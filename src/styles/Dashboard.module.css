@@ -33,14 +33,53 @@
   line-height: 1.65;
 }
 
-.analysisGrid {
+.sections {
   display: grid;
-  gap: 22px;
+  gap: 28px;
 }
 
-@media (min-width: 1100px) {
-  .analysisGrid {
-    grid-template-columns: minmax(320px, 420px) 1fr;
-    align-items: start;
+.sectionBlock {
+  display: grid;
+  gap: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.sectionKicker {
+  margin: 0 0 8px;
+  color: var(--primary-soft);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.82rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.55rem;
+}
+
+.sectionDescription {
+  max-width: 540px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .sectionHeader {
+    flex-direction: column;
+  }
+
+  .sectionDescription {
+    text-align: left;
+    max-width: none;
   }
 }
