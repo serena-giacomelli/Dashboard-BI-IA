@@ -38,12 +38,37 @@
   gap: 10px;
 }
 
+.group {
+  display: grid;
+  gap: 10px;
+}
+
+.groupTitle {
+  margin: 0;
+  padding: 0 2px;
+  color: rgba(245, 248, 252, 0.6);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.groupLinks {
+  display: grid;
+  gap: 8px;
+}
+
 .link {
   padding: 12px 14px;
   border-radius: 12px;
   color: rgba(245, 248, 252, 0.8);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid transparent;
+}
+
+.subLink {
+  margin-left: 10px;
+  padding-left: 18px;
 }
 
 .active {
