@@ -53,18 +53,6 @@ function LookerEmbed({
 
   return (
     <section className={styles.wrapper}>
-      <div className={styles.header}>
-        <div>
-          <h2>LookerEmbed</h2>
-          <p>Visualización responsiva conectada al panel analítico</p>
-        </div>
-
-        {src ? (
-          <button className={styles.openButton} type="button" onClick={handleOpenReport}>
-            Abrir reporte
-          </button>
-        ) : null}
-      </div>
 
       <div className={styles.frameShell}>
         <iframe

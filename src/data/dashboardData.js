@@ -18,7 +18,6 @@ export const budgetRows = [
 ];
 
 export const defaultQuestionSuggestions = [
-  'Generá un informe ejecutivo',
   '¿Qué cliente tiene el mayor total de honorarios?',
   '¿Cuántos presupuestos están en revisión?',
   '¿Qué recomendación darías para mejorar el seguimiento?',
