@@ -114,27 +114,6 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
 
   return (
     <section className={styles.panel}>
-      <div className={styles.header}>
-        <div>
-          <p className={styles.kicker}>IA asistida</p>
-          <h2>Generador de informes y preguntas</h2>
-          <p className={styles.subtitle}>
-            Te ayuda a resumir el tablero y responder consultas sobre los datos visibles.
-          </p>
-        </div>
-
-        <div className={styles.metrics}>
-          <div>
-            <span>Total analizado</span>
-            <strong>{currencyFormatter.format(stats.totalFees)}</strong>
-          </div>
-          <div>
-            <span>Presupuestos</span>
-            <strong>{stats.count}</strong>
-          </div>
-        </div>
-      </div>
-
       <div className={styles.workflowGrid}>
         <article className={styles.actionCard}>
           <div className={styles.cardHeader}>
