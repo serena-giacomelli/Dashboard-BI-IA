@@ -1,6 +1,7 @@
-import IACard from '../components/IACard';
+import AIInsightsPanel from '../components/AIInsightsPanel';
 import LookerEmbed from '../components/LookerEmbed';
 import styles from '../styles/Dashboard.module.css';
+import { budgetRows, defaultQuestionSuggestions } from '../data/dashboardData';
 
 function Dashboard() {
   return (
@@ -15,8 +16,8 @@ function Dashboard() {
         </div>
       </header>
 
-      <div className={styles.grid}>
-        <IACard text="El análisis detecta estabilidad operativa y una mejora progresiva en el seguimiento de indicadores. Se recomienda revisar alertas en matrículas y retención." />
+      <div className={styles.analysisGrid}>
+        <AIInsightsPanel rows={budgetRows} suggestions={defaultQuestionSuggestions} />
         <LookerEmbed src="https://datastudio.google.com/embed/reporting/a0224742-cbbb-47f9-b975-2bf78f309c70/page/bt3zF" />
       </div>
     </section>

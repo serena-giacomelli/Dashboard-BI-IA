@@ -1,0 +1,168 @@
+.panel {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  color: var(--primary-soft);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.35rem;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.metrics {
+  display: grid;
+  gap: 12px;
+  min-width: 180px;
+}
+
+.metrics div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(22, 50, 79, 0.05);
+}
+
+.metrics span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.metrics strong {
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.button:hover {
+  background: #f7fafc;
+}
+
+.primaryButton {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.primaryButton:hover {
+  background: #203f5f;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 110px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: #ffffff;
+}
+
+.textarea:focus {
+  outline: 2px solid rgba(22, 50, 79, 0.18);
+  border-color: rgba(22, 50, 79, 0.35);
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.suggestion {
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(22, 50, 79, 0.16);
+  background: rgba(22, 50, 79, 0.04);
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.resultBox,
+.reportBox {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(22, 50, 79, 0.04);
+  border: 1px solid rgba(22, 50, 79, 0.09);
+}
+
+.resultLabel {
+  margin: 0;
+  color: var(--primary-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.resultText {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .metrics {
+    min-width: 0;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
