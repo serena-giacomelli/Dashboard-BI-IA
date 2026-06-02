@@ -109,6 +109,13 @@
   line-height: 1.6;
 }
 
+.suggestionPicker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
 .button {
   padding: 10px 14px;
   border-radius: 12px;
@@ -156,6 +163,25 @@
 .textarea:focus {
   outline: 2px solid rgba(22, 50, 79, 0.18);
   border-color: rgba(22, 50, 79, 0.35);
+}
+
+.select {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: #ffffff;
+}
+
+.select:focus {
+  outline: 2px solid rgba(22, 50, 79, 0.18);
+  border-color: rgba(22, 50, 79, 0.35);
+}
+
+.suggestionButton {
+  height: 48px;
+  white-space: nowrap;
 }
 
 .suggestions {
@@ -215,5 +241,13 @@
 
   .cardHeader {
     flex-direction: column;
+  }
+
+  .suggestionPicker {
+    grid-template-columns: 1fr;
+  }
+
+  .suggestionButton {
+    width: 100%;
   }
 }

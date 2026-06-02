@@ -86,6 +86,7 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
   const stats = useMemo(() => summarizeRows(rows), [rows]);
   const [question, setQuestion] = useState('');
   const [report, setReport] = useState('');
+  const [selectedSuggestion, setSelectedSuggestion] = useState(suggestions[0] ?? '');
   const [answer, setAnswer] = useState(
     'Pedime un informe ejecutivo o preguntame algo sobre total de honorarios, estados y recomendaciones.',
   );
@@ -103,6 +104,12 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
   const handleSuggestion = (suggestion) => {
     setQuestion(suggestion);
     handleAsk(suggestion);
+  };
+
+  const handleUseSuggestion = () => {
+    if (!selectedSuggestion) return;
+
+    handleSuggestion(selectedSuggestion);
   };
 
   return (
@@ -133,16 +140,11 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
           <div className={styles.cardHeader}>
             <div>
               <p className={styles.cardKicker}>Informe automático</p>
-              <h3 className={styles.cardTitle}>Generar informe IA</h3>
             </div>
             <button className={`${styles.button} ${styles.primaryButton}`} type="button" onClick={handleGenerateReport}>
               Generar informe
             </button>
           </div>
-
-          <p className={styles.cardDescription}>
-            Este bloque arma un resumen ejecutivo del tablero y lo deja listo para revisar o copiar.
-          </p>
 
           <div className={styles.reportBox}>
             <p className={styles.resultLabel}>Informe generado</p>
@@ -156,7 +158,6 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
           <div className={styles.cardHeader}>
             <div>
               <p className={styles.cardKicker}>Consulta conversacional</p>
-              <h3 className={styles.cardTitle}>Preguntar sobre gráficos y datos</h3>
             </div>
             <button className={styles.button} type="button" onClick={() => handleAsk(question)}>
               Responder pregunta
@@ -175,17 +176,30 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
           </label>
 
           {suggestions.length ? (
-            <div className={styles.suggestions}>
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  className={styles.suggestion}
-                  type="button"
-                  onClick={() => handleSuggestion(suggestion)}
+            <div className={styles.suggestionPicker}>
+              <label className={styles.field}>
+                <span>Preguntas posibles</span>
+                <select
+                  className={styles.select}
+                  value={selectedSuggestion}
+                  onChange={(event) => setSelectedSuggestion(event.target.value)}
                 >
-                  {suggestion}
-                </button>
-              ))}
+                  {suggestions.map((suggestion) => (
+                    <option key={suggestion} value={suggestion}>
+                      {suggestion}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                className={`${styles.button} ${styles.suggestionButton}`}
+                type="button"
+                onClick={handleUseSuggestion}
+                disabled={!selectedSuggestion}
+              >
+                Usar pregunta
+              </button>
             </div>
           ) : null}
 
