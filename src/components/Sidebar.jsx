@@ -18,6 +18,12 @@ function Sidebar() {
         >
           REPORTES
         </NavLink>
+        <NavLink
+          to="/detalle"
+          className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
+        >
+          GESTIÓN ESTRATÉGICA
+        </NavLink>
       </nav>
     </aside>
   );
