@@ -66,6 +66,49 @@
   gap: 10px;
 }
 
+.workflowGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.actionCard {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 20px;
+  background: #f9fbfd;
+  border: 1px solid #e3eaf1;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cardKicker {
+  margin: 0 0 6px;
+  color: var(--primary-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.cardDescription {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .button {
   padding: 10px 14px;
   border-radius: 12px;
@@ -164,5 +207,13 @@
     min-width: 0;
     width: 100%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardHeader {
+    flex-direction: column;
   }
 }

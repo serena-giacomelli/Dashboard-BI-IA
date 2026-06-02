@@ -28,4 +28,8 @@ export const defaultQuestionSuggestions = [
   '¿Qué gráfico conviene revisar primero?',
   '¿Cuántos presupuestos fueron enviados?',
   '¿Qué monto total está analizando la IA?',
+  '¿Hay algún cliente que requiera atención inmediata?',
+  '¿Qué estado operativo domina el tablero?',
+  '¿Qué alerta aparece más seguido en el análisis?',
+  '¿Qué resumen corto le darías a la dirección?',
 ];

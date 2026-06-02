@@ -128,52 +128,73 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
         </div>
       </div>
 
-      <div className={styles.toolbar}>
-        <button className={`${styles.button} ${styles.primaryButton}`} type="button" onClick={handleGenerateReport}>
-          Generar informe IA
-        </button>
-        <button className={styles.button} type="button" onClick={() => handleAsk(question)}>
-          Responder pregunta
-        </button>
-      </div>
-
-      <label className={styles.field}>
-        <span>Escribí tu pregunta</span>
-        <textarea
-          className={styles.textarea}
-          value={question}
-          onChange={(event) => setQuestion(event.target.value)}
-          placeholder="Ejemplo: ¿Qué cliente tiene el mayor total de honorarios?"
-          rows={4}
-        />
-      </label>
-
-      {suggestions.length ? (
-        <div className={styles.suggestions}>
-          {suggestions.map((suggestion) => (
-            <button
-              key={suggestion}
-              className={styles.suggestion}
-              type="button"
-              onClick={() => handleSuggestion(suggestion)}
-            >
-              {suggestion}
+      <div className={styles.workflowGrid}>
+        <article className={styles.actionCard}>
+          <div className={styles.cardHeader}>
+            <div>
+              <p className={styles.cardKicker}>Informe automático</p>
+              <h3 className={styles.cardTitle}>Generar informe IA</h3>
+            </div>
+            <button className={`${styles.button} ${styles.primaryButton}`} type="button" onClick={handleGenerateReport}>
+              Generar informe
             </button>
-          ))}
-        </div>
-      ) : null}
+          </div>
 
-      <div className={styles.resultBox}>
-        <p className={styles.resultLabel}>Respuesta IA</p>
-        <p className={styles.resultText}>{answer}</p>
+          <p className={styles.cardDescription}>
+            Este bloque arma un resumen ejecutivo del tablero y lo deja listo para revisar o copiar.
+          </p>
+
+          <div className={styles.reportBox}>
+            <p className={styles.resultLabel}>Informe generado</p>
+            <p className={styles.resultText}>
+              {report || 'Todavía no generaste un informe. Tocá “Generar informe” para crear uno.'}
+            </p>
+          </div>
+        </article>
+
+        <article className={styles.actionCard}>
+          <div className={styles.cardHeader}>
+            <div>
+              <p className={styles.cardKicker}>Consulta conversacional</p>
+              <h3 className={styles.cardTitle}>Preguntar sobre gráficos y datos</h3>
+            </div>
+            <button className={styles.button} type="button" onClick={() => handleAsk(question)}>
+              Responder pregunta
+            </button>
+          </div>
+
+          <label className={styles.field}>
+            <span>Escribí tu pregunta</span>
+            <textarea
+              className={styles.textarea}
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              placeholder="Ejemplo: ¿Qué cliente tiene el mayor total de honorarios?"
+              rows={4}
+            />
+          </label>
+
+          {suggestions.length ? (
+            <div className={styles.suggestions}>
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  className={styles.suggestion}
+                  type="button"
+                  onClick={() => handleSuggestion(suggestion)}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <div className={styles.resultBox}>
+            <p className={styles.resultLabel}>Respuesta IA</p>
+            <p className={styles.resultText}>{answer}</p>
+          </div>
+        </article>
       </div>
-
-      {report ? (
-        <div className={styles.reportBox}>
-          <p className={styles.resultLabel}>Informe generado</p>
-          <p className={styles.resultText}>{report}</p>
-        </div>
-      ) : null}
     </section>
   );
 }
