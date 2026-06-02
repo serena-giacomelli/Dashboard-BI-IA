@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import styles from '../styles/Sidebar.module.css';
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/dashboard', label: 'Reportes' },
   { to: '/detalle', label: 'Gestión Estratégica' },
 ];
 
