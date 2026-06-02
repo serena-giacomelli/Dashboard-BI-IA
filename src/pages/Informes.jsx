@@ -47,9 +47,10 @@ function filterRows(rows, reportId, filters) {
   return rows.filter((row) => {
     if (reportId === 'tareas') {
       const estados = filters.estados || [];
+      const usuarios = filters.usuario || [];
       return (
         (!filters.cliente || row.cliente === filters.cliente) &&
-        (!filters.usuario || row.usuario === filters.usuario) &&
+        (!usuarios.length || usuarios.includes(row.usuario)) &&
         (!filters.organismo || row.organismo === filters.organismo) &&
         (!filters.usuarioSeguimiento || row.usuarioSeguimiento === filters.usuarioSeguimiento) &&
         (!estados.length || estados.includes(row.estado))
@@ -67,10 +68,11 @@ function filterRows(rows, reportId, filters) {
       const rowDate = new Date(`${row.vencimiento}T00:00:00`).getTime();
       const fromDate = filters.fechaDesde ? new Date(`${filters.fechaDesde}T00:00:00`).getTime() : null;
       const toDate = filters.fechaHasta ? new Date(`${filters.fechaHasta}T23:59:59`).getTime() : null;
+      const usuarios = filters.usuario || [];
 
       return (
         (!filters.cliente || row.cliente === filters.cliente) &&
-        (!filters.usuario || row.usuario === filters.usuario) &&
+        (!usuarios.length || usuarios.includes(row.usuario)) &&
         (!fromDate || rowDate >= fromDate) &&
         (!toDate || rowDate <= toDate)
       );
@@ -142,6 +144,20 @@ function Informes() {
   const handleMultiSelectChange = (key, event) => {
     const selectedValues = Array.from(event.target.selectedOptions).map((option) => option.value);
     handleFilterChange(key, selectedValues);
+  };
+
+  const toggleCheckboxValue = (key, option) => {
+    setFilters((current) => {
+      const currentValues = current[key] ?? [];
+      const nextValues = currentValues.includes(option)
+        ? currentValues.filter((value) => value !== option)
+        : [...currentValues, option];
+
+      return {
+        ...current,
+        [key]: nextValues,
+      };
+    });
   };
 
   const downloadFile = (blob, fileName) => {
@@ -269,22 +285,25 @@ function Informes() {
 
               if (filter.type === 'multiselect') {
                 return (
-                  <label key={filter.key} className={styles.field}>
-                    <span>{filter.label}</span>
-                    <select
-                      className={styles.multiSelect}
-                      multiple
-                      value={filters[filter.key]}
-                      onChange={(event) => handleMultiSelectChange(filter.key, event)}
-                    >
+                  <fieldset key={filter.key} className={styles.fieldset}>
+                    <legend>{filter.label}</legend>
+
+                    <div className={styles.checkboxGroup}>
                       {filter.options.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
+                        <label key={option} className={styles.checkboxItem}>
+                          <input
+                            className={styles.checkboxInput}
+                            type="checkbox"
+                            checked={(filters[filter.key] ?? []).includes(option)}
+                            onChange={() => toggleCheckboxValue(filter.key, option)}
+                          />
+                          <span>{option}</span>
+                        </label>
                       ))}
-                    </select>
-                    <small className={styles.helper}>Mantener Ctrl para elegir mas de una opcion.</small>
-                  </label>
+                    </div>
+
+                    <small className={styles.helper}>Podés marcar más de una opción.</small>
+                  </fieldset>
                 );
               }
 

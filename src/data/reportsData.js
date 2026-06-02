@@ -4,7 +4,7 @@ export const reportConfigs = {
     description: 'Seguimiento operativo de tareas, responsables y estados.',
     filters: [
       { key: 'cliente', label: 'Clientes', type: 'select', options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
-      { key: 'usuario', label: 'Usuario', type: 'select', options: ['Todos', 'M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
+      { key: 'usuario', label: 'Usuario', type: 'multiselect', options: ['M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
       { key: 'organismo', label: 'Organismos', type: 'select', options: ['Todos', 'SENASA', 'ANMAT', 'INASE', 'INTA'] },
       { key: 'usuarioSeguimiento', label: 'Usuario seguimiento', type: 'select', options: ['Todos', 'S. Vargas', 'L. Torres', 'M. Perez'] },
       { key: 'estados', label: 'Estados de tareas', type: 'multiselect', options: ['Pendiente', 'En proceso', 'Observado', 'Finalizado', 'Bloqueado'] },
@@ -127,7 +127,7 @@ export const reportConfigs = {
     description: 'Alertas de vencimiento por cliente, usuario y rango de fechas.',
     filters: [
       { key: 'cliente', label: 'Cliente', type: 'select', options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
-      { key: 'usuario', label: 'Usuario', type: 'select', options: ['Todos', 'M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
+      { key: 'usuario', label: 'Usuario', type: 'multiselect', options: ['M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
       { key: 'fechaDesde', label: 'Fecha desde', type: 'date' },
       { key: 'fechaHasta', label: 'Fecha hasta', type: 'date' },
     ],

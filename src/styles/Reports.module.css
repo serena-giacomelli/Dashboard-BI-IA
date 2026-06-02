@@ -91,6 +91,20 @@
   font-size: 0.92rem;
 }
 
+.fieldset {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.fieldset legend {
+  padding: 0;
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+}
+
 .select,
 .input,
 .multiSelect {
@@ -105,6 +119,29 @@
 
 .multiSelect {
   min-height: 164px;
+}
+
+.checkboxGroup {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.checkboxInput {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
 }
 
 .helper {
