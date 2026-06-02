@@ -12,8 +12,7 @@ function Sidebar() {
       <div className={styles.brand}>
         <span className={styles.badge}>BI</span>
         <div>
-          <h1>Gestión Estratégica</h1>
-          <p>Universidad</p>
+          <h1>CIFAS</h1>
         </div>
       </div>
 
