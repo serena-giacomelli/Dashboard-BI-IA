@@ -1,6 +1,11 @@
 import styles from '../styles/LookerEmbed.module.css';
 
-function LookerEmbed({ url }) {
+function LookerEmbed({
+  src,
+  width = 600,
+  height = 338,
+  sandbox = 'allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox',
+}) {
   const placeholderMarkup = `
     <html lang="es">
       <head>
@@ -50,11 +55,16 @@ function LookerEmbed({ url }) {
       <div className={styles.frameShell}>
         <iframe
           className={styles.frame}
-          src={url || undefined}
-          srcDoc={!url ? placeholderMarkup : undefined}
+          src={src || undefined}
+          width={width}
+          height={height}
+          frameBorder="0"
+          style={{ border: 0 }}
+          sandbox={sandbox}
           title="Looker embed"
           loading="lazy"
           allowFullScreen
+          srcDoc={!src ? placeholderMarkup : undefined}
         />
       </div>
     </section>
