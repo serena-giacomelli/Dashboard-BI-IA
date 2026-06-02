@@ -226,23 +226,7 @@ function Informes() {
     <section className={styles.page}>
       <header className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.kicker}>Informes</p>
           <h1>Generacion de informes operativos</h1>
-          <p className={styles.body}>
-            Selecciona el tipo de informe, completa los filtros y exporta el resultado a Excel o PDF desde la misma pantalla.
-          </p>
-        </div>
-
-        <div className={styles.heroActions}>
-          <button className={`${styles.button} ${styles.secondaryButton}`} type="button" onClick={() => navigate('/dashboard')}>
-            Volver
-          </button>
-          <button className={`${styles.button} ${styles.secondaryButton}`} type="button" onClick={handleExportPdf}>
-            PDF
-          </button>
-          <button className={`${styles.button} ${styles.primaryButton}`} type="button" onClick={handleExportExcel}>
-            Excel
-          </button>
         </div>
       </header>
 

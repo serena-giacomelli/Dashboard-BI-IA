@@ -36,11 +36,7 @@ function Dashboard() {
 
         <section className={styles.sectionBlock}>
           <div className={styles.sectionHeader}>
-            <div>
-              <p className={styles.sectionKicker}>Informes operativos</p>
-            </div>
           </div>
-
           <Informes />
         </section>
       </div>
