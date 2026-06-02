@@ -4,6 +4,13 @@
 }
 
 .header h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header h2 {
   margin: 0;
   color: var(--primary);
 }
@@ -11,6 +18,21 @@
 .header p {
   margin: 6px 0 0;
   color: var(--muted);
+}
+
+.openButton {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--primary);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+
+.openButton:hover {
+  background: #f6f9fc;
 }
 
 .frameShell {

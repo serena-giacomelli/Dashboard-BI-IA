@@ -4,8 +4,14 @@ function LookerEmbed({
   src,
   width = 600,
   height = 338,
-  sandbox = 'allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox',
+  sandbox = 'allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation',
 }) {
+  const handleOpenReport = () => {
+    if (!src) return;
+
+    window.open(src, '_blank', 'noopener,noreferrer');
+  };
+
   const placeholderMarkup = `
     <html lang="es">
       <head>
@@ -48,8 +54,16 @@ function LookerEmbed({
   return (
     <section className={styles.wrapper}>
       <div className={styles.header}>
-        <h2>LookerEmbed</h2>
-        <p>Visualización responsiva conectada al panel analítico</p>
+        <div>
+          <h2>LookerEmbed</h2>
+          <p>Visualización responsiva conectada al panel analítico</p>
+        </div>
+
+        {src ? (
+          <button className={styles.openButton} type="button" onClick={handleOpenReport}>
+            Abrir reporte
+          </button>
+        ) : null}
       </div>
 
       <div className={styles.frameShell}>
