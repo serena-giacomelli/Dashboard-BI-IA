@@ -22,4 +22,10 @@ export const defaultQuestionSuggestions = [
   '¿Qué cliente tiene el mayor total de honorarios?',
   '¿Cuántos presupuestos están en revisión?',
   '¿Qué recomendación darías para mejorar el seguimiento?',
+  '¿Cuál es el principal riesgo del tablero?',
+  '¿Qué debería priorizar la coordinación?',
+  '¿Cómo va la tendencia general?',
+  '¿Qué gráfico conviene revisar primero?',
+  '¿Cuántos presupuestos fueron enviados?',
+  '¿Qué monto total está analizando la IA?',
 ];

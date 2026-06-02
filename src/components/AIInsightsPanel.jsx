@@ -91,18 +91,13 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
   );
 
   const handleGenerateReport = () => {
-    const nextReport = generateExecutiveReport(stats, rows);
-    setReport(nextReport);
-    setAnswer('Informe generado con éxito. Si querés, podés preguntarme por un dato puntual del tablero.');
+    setReport(generateExecutiveReport(stats, rows));
   };
 
   const handleAsk = (nextQuestion = question) => {
     const nextAnswer = answerQuestion(nextQuestion, stats);
     setQuestion(nextQuestion);
     setAnswer(nextAnswer);
-    if (!report) {
-      setReport(generateExecutiveReport(stats, rows));
-    }
   };
 
   const handleSuggestion = (suggestion) => {
