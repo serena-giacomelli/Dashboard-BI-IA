@@ -1,5 +1,6 @@
 import AIInsightsPanel from '../components/AIInsightsPanel';
 import LookerEmbed from '../components/LookerEmbed';
+import Informes from './Informes';
 import styles from '../styles/Dashboard.module.css';
 import { budgetRows, defaultQuestionSuggestions } from '../data/dashboardData';
 
@@ -31,6 +32,16 @@ function Dashboard() {
           </div>
 
           <AIInsightsPanel rows={budgetRows} suggestions={defaultQuestionSuggestions} />
+        </section>
+
+        <section className={styles.sectionBlock}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.sectionKicker}>Informes operativos</p>
+            </div>
+          </div>
+
+          <Informes />
         </section>
       </div>
     </section>
