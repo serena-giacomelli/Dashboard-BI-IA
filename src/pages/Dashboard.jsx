@@ -8,11 +8,7 @@ function Dashboard() {
     <section className={styles.page}>
       <header className={styles.hero}>
         <div>
-          <p className={styles.kicker}>Business Intelligence</p>
           <h1>Dashboard estratégico</h1>
-          <p className={styles.subtitle}>
-            Indicadores clave para decisiones académicas y de gestión.
-          </p>
         </div>
       </header>
 
