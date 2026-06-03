@@ -4,8 +4,8 @@ import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import { reportConfigs } from '../data/reportsData';
 import { allColumnsByReport } from '../data/allColumns';
-import { exportToExcel } from '../utils/exportExcel';
-import ExportModal from '../components/ExportModal';
+import { exportToExcel } from '../utils/exportExcel.js';
+import ExportModal from '../components/ExportModal.jsx';
 import styles from '../styles/Reports.module.css';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
