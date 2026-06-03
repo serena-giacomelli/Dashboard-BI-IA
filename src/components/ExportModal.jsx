@@ -1,0 +1,112 @@
+import { useState, useEffect } from 'react';
+import styles from '../styles/ExportModal.module.css';
+
+/**
+ * ExportModal
+ * Props:
+ *  - isOpen: boolean
+ *  - onClose: () => void
+ *  - onConfirm: (selectedColumns: string[], format: 'pdf' | 'excel') => void
+ *  - format: 'pdf' | 'excel'
+ *  - columns: Array<{ key: string, label: string }>   ← todas las columnas disponibles del informe
+ */
+function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
+  const [selected, setSelected] = useState([]);
+
+  // Al abrir el modal, pre-seleccionar todas las columnas
+  useEffect(() => {
+    if (isOpen) {
+      setSelected(columns.map((col) => col.key));
+    }
+  }, [isOpen, columns]);
+
+  if (!isOpen) return null;
+
+  const toggleColumn = (key) => {
+    setSelected((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const toggleAll = () => {
+    setSelected(selected.length === columns.length ? [] : columns.map((c) => c.key));
+  };
+
+  const handleConfirm = () => {
+    if (selected.length === 0) return;
+    // Mantener el orden original de las columnas
+    const ordered = columns.filter((col) => selected.includes(col.key)).map((col) => col.key);
+    onConfirm(ordered, format);
+    onClose();
+  };
+
+  const allChecked = selected.length === columns.length;
+  const someChecked = selected.length > 0 && !allChecked;
+  const formatLabel = format === 'pdf' ? 'PDF' : 'Excel';
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <header className={styles.header}>
+          <div className={styles.headerLeft}>
+            <span className={styles.formatBadge} data-format={format}>
+              {formatLabel}
+            </span>
+            <h2 className={styles.title}>Seleccionar columnas</h2>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar">
+            ✕
+          </button>
+        </header>
+
+        <p className={styles.subtitle}>
+          Elegí qué columnas incluir en el archivo exportado.
+        </p>
+
+        <div className={styles.selectAllRow}>
+          <label className={styles.checkItem}>
+            <input
+              type="checkbox"
+              checked={allChecked}
+              ref={(el) => { if (el) el.indeterminate = someChecked; }}
+              onChange={toggleAll}
+            />
+            <span className={styles.checkLabel}>
+              {allChecked ? 'Deseleccionar todas' : 'Seleccionar todas'}
+            </span>
+          </label>
+          <span className={styles.counter}>{selected.length} / {columns.length}</span>
+        </div>
+
+        <div className={styles.columnGrid}>
+          {columns.map((col) => (
+            <label key={col.key} className={styles.checkItem}>
+              <input
+                type="checkbox"
+                checked={selected.includes(col.key)}
+                onChange={() => toggleColumn(col.key)}
+              />
+              <span className={styles.checkLabel}>{col.label}</span>
+            </label>
+          ))}
+        </div>
+
+        <footer className={styles.footer}>
+          <button className={styles.cancelBtn} onClick={onClose}>
+            Cancelar
+          </button>
+          <button
+            className={styles.confirmBtn}
+            onClick={handleConfirm}
+            disabled={selected.length === 0}
+            data-format={format}
+          >
+            Exportar {formatLabel}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+export default ExportModal;

@@ -1,7 +1,9 @@
+import { allColumnsByReport } from './allColumns';
 export const reportConfigs = {
   tareas: {
     label: 'Tareas',
     description: 'Seguimiento operativo de tareas, responsables y estados.',
+    allColumns: allColumnsByReport.tareas,
     filters: [
       { key: 'cliente', label: 'Clientes', type: 'select', options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
       { key: 'usuario', label: 'Usuario', type: 'multiselect', options: ['M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
@@ -75,6 +77,7 @@ export const reportConfigs = {
   tramites: {
     label: 'Tramites',
     description: 'Consulta de tramites por organismo y area responsable.',
+    allColumns: allColumnsByReport.tramites,
     filters: [
       { key: 'organismo', label: 'Organismos', type: 'select', options: ['Todos', 'SENASA', 'ANMAT', 'INTA', 'Municipalidad'] },
       { key: 'area', label: 'Area', type: 'select', options: ['Todas', 'Tecnica', 'Comercial', 'Administracion', 'Legal'] },
@@ -125,6 +128,7 @@ export const reportConfigs = {
   vencimientos: {
     label: 'Vencimientos',
     description: 'Alertas de vencimiento por cliente, usuario y rango de fechas.',
+    allColumns: allColumnsByReport.vencimientos,
     filters: [
       { key: 'cliente', label: 'Cliente', type: 'select', options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
       { key: 'usuario', label: 'Usuario', type: 'multiselect', options: ['M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
@@ -177,6 +181,7 @@ export const reportConfigs = {
   engordes: {
     label: 'Engordes',
     description: 'Seguimiento por provincia, partido y tipo de acceso.',
+    allColumns: allColumnsByReport.engordes,
     filters: [
       {
         key: 'provincia',
@@ -286,6 +291,7 @@ export const reportConfigs = {
   pedidosPendientes: {
     label: 'Pedidos pendientes',
     description: 'Pedidos abiertos con rango de fechas para control de salida.',
+    allColumns: allColumnsByReport.pedidosPendientes,
     filters: [
       { key: 'fechaDesde', label: 'Fecha desde', type: 'date' },
       { key: 'fechaHasta', label: 'Fecha hasta', type: 'date' },

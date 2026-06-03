@@ -1,0 +1,222 @@
+/**
+ * exportExcel.js
+ *
+ * Exporta datos a un archivo .xlsx con formato profesional:
+ *  - Fila de título del informe (fusionada, fondo oscuro, texto blanco)
+ *  - Fila de metadatos: fecha de generación y cantidad de registros
+ *  - Fila de filtros aplicados
+ *  - Fila de encabezados de columna: negrita, fondo gris claro, bordes
+ *  - Filas de datos: bordes finos, filas alternas levemente coloreadas
+ *  - Ancho de columna ajustado al contenido
+ *
+ * Uso:
+ *   import { exportToExcel } from './exportExcel';
+ *   exportToExcel({ reportConfig, filteredRows, filterSummary, selectedColumnKeys });
+ */
+
+import ExcelJS from 'exceljs';
+
+// ── Helpers de formato ────────────────────────────────────────────────────────
+
+function formatDate(value) {
+  if (!value) return '-';
+  return new Intl.DateTimeFormat('es-AR').format(new Date(`${value}T00:00:00`));
+}
+
+function formatFileDate(value = new Date()) {
+  return value.toISOString().slice(0, 10);
+}
+
+function getCellValue(row, columnKey) {
+  if (columnKey === 'fecha' || columnKey === 'vencimiento' || columnKey === 'fechaVto' || columnKey === 'ultimoCambio') {
+    return formatDate(row[columnKey]);
+  }
+  return row[columnKey] ?? '-';
+}
+
+function downloadBlob(blob, fileName) {
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+}
+
+// ── Estilos constantes ────────────────────────────────────────────────────────
+
+const HEADER_FILL = {
+  type: 'pattern',
+  pattern: 'solid',
+  fgColor: { argb: 'FFE2E8F0' }, // gris claro
+};
+
+const HEADER_FONT = {
+  bold: true,
+  size: 10,
+  color: { argb: 'FF16324F' }, // azul oscuro del sistema
+};
+
+const TITLE_FILL = {
+  type: 'pattern',
+  pattern: 'solid',
+  fgColor: { argb: 'FF16324F' }, // azul oscuro
+};
+
+const TITLE_FONT = {
+  bold: true,
+  size: 13,
+  color: { argb: 'FFFFFFFF' },
+};
+
+const META_FONT = {
+  size: 9,
+  color: { argb: 'FF555555' },
+};
+
+const FILTER_FONT = {
+  size: 9,
+  italic: true,
+  color: { argb: 'FF444444' },
+};
+
+const THIN_BORDER = {
+  top:    { style: 'thin', color: { argb: 'FFD1D5DB' } },
+  left:   { style: 'thin', color: { argb: 'FFD1D5DB' } },
+  bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+  right:  { style: 'thin', color: { argb: 'FFD1D5DB' } },
+};
+
+const ALT_ROW_FILL = {
+  type: 'pattern',
+  pattern: 'solid',
+  fgColor: { argb: 'FFF8FAFC' }, // blanco roto muy sutil
+};
+
+// ── Función principal ────────────────────────────────────────────────────────
+
+/**
+ * @param {object}   params
+ * @param {object}   params.reportConfig        - Config completa del informe (label, allColumns, etc.)
+ * @param {Array}    params.filteredRows         - Filas ya filtradas
+ * @param {Array}    params.filterSummary        - [{ label, value }] resumen de filtros aplicados
+ * @param {string[]} params.selectedColumnKeys   - Keys de las columnas seleccionadas en el modal
+ * @param {string}   params.reportId             - ID del informe (para el nombre del archivo)
+ */
+export async function exportToExcel({ reportConfig, filteredRows, filterSummary, selectedColumnKeys, reportId }) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Sistema de Informes';
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet('Datos', {
+    views: [{ state: 'frozen', ySplit: 0 }], // se actualizará luego
+    pageSetup: {
+      paperSize: 9, // A4
+      orientation: 'landscape',
+      fitToPage: true,
+      fitToWidth: 1,
+    },
+  });
+
+  // Columnas seleccionadas (en el orden original)
+  const exportColumns = reportConfig.allColumns.filter((col) =>
+    selectedColumnKeys.includes(col.key)
+  );
+
+  const colCount = exportColumns.length;
+  const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
+
+  // ── Fila 1: Título del informe ────────────────────────────────────────────
+  sheet.addRow([`Informe: ${reportConfig.label}`]);
+  sheet.mergeCells(1, 1, 1, colCount);
+  const titleCell = sheet.getCell('A1');
+  titleCell.font = TITLE_FONT;
+  titleCell.fill = TITLE_FILL;
+  titleCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+  sheet.getRow(1).height = 28;
+
+  // ── Fila 2: Metadatos ─────────────────────────────────────────────────────
+  sheet.addRow([`Generado: ${now}    |    Registros: ${filteredRows.length}`]);
+  sheet.mergeCells(2, 1, 2, colCount);
+  const metaCell = sheet.getCell('A2');
+  metaCell.font = META_FONT;
+  metaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+  sheet.getRow(2).height = 18;
+
+  // ── Filas 3..N: Filtros aplicados ─────────────────────────────────────────
+  let currentRow = 3;
+  filterSummary.forEach(({ label, value }) => {
+    sheet.addRow([`${label}: ${value}`]);
+    sheet.mergeCells(currentRow, 1, currentRow, colCount);
+    const filterCell = sheet.getCell(`A${currentRow}`);
+    filterCell.font = FILTER_FONT;
+    filterCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    sheet.getRow(currentRow).height = 16;
+    currentRow++;
+  });
+
+  // Fila separadora vacía
+  sheet.addRow([]);
+  currentRow++;
+
+  // ── Fila de encabezados de columna ────────────────────────────────────────
+  const headerRowIndex = currentRow;
+  const headerRow = sheet.addRow(exportColumns.map((col) => col.label));
+  headerRow.height = 22;
+  headerRow.eachCell((cell) => {
+    cell.font = HEADER_FONT;
+    cell.fill = HEADER_FILL;
+    cell.border = THIN_BORDER;
+    cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: false };
+  });
+  currentRow++;
+
+  // Congelar hasta la fila de encabezados
+  sheet.views = [{ state: 'frozen', ySplit: headerRowIndex }];
+
+  // ── Filas de datos ────────────────────────────────────────────────────────
+  if (filteredRows.length === 0) {
+    const emptyRow = sheet.addRow(['Sin registros para los filtros seleccionados.']);
+    sheet.mergeCells(currentRow, 1, currentRow, colCount);
+    emptyRow.getCell(1).font = { italic: true, color: { argb: 'FF999999' }, size: 10 };
+    emptyRow.getCell(1).alignment = { horizontal: 'center' };
+  } else {
+    filteredRows.forEach((row, rowIndex) => {
+      const values = exportColumns.map((col) => getCellValue(row, col.key));
+      const dataRow = sheet.addRow(values);
+      dataRow.height = 18;
+
+      const isAlt = rowIndex % 2 === 1;
+      dataRow.eachCell({ includeEmpty: true }, (cell) => {
+        cell.border = THIN_BORDER;
+        cell.font = { size: 10 };
+        cell.alignment = { vertical: 'middle', wrapText: false };
+        if (isAlt) {
+          cell.fill = ALT_ROW_FILL;
+        }
+      });
+    });
+  }
+
+  // ── Ancho automático de columnas ──────────────────────────────────────────
+  exportColumns.forEach((col, index) => {
+    const colLetter = sheet.getColumn(index + 1);
+
+    // Medir el contenido más largo: encabezado vs datos
+    const headerLen = col.label.length;
+    const maxDataLen = filteredRows.reduce((max, row) => {
+      const val = String(getCellValue(row, col.key));
+      return Math.max(max, val.length);
+    }, 0);
+
+    const idealWidth = Math.max(headerLen, maxDataLen) + 4; // +4 de padding
+    colLetter.width = Math.min(Math.max(idealWidth, 10), 60); // mín 10, máx 60
+  });
+
+  // ── Guardar y descargar ───────────────────────────────────────────────────
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  downloadBlob(blob, `informe_${reportId}_${formatFileDate()}.xlsx`);
+}

@@ -2,9 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 import { reportConfigs } from '../data/reportsData';
+import { allColumnsByReport } from '../data/allColumns';
+import { exportToExcel } from '../utils/exportExcel';
+import ExportModal from '../components/ExportModal';
 import styles from '../styles/Reports.module.css';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
   value,
@@ -13,10 +17,7 @@ const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
 }));
 
 function formatDate(value) {
-  if (!value) {
-    return '-';
-  }
-
+  if (!value) return '-';
   return new Intl.DateTimeFormat('es-AR').format(new Date(`${value}T00:00:00`));
 }
 
@@ -35,11 +36,9 @@ function describeFilterValue(filter, value) {
   if (filter.type === 'multiselect') {
     return value.length ? value.join(', ') : 'Todos';
   }
-
   if (filter.type === 'date') {
     return value ? formatDate(value) : 'Sin definir';
   }
-
   return value || 'Todos';
 }
 
@@ -56,20 +55,17 @@ function filterRows(rows, reportId, filters) {
         (!estados.length || estados.includes(row.estado))
       );
     }
-
     if (reportId === 'tramites') {
       return (
         (!filters.organismo || row.organismo === filters.organismo) &&
         (!filters.area || row.area === filters.area)
       );
     }
-
     if (reportId === 'vencimientos') {
       const rowDate = new Date(`${row.vencimiento}T00:00:00`).getTime();
       const fromDate = filters.fechaDesde ? new Date(`${filters.fechaDesde}T00:00:00`).getTime() : null;
       const toDate = filters.fechaHasta ? new Date(`${filters.fechaHasta}T23:59:59`).getTime() : null;
       const usuarios = filters.usuario || [];
-
       return (
         (!filters.cliente || row.cliente === filters.cliente) &&
         (!usuarios.length || usuarios.includes(row.usuario)) &&
@@ -77,7 +73,6 @@ function filterRows(rows, reportId, filters) {
         (!toDate || rowDate <= toDate)
       );
     }
-
     if (reportId === 'engordes') {
       const pertenencias = filters.pertenencia || [];
       return (
@@ -86,15 +81,12 @@ function filterRows(rows, reportId, filters) {
         (!pertenencias.length || pertenencias.includes(row.pertenencia))
       );
     }
-
     if (reportId === 'pedidosPendientes') {
       const rowDate = new Date(`${row.fecha}T00:00:00`).getTime();
       const fromDate = filters.fechaDesde ? new Date(`${filters.fechaDesde}T00:00:00`).getTime() : null;
       const toDate = filters.fechaHasta ? new Date(`${filters.fechaHasta}T23:59:59`).getTime() : null;
-
       return (!fromDate || rowDate >= fromDate) && (!toDate || rowDate <= toDate);
     }
-
     return true;
   });
 }
@@ -106,22 +98,20 @@ function buildFilterSummary(reportConfig, filters) {
   }));
 }
 
-function buildPdfRows(reportConfig, rows) {
-  return rows.map((row) => reportConfig.columns.map((column) => {
-    if (column.key === 'fecha' || column.key === 'vencimiento') {
-      return formatDate(row[column.key]);
-    }
-
-    return row[column.key] ?? '-';
-  }));
-}
+// ── Componente ────────────────────────────────────────────────────────────────
 
 function Informes() {
   const navigate = useNavigate();
   const [reportId, setReportId] = useState('tareas');
   const [filters, setFilters] = useState(() => createInitialFilters('tareas'));
 
+  // Estado del modal: null = cerrado, 'pdf' | 'excel' = abierto con ese formato
+  const [exportFormat, setExportFormat] = useState(null);
+
   const reportConfig = reportConfigs[reportId];
+
+  // Todas las columnas disponibles para el informe actual (modal + exportación)
+  const allColumns = allColumnsByReport[reportId] ?? reportConfig.columns;
 
   useEffect(() => {
     setFilters(createInitialFilters(reportId));
@@ -132,18 +122,15 @@ function Informes() {
     [filters, reportConfig.rows, reportId],
   );
 
-  const filterSummary = useMemo(() => buildFilterSummary(reportConfig, filters), [filters, reportConfig]);
+  const filterSummary = useMemo(
+    () => buildFilterSummary(reportConfig, filters),
+    [filters, reportConfig],
+  );
+
+  // ── Handlers de filtros ─────────────────────────────────────────────────────
 
   const handleFilterChange = (key, value) => {
-    setFilters((current) => ({
-      ...current,
-      [key]: value,
-    }));
-  };
-
-  const handleMultiSelectChange = (key, event) => {
-    const selectedValues = Array.from(event.target.selectedOptions).map((option) => option.value);
-    handleFilterChange(key, selectedValues);
+    setFilters((current) => ({ ...current, [key]: value }));
   };
 
   const toggleCheckboxValue = (key, option) => {
@@ -152,91 +139,88 @@ function Informes() {
       const nextValues = currentValues.includes(option)
         ? currentValues.filter((value) => value !== option)
         : [...currentValues, option];
-
-      return {
-        ...current,
-        [key]: nextValues,
-      };
+      return { ...current, [key]: nextValues };
     });
   };
 
-  const downloadFile = (blob, fileName) => {
-    const url = window.URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = fileName;
-    anchor.click();
-    window.URL.revokeObjectURL(url);
+  // ── Abrir modal ─────────────────────────────────────────────────────────────
+
+  const openExportModal = (format) => setExportFormat(format);
+  const closeExportModal = () => setExportFormat(null);
+
+  // ── Exportación efectiva (llamada desde el modal al confirmar) ───────────────
+
+  const handleExportConfirm = async (selectedColumnKeys, format) => {
+    const configForExport = { ...reportConfig, allColumns };
+
+    if (format === 'excel') {
+      await exportToExcel({
+        reportConfig: configForExport,
+        filteredRows,
+        filterSummary,
+        selectedColumnKeys,
+        reportId,
+      });
+      return;
+    }
+
+    if (format === 'pdf') {
+      handleExportPdf(selectedColumnKeys);
+    }
   };
 
-  const handleExportExcel = () => {
-    const workbook = XLSX.utils.book_new();
-    const summaryRows = [
-      ['Informe', reportConfig.label],
-      ['Generado', new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date())],
-      ['Cantidad de registros', filteredRows.length],
-      [''],
-      ...filterSummary.map((item) => [item.label, item.value]),
-    ];
+  // ── PDF con columnas seleccionadas ──────────────────────────────────────────
 
-    const summarySheet = XLSX.utils.aoa_to_sheet(summaryRows);
-    const dataSheetRows = filteredRows.map((row) => {
-      return reportConfig.columns.reduce((accumulator, column) => {
-        accumulator[column.label] = column.key === 'fecha' || column.key === 'vencimiento' ? formatDate(row[column.key]) : row[column.key] ?? '-';
-        return accumulator;
-      }, {});
-    });
-
-    const dataSheet = XLSX.utils.json_to_sheet(dataSheetRows.length ? dataSheetRows : [
-      reportConfig.columns.reduce((accumulator, column) => {
-        accumulator[column.label] = '-';
-        return accumulator;
-      }, {}),
-    ]);
-
-    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen');
-    XLSX.utils.book_append_sheet(workbook, dataSheet, 'Datos');
-
-    const workbookBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([workbookBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    downloadFile(blob, `informe_${reportId}_${formatFileDate()}.xlsx`);
-  };
-
-  const handleExportPdf = () => {
-    const doc = new jsPDF();
+  const handleExportPdf = (selectedColumnKeys) => {
+    const exportColumns = allColumns.filter((col) => selectedColumnKeys.includes(col.key));
+    const doc = new jsPDF({ orientation: 'landscape' });
     const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 
-    doc.setFontSize(18);
-    doc.text(`Informe ${reportConfig.label}`, 14, 18);
-    doc.setFontSize(10);
-    doc.text(`Generado: ${now}`, 14, 26);
-    doc.text(`Registros: ${filteredRows.length}`, 14, 32);
+    doc.setFontSize(16);
+    doc.setTextColor(22, 50, 79);
+    doc.text(`Informe ${reportConfig.label}`, 14, 16);
 
-    let cursorY = 40;
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generado: ${now}`, 14, 23);
+    doc.text(`Registros: ${filteredRows.length}`, 14, 29);
+
+    let cursorY = 36;
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
     filterSummary.forEach((item) => {
       doc.text(`${item.label}: ${item.value}`, 14, cursorY);
-      cursorY += 6;
+      cursorY += 5;
     });
+
+    const pdfRows = filteredRows.map((row) =>
+      exportColumns.map((col) => {
+        if (['fecha', 'vencimiento', 'fechaVto', 'ultimoCambio'].includes(col.key)) {
+          return formatDate(row[col.key]);
+        }
+        return row[col.key] ?? '-';
+      })
+    );
 
     if (filteredRows.length) {
       autoTable(doc, {
         startY: cursorY + 4,
-        head: [reportConfig.columns.map((column) => column.label)],
-        body: buildPdfRows(reportConfig, filteredRows),
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-        },
-        headStyles: {
-          fillColor: [22, 50, 79],
-        },
+        head: [exportColumns.map((col) => col.label)],
+        body: pdfRows,
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillColor: [22, 50, 79], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 248, 255] },
       });
     } else {
+      doc.setFontSize(9);
+      doc.setTextColor(150);
       doc.text('No hay registros para exportar con los filtros seleccionados.', 14, cursorY + 8);
     }
 
     doc.save(`informe_${reportId}_${formatFileDate()}.pdf`);
   };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <section className={styles.page}>
@@ -247,6 +231,7 @@ function Informes() {
       </header>
 
       <div className={styles.layout}>
+        {/* Panel izquierdo: filtros */}
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
             <div>
@@ -258,7 +243,11 @@ function Informes() {
 
           <label className={styles.field}>
             <span>Elegir informe</span>
-            <select className={styles.select} value={reportId} onChange={(event) => setReportId(event.target.value)}>
+            <select
+              className={styles.select}
+              value={reportId}
+              onChange={(event) => setReportId(event.target.value)}
+            >
               {reportEntries.map((entry) => (
                 <option key={entry.value} value={entry.value}>
                   {entry.label}
@@ -287,7 +276,6 @@ function Informes() {
                 return (
                   <fieldset key={filter.key} className={styles.fieldset}>
                     <legend>{filter.label}</legend>
-
                     <div className={styles.checkboxGroup}>
                       {filter.options.map((option) => (
                         <label key={option} className={styles.checkboxItem}>
@@ -301,7 +289,6 @@ function Informes() {
                         </label>
                       ))}
                     </div>
-
                     <small className={styles.helper}>Podés marcar más de una opción.</small>
                   </fieldset>
                 );
@@ -327,18 +314,31 @@ function Informes() {
           </div>
 
           <div className={styles.footerActions}>
-            <button className={`${styles.button} ${styles.secondaryButton}`} type="button" onClick={() => navigate('/dashboard')}>
+            <button
+              className={`${styles.button} ${styles.secondaryButton}`}
+              type="button"
+              onClick={() => navigate('/dashboard')}
+            >
               Volver
             </button>
-            <button className={`${styles.button} ${styles.secondaryButton}`} type="button" onClick={handleExportPdf}>
+            <button
+              className={`${styles.button} ${styles.secondaryButton}`}
+              type="button"
+              onClick={() => openExportModal('pdf')}
+            >
               PDF
             </button>
-            <button className={`${styles.button} ${styles.primaryButton}`} type="button" onClick={handleExportExcel}>
+            <button
+              className={`${styles.button} ${styles.primaryButton}`}
+              type="button"
+              onClick={() => openExportModal('excel')}
+            >
               Excel
             </button>
           </div>
         </section>
 
+        {/* Panel derecho: vista previa */}
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
             <div>
@@ -372,7 +372,11 @@ function Informes() {
                   filteredRows.map((row) => (
                     <tr key={row.id}>
                       {reportConfig.columns.map((column) => (
-                        <td key={column.key}>{column.key === 'fecha' || column.key === 'vencimiento' ? formatDate(row[column.key]) : row[column.key] ?? '-'}</td>
+                        <td key={column.key}>
+                          {column.key === 'fecha' || column.key === 'vencimiento'
+                            ? formatDate(row[column.key])
+                            : row[column.key] ?? '-'}
+                        </td>
                       ))}
                     </tr>
                   ))
@@ -388,6 +392,15 @@ function Informes() {
           </div>
         </section>
       </div>
+
+      {/* Modal de selección de columnas */}
+      <ExportModal
+        isOpen={exportFormat !== null}
+        onClose={closeExportModal}
+        onConfirm={handleExportConfirm}
+        format={exportFormat ?? 'excel'}
+        columns={allColumns}
+      />
     </section>
   );
 }
