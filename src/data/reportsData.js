@@ -12,9 +12,9 @@ export const reportConfigs = {
     columns: [
       { key: 'id', label: 'Codigo' },
       { key: 'cliente', label: 'Cliente' },
-      { key: 'usuario', label: 'Usuario' },
+      { key: 'usuario', label: 'Usuario seguimiento tarea' },
       { key: 'organismo', label: 'Organismo' },
-      { key: 'usuarioSeguimiento', label: 'Seguimiento' },
+      { key: 'usuarioSeguimiento', label: 'Usuario seguimiento presupuesto' },
       { key: 'estado', label: 'Estado' },
       { key: 'fecha', label: 'Fecha' },
       { key: 'detalle', label: 'Detalle' },
