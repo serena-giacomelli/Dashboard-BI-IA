@@ -45,16 +45,15 @@ function describeFilterValue(filter, value) {
 function filterRows(rows, reportId, filters) {
   return rows.filter((row) => {
     if (reportId === 'tareas') {
-      const estados = filters.estados || [];
-      const usuarios = filters.usuario || [];
-      return (
-        (!filters.cliente || row.cliente === filters.cliente) &&
-        (!usuarios.length || usuarios.includes(row.usuario)) &&
-        (!filters.organismo || row.organismo === filters.organismo) &&
-        (!filters.usuarioSeguimiento || row.usuarioSeguimiento === filters.usuarioSeguimiento) &&
-        (!estados.length || estados.includes(row.estado))
-      );
-    }
+  const estados = filters.estados || [];
+  const usuarios = filters.usuarioAsignado || [];
+  return (
+    (!filters.contactoCliente || row.contactoCliente === filters.contactoCliente) &&
+    (!usuarios.length || usuarios.includes(row.usuarioAsignado)) &&
+    (!filters.contactoOrganismo || row.contactoOrganismo === filters.contactoOrganismo) &&
+    (!estados.length || estados.includes(row.estado))
+  );
+}
     if (reportId === 'tramites') {
       return (
         (!filters.organismo || row.organismo === filters.organismo) &&
@@ -396,7 +395,7 @@ function Informes() {
                     <tr key={row.id}>
                       {reportConfig.columns.map((column) => (
                         <td key={column.key}>
-                          {column.key === 'fecha' || column.key === 'vencimiento'
+                          {column.key === 'fecha' || column.key === 'vencimiento' || column.key === 'fechaInicio'
                             ? formatDate(row[column.key])
                             : row[column.key] ?? '-'}
                         </td>
