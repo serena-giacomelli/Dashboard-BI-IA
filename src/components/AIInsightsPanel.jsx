@@ -93,9 +93,80 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
   };
 
   // ... (El resto del componente de renderizado se mantiene igual)
-  return (
+   return (
     <section className={styles.panel}>
-        {/* Renderizado omitido por brevedad, igual al original */}
+      <div className={styles.workflowGrid}>
+        <article className={styles.actionCard}>
+          <div className={styles.cardHeader}>
+            <div>
+              <p className={styles.cardKicker}>Informe automático</p>
+            </div>
+            <button className={`${styles.button} ${styles.primaryButton}`} type="button" onClick={handleGenerateReport}>
+              Generar informe
+            </button>
+          </div>
+
+          <div className={styles.reportBox}>
+            <p className={styles.resultLabel}>Informe generado</p>
+            <p className={styles.resultText}>
+              {report || 'Todavía no generaste un informe. Tocá “Generar informe” para crear uno.'}
+            </p>
+          </div>
+        </article>
+        <article className={styles.actionCard}>
+          <div className={styles.cardHeader}>
+            <div>
+              <p className={styles.cardKicker}>Consulta conversacional</p>
+            </div>
+            <button className={styles.button} type="button" onClick={() => handleAsk(question)}>
+              Responder pregunta
+            </button>
+          </div>
+          <label className={styles.field}>
+            <span>Escribí tu pregunta</span>
+            <textarea
+              className={styles.textarea}
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              placeholder="Ejemplo: ¿Qué cliente tiene el mayor total de honorarios?"
+              rows={4}
+            />
+
+          </label>
+          {suggestions.length ? (
+            <div className={styles.suggestionPicker}>
+              <label className={styles.field}>
+                <span>Preguntas posibles</span>
+                <select
+                  className={styles.select}
+                  value={selectedSuggestion}
+                  onChange={(event) => setSelectedSuggestion(event.target.value)}
+
+                >
+                  {suggestions.map((suggestion) => (
+                    <option key={suggestion} value={suggestion}>
+                      {suggestion}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                className={`${styles.button} ${styles.suggestionButton}`}
+                type="button"
+                onClick={handleUseSuggestion}
+               disabled={!selectedSuggestion}
+              >
+                Usar pregunta
+              </button>
+            </div>
+          ) : null}
+
+          <div className={styles.resultBox}>
+            <p className={styles.resultLabel}>Respuesta IA</p>
+            <p className={styles.resultText}>{answer}</p>
+          </div>
+       </article>
+      </div>
     </section>
   );
 }
