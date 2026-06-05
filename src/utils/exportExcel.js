@@ -15,6 +15,7 @@
  */
 
 import ExcelJS from 'exceljs';
+import { STATE_STYLES, getDueDateStyle } from '../styles/reportTheme';
 
 // ── Helpers de formato ────────────────────────────────────────────────────────
 
@@ -119,9 +120,7 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
   });
 
   // Columnas seleccionadas (en el orden original)
-  const exportColumns = reportConfig.allColumns.filter((col) =>
-    selectedColumnKeys.includes(col.key)
-  );
+  const exportColumns = reportConfig.allColumns.filter((col) => selectedColumnKeys.includes(col.key));
 
   const colCount = exportColumns.length;
   const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
@@ -193,6 +192,21 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
         cell.alignment = { vertical: 'middle', wrapText: false };
         if (isAlt) {
           cell.fill = ALT_ROW_FILL;
+    
+    // 1. Integración de Estilos de Estado (desde reportTheme)
+        if (colKey === 'estado' && STATE_STYLES[cellValue]) {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: STATE_STYLES[cellValue].bg } };
+          cell.font = { size: 10, color: { argb: STATE_STYLES[cellValue].text }, bold: true };
+        }
+
+        // 2. Integración de Estilos de Vencimiento (desde reportTheme)
+        if ((colKey === 'fecha' || colKey === 'vencimiento' || colKey === 'fechaVto') && cellValue) {
+          const style = getDueDateStyle(cellValue);
+          if (style) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: style.bg } };
+            cell.font = { size: 10, color: { argb: style.text } };
+          }
+        }
         }
       });
     });

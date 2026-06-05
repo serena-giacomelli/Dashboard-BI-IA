@@ -176,23 +176,45 @@ function Informes() {
     const doc = new jsPDF({ orientation: 'landscape' });
     const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 
-    doc.setFontSize(16);
-    doc.setTextColor(22, 50, 79);
-    doc.text(`Informe ${reportConfig.label}`, 14, 16);
+   // ── Encabezado Profesional ──
+    const addHeader = () => {
+      // 1. Logo (Solo si lo configuraste)
+      if (COMPANY_CONFIG.logo) {
+        doc.addImage(COMPANY_CONFIG.logo, 'PNG', 14, 10, 30, 15);
+      }
 
+    // 2. Nombre Empresa
+      doc.setFont(COMPANY_CONFIG.font, 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(22, 50, 79); // Azul corporativo
+      doc.text(COMPANY_CONFIG.name, 48, 18);
+
+      // 3. Título Informe
+      doc.setFont(COMPANY_CONFIG.font, 'normal');
+      doc.setFontSize(14);
+      doc.text(`Informe: ${reportConfig.label}`, 48, 24);
+
+      // 4. Línea Divisoria
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, 28, 280, 28);
+    };
+   
+      addHeader();
+
+   //metadata y filtros
+      let cursorY = 35;
+    doc.setFont(COMPANY_CONFIG.font, 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generado: ${now}`, 14, 23);
-    doc.text(`Registros: ${filteredRows.length}`, 14, 29);
-
-    let cursorY = 36;
-    doc.setFontSize(8);
     doc.setTextColor(80, 80, 80);
+    doc.text(`Generado el: ${now} | Registros: ${filteredRows.length}`, 14, cursorY);
+    cursorY += 7;
+
     filterSummary.forEach((item) => {
       doc.text(`${item.label}: ${item.value}`, 14, cursorY);
       cursorY += 5;
     });
 
+    // ── Tabla de datos ──
     const pdfRows = filteredRows.map((row) =>
       exportColumns.map((col) => {
         if (['fecha', 'vencimiento', 'fechaVto', 'ultimoCambio'].includes(col.key)) {
@@ -204,17 +226,18 @@ function Informes() {
 
     if (filteredRows.length) {
       autoTable(doc, {
-        startY: cursorY + 4,
+        startY: cursorY + 5,
         head: [exportColumns.map((col) => col.label)],
         body: pdfRows,
-        styles: { fontSize: 7, cellPadding: 2 },
+        styles: { font: COMPANY_CONFIG.font, fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: [22, 50, 79], textColor: 255, fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [245, 248, 255] },
+        margin: { left: 14, right: 14 }
       });
     } else {
       doc.setFontSize(9);
       doc.setTextColor(150);
-      doc.text('No hay registros para exportar con los filtros seleccionados.', 14, cursorY + 8);
+      doc.text('No hay registros para exportar con los filtros seleccionados.', 14, cursorY + 10);
     }
 
     doc.save(`informe_${reportId}_${formatFileDate()}.pdf`);

@@ -9,7 +9,7 @@ export const reportConfigs = {
       { key: 'usuario', label: 'Usuario', type: 'multiselect', options: ['M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
       { key: 'organismo', label: 'Organismos', type: 'select', options: ['Todos', 'SENASA', 'ANMAT', 'INASE', 'INTA'] },
       { key: 'usuarioSeguimiento', label: 'Usuario seguimiento', type: 'select', options: ['Todos', 'S. Vargas', 'L. Torres', 'M. Perez'] },
-      { key: 'estados', label: 'Estados de tareas', type: 'multiselect', options: ['Pendiente', 'En proceso', 'Observado', 'Finalizado', 'Bloqueado'] },
+      { key: 'estados', label: 'Estados de tareas', type: 'multiselect', options: ['1. Pendiente de asignacion', '2. Asignada', '3. Tarea no aceptada', '5. En obra', '6. Presentada', '7.Demorada por el cliente', '8. Demorada por el organismo', '9. Observada', '10. Finalizada', '11. Finalizada. no corresponde facturar', '12. Anualidad'] },
     ],
     columns: [
       { key: 'id', label: 'Codigo' },
