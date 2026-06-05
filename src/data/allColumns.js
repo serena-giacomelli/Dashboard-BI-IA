@@ -13,34 +13,41 @@
 
 export const allColumnsByReport = {
 
-  tareas: [
-    { key: 'cliente',              label: 'Cliente' },
-    { key: 'presupuesto',          label: 'Presupuesto' },
-    { key: 'organismo',            label: 'Organismo' },
-    { key: 'regional',             label: 'Regional' },
-    { key: 'usuarioSeguimiento',   label: 'Usuario Seguimiento Tarea' },
-    { key: 'tramite',              label: 'Trámite' },
-    { key: 'id',                   label: 'ID' },
+tareas: [
+    { key: 'idTarea',              label: 'ID Tarea' },
     { key: 'tarea',                label: 'Tarea' },
-    { key: 'estado',               label: 'Estado' },
-    { key: 'usuarioSegPresupuesto', label: 'Usuario Seg. Presupuesto' },
-    { key: 'fechaVto',             label: 'Fecha Vto.' },
-    { key: 'nroExpediente',        label: 'Nro. Expediente' },
-    { key: 'ultimoCambio',         label: 'Último Cambio' },
-    { key: 'obs',                  label: 'Observaciones' },
+    { key: 'presupuesto',          label: 'Presupuesto' },
+    { key: 'tramite',              label: 'Trámite' },
+    { key: 'usuarioAsignado',      label: 'Usuario Asignado' },
+    { key: 'estado',               label: 'Estado de Tarea' },
+    { key: 'fechaInicio',          label: 'Fecha Inicio' },
+    { key: 'fechaFin',             label: 'Fecha Fin' },
+    { key: 'contactoCliente',      label: 'Contacto Cliente' },
+    { key: 'contactoOrganismo',    label: 'Contacto Organismo' },
+    { key: 'directorTecnico',      label: 'Director Técnico' },
+    { key: 'establecimiento',      label: 'Establecimiento' },
+    { key: 'obsInternas',          label: 'Observaciones Internas' },
   ],
 
   tramites: [
     { key: 'id',                   label: 'ID' },
     { key: 'nombre',               label: 'Nombre' },
+    // Datos de Expediente
+    { key: 'nroExpediente',        label: 'N° Expediente' },
+    { key: 'nombreExpediente',     label: 'Nombre Expediente' },
+    { key: 'fechaNotificacion',    label: 'Fecha Notificación Requeridos' },
+    { key: 'fechaVtoRegistro',     label: 'Fecha Vto. Registro' },
+    { key: 'nroExpedienteSec',     label: 'N° Expediente Secundario' },
+    { key: 'nombreExpedienteSec',  label: 'Nombre Expediente Secundario' },
+    { key: 'marca',                label: 'Marca' },
+    { key: 'nroRegistro',          label: 'N° de Registro' },
+    // Datos Financieros asociados al trámite
     { key: 'organismo',            label: 'Organismo' },
-    { key: 'area',                 label: 'Área' },
-    { key: 'tramiteDescripcion',   label: 'Descripción Trámite' },
-    { key: 'tareaId',              label: 'Tarea ID' },
-    { key: 'tareaNombre',          label: 'Tarea Nombre' },
-    { key: 'tareaDescripcion',     label: 'Tarea Descripción' },
-    { key: 'tareaCategoria',       label: 'Tarea Categoría' },
-    { key: 'obs',                  label: 'Observaciones' },
+    { key: 'tipoArancel',          label: 'Tipo de Arancel' },
+    { key: 'montoArancel',         label: 'Monto Arancel' },
+    { key: 'honorarioMonto',       label: 'Honorario ($)' },
+    { key: 'subcompania',          label: 'Subcompañía' },
+    { key: 'porcDistribucion',     label: 'Porcentaje (%)' },
   ],
 
   vencimientos: [

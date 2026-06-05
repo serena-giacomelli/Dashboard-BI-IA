@@ -1,19 +1,21 @@
 export const budgetRows = [
   {
-    number: '10234',
-    client: 'ALBERTO BERARDI S.A.',
-    type: 'SENASA',
-    status: 'Enviado',
-    date: '12/05/2025',
-    totalFees: 107000,
+    nroPresupuesto: '10234',
+    cliente: 'ALBERTO BERARDI S.A.',
+    subcompania: 'Subcompañía A',
+    usuarioSeguimiento: 'Juan Pérez',
+    fechaCreacion: '12/05/2025',
+    estadoPresupuesto: 'Enviado',
+    honorarioMonto: 107000,
   },
   {
-    number: '10233',
-    client: 'BERARDI JOSE',
-    type: 'ANMAT',
-    status: 'Revisión',
-    date: '08/05/2025',
-    totalFees: 54000,
+    nroPresupuesto: '10233',
+    cliente: 'BERARDI JOSE',
+    subcompania: 'Subcompañía B',
+    usuarioSeguimiento: 'María Gómez',
+    fechaCreacion: '08/05/2025',
+    estadoPresupuesto: 'Revisión',
+    honorarioMonto: 54000,
   },
 ];
 
