@@ -92,6 +92,10 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
     setAnswer(nextAnswer);
   };
 
+  const handleUseSuggestion = () => {
+    handleAsk(selectedSuggestion);
+  };
+
   // ... (El resto del componente de renderizado se mantiene igual)
    return (
     <section className={styles.panel}>
