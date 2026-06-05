@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Detail from './pages/Detail';
 import styles from './styles/AppShell.module.css';
+import Informes from './pages/Informes';
 
 function App() {
   return (
@@ -12,7 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/informes" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/informes" element={<Informes />} />
           <Route path="/detalle" element={<Detail />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
