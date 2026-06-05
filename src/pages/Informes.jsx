@@ -7,8 +7,7 @@ import { allColumnsByReport } from '../data/allColumns';
 import { exportToExcel } from '../utils/exportExcel.js';
 import ExportModal from '../components/ExportModal.jsx';
 import styles from '../styles/Reports.module.css';
-import { COMPANY_CONFIG } from '../config/companyConfig';
-
+import { COMPANY_CONFIG } from '../styles/reportTheme';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
