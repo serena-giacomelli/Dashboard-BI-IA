@@ -163,9 +163,9 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
         }
 
       // Estilo para estados de engorde
-      } else if (colKey === 'estado' && FAT_STYLE[cellValue]) {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: FAT_STYLE[cellValue].bg } };
-        cell.font = { size: 10, color: { argb: FAT_STYLE[cellValue].text }, bold: true };
+      } else if (colKey === 'estado' && FAT_STYLES[cellValue]) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: FAT_STYLES[cellValue].bg } };
+        cell.font = { size: 10, color: { argb: FAT_STYLES[cellValue].text }, bold: true };
       }
     });
   });
