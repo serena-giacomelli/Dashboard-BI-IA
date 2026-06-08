@@ -53,6 +53,14 @@ const THIN_BORDER = {
 };
 const ALT_ROW_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
 
+// ── Ordenamiento por fecha según reporte ─────────────────────────────────────
+
+const DATE_COLUMN_BY_REPORT = {
+  tareas:       'fechaInicio',
+  tramites:     'fechaVtoRegistro',
+  vencimientos: 'vencimiento',
+};
+
 // ── Función principal ─────────────────────────────────────────────────────────
 
 export async function exportToExcel({ reportConfig, filteredRows, filterSummary, selectedColumnKeys, reportId }) {
@@ -67,6 +75,16 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
   const colCount = exportColumns.length;
   const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 
+  // ── Ordenar filas por fecha si aplica ──
+  const sortKey = DATE_COLUMN_BY_REPORT[reportId];
+  const sortedRows = sortKey
+    ? [...filteredRows].sort((a, b) => {
+        const da = a[sortKey] ? new Date(a[sortKey]) : new Date(0);
+        const db = b[sortKey] ? new Date(b[sortKey]) : new Date(0);
+        return da - db;
+      })
+    : filteredRows;
+
   // ── Filas reservadas para el logo (filas 1 a 4) ──
   sheet.addRow([]); sheet.getRow(1).height = 20;
   sheet.addRow([]); sheet.getRow(2).height = 20;
@@ -78,14 +96,14 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
     try {
       const logoId = workbook.addImage({ base64: COMPANY_CONFIG.logo, extension: 'png' });
       sheet.addImage(logoId, {
-      tl: { col: 0, row: 0, nativeColOff: 9525 * 3, nativeRowOff: 9525 * 3 },
-      ext: { width: 200, height: 98 },
-      editAs: 'absolute',
-    });
+        tl: { col: 0, row: 0, nativeColOff: 9525 * 3, nativeRowOff: 9525 * 3 },
+        ext: { width: 200, height: 98 },
+        editAs: 'absolute',
+      });
     } catch (e) { console.warn('Logo error:', e); }
   }
 
-  // ── Nombre empresa y título (a la derecha del logo) ──
+  // ── Nombre empresa y título ──
   sheet.getCell('C2').value = COMPANY_CONFIG.name;
   sheet.getCell('C2').font = { bold: true, size: 14, color: { argb: 'FF16324F' } };
   sheet.getCell('C2').alignment = { vertical: 'middle' };
@@ -102,7 +120,7 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
   }
 
   // ── Metadatos ──
-  sheet.addRow([`Generado: ${now}    |    Registros: ${filteredRows.length}`]);
+  sheet.addRow([`Generado: ${now}    |    Registros: ${sortedRows.length}`]);
   sheet.mergeCells(6, 1, 6, colCount);
   sheet.getCell('A6').font = META_FONT;
   sheet.getRow(6).height = 20;
@@ -132,49 +150,16 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
   });
   currentRow++;
+
+  // ── AutoFilter ──
+  const lastCol = colIndexToLetter(colCount);
+  sheet.autoFilter = `A${headerRowIndex}:${lastCol}${headerRowIndex + sortedRows.length}`;
+
+  // ── Fila congelada ──
   sheet.views = [{ state: 'frozen', ySplit: headerRowIndex }];
 
-  // ── Ordenamiento por fecha según reporte ──
-const DATE_COLUMN_BY_REPORT = {
-  tareas:       'fechaInicio',
-  tramites:     'fechaVtoRegistro',
-  vencimientos: 'vencimiento',
-};
-
-const sortKey = DATE_COLUMN_BY_REPORT[reportId];
-const sortedRows = sortKey
-  ? [...filteredRows].sort((a, b) => {
-      const da = a[sortKey] ? new Date(a[sortKey]) : new Date(0);
-      const db = b[sortKey] ? new Date(b[sortKey]) : new Date(0);
-      return da - db;
-    })
-  : filteredRows;
-
-// ── Encabezados de tabla ──
-const headerRowIndex = currentRow;
-const headerRow = sheet.addRow(exportColumns.map((col) => col.label));
-headerRow.height = 25;
-headerRow.eachCell((cell) => {
-  cell.font = HEADER_FONT;
-  cell.fill = HEADER_FILL;
-  cell.border = THIN_BORDER;
-  cell.alignment = { vertical: 'middle', horizontal: 'center' };
-});
-currentRow++;
-
-// ── AutoFilter sobre el rango completo ──
-const lastCol = colIndexToLetter(colCount);
-sheet.autoFilter = `A${headerRowIndex}:${lastCol}${headerRowIndex + sortedRows.length}`;
-
-sheet.views = [{ state: 'frozen', ySplit: headerRowIndex }];
-
-// ── Filas de datos (usar sortedRows) ──
-sortedRows.forEach((row, rowIndex) => {
-  // ... el resto igual que antes
-});
-
   // ── Filas de datos ──
-  filteredRows.forEach((row, rowIndex) => {
+  sortedRows.forEach((row, rowIndex) => {
     const values = exportColumns.map((col) => getCellValue(row, col.key));
     const dataRow = sheet.addRow(values);
     dataRow.height = 22;
@@ -204,15 +189,16 @@ sortedRows.forEach((row, rowIndex) => {
       }
 
       // Estilo Vencimiento / Fecha
-      if (['vencimiento', 'fechaVto', 'fechaFin', 'fechaVtoRegistro'].includes(colKey) && cellValue) {
-        const style = getDueDateStyle(cellValue);
+      if (['vencimiento', 'fechaVto', 'fechaFin', 'fechaVtoRegistro'].includes(colKey) && cellValue && cellValue !== '-') {
+        const style = getDueDateStyle(row[colKey]);
         if (style) {
           cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: style.bg } };
           cell.font = { size: 10, color: { argb: style.text } };
         }
+      }
 
       // Estilo para estados de engorde
-      } else if (colKey === 'estado' && FAT_STYLES[cellValue]) {
+      if (colKey === 'estado' && FAT_STYLES[cellValue]) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: FAT_STYLES[cellValue].bg } };
         cell.font = { size: 10, color: { argb: FAT_STYLES[cellValue].text }, bold: false };
       }
