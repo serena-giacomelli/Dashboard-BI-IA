@@ -277,7 +277,7 @@ export const reportConfigs = {
         nombreExpediente:    'Registro Producto Berardi',
         fechaNotificacion:   '2028-05-10',
         fechaVtoRegistro:    '2030-05-10',
-        estadoPresupuesto:   '4. Rechazado',
+        estadoPresupuesto:   '5. Rechazado',
         nroExpedienteSec:    'EXP-SEC-0020',
         nombreExpedienteSec: 'Estudios de estabilidad',
         marca:               'BerardiFoods',
