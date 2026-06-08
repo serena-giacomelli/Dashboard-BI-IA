@@ -124,6 +124,47 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
   currentRow++;
   sheet.views = [{ state: 'frozen', ySplit: headerRowIndex }];
 
+  // ── Ordenamiento por fecha según reporte ──
+const DATE_COLUMN_BY_REPORT = {
+  tareas:       'fechaInicio',
+  tramites:     'fechaVtoRegistro',
+  vencimientos: 'vencimiento',
+};
+
+const sortKey = DATE_COLUMN_BY_REPORT[reportId];
+const sortedRows = sortKey
+  ? [...filteredRows].sort((a, b) => {
+      const da = a[sortKey] ? new Date(a[sortKey]) : new Date(0);
+      const db = b[sortKey] ? new Date(b[sortKey]) : new Date(0);
+      return da - db;
+    })
+  : filteredRows;
+
+// ── Encabezados de tabla ──
+const headerRowIndex = currentRow;
+const headerRow = sheet.addRow(exportColumns.map((col) => col.label));
+headerRow.height = 25;
+headerRow.eachCell((cell) => {
+  cell.font = HEADER_FONT;
+  cell.fill = HEADER_FILL;
+  cell.border = THIN_BORDER;
+  cell.alignment = { vertical: 'middle', horizontal: 'center' };
+});
+currentRow++;
+
+// ── AutoFilter sobre el rango completo ──
+sheet.autoFilter = {
+  from: { row: headerRowIndex, column: 1 },
+  to:   { row: headerRowIndex + sortedRows.length, column: colCount },
+};
+
+sheet.views = [{ state: 'frozen', ySplit: headerRowIndex }];
+
+// ── Filas de datos (usar sortedRows) ──
+sortedRows.forEach((row, rowIndex) => {
+  // ... el resto igual que antes
+});
+
   // ── Filas de datos ──
   filteredRows.forEach((row, rowIndex) => {
     const values = exportColumns.map((col) => getCellValue(row, col.key));
@@ -155,7 +196,7 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
       }
 
       // Estilo Vencimiento / Fecha
-      if (['fecha', 'vencimiento', 'fechaVto', 'fechaInicio', 'fechaFin', 'fechaVtoRegistro'].includes(colKey) && cellValue) {
+      if (['vencimiento', 'fechaVto', 'fechaFin', 'fechaVtoRegistro'].includes(colKey) && cellValue) {
         const style = getDueDateStyle(cellValue);
         if (style) {
           cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: style.bg } };
