@@ -301,18 +301,17 @@ export const reportConfigs = {
     description: 'Alertas de vencimiento por cliente, usuario y rango de fechas.',
     allColumns: allColumnsByReport.vencimientos,
     filters: [
-      { key: 'cliente',     label: 'Cliente',      type: 'select',      options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
+      { key: 'razonSocial',     label: 'Razon Social',      type: 'select',      options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
       { key: 'usuario',     label: 'Usuario',       type: 'multiselect', options: ['M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
       { key: 'fechaDesde',  label: 'Fecha desde',   type: 'date' },
       { key: 'fechaHasta',  label: 'Fecha hasta',   type: 'date' },
     ],
     columns: [
-      { key: 'id',          label: 'Legajo' },
-      { key: 'cliente',     label: 'Cliente' },
+      { key: 'id',          label: 'ID' },
+      { key: 'razonSocial', label: 'Razon Social' },
       { key: 'usuario',     label: 'Usuario' },
+      { key: 'tipo',        label: 'Tipo' },
       { key: 'vencimiento', label: 'Vencimiento' },
-      { key: 'estado',      label: 'Estado' },
-      { key: 'detalle',     label: 'Detalle' },
     ],
     rows: [
       {
@@ -324,9 +323,7 @@ export const reportConfigs = {
         establecimiento:'Planta Norte',
         obs:            'Renovar antes del vencimiento',
         usuario:        'M. Rojas',
-        cliente:        'ALBERTO BERARDI S.A.',
-        estado:         'Por vencer',
-        detalle:        'Actualizacion de documentacion',
+
       },
       {
         id:             'V-302',
@@ -337,9 +334,6 @@ export const reportConfigs = {
         establecimiento:'Depósito Central',
         obs:            'En plazo normal',
         usuario:        'G. Perez',
-        cliente:        'BERARDI JOSE',
-        estado:         'En plazo',
-        detalle:        'Renovacion de certificado',
       },
       {
         id:             'V-303',
@@ -350,9 +344,6 @@ export const reportConfigs = {
         establecimiento:'Campo Sur',
         obs:            'Requiere presentacion urgente',
         usuario:        'L. Gomez',
-        cliente:        'COOPERATIVA LA PAMPA',
-        estado:         'Critico',
-        detalle:        'Presentacion ante organismo',
       },
       {
         id:             'V-304',
@@ -363,9 +354,6 @@ export const reportConfigs = {
         establecimiento:'Frigorífico Principal',
         obs:            'Sin observaciones',
         usuario:        'C. Ruiz',
-        cliente:        'FRIGORIFICO SUR',
-        estado:         'En plazo',
-        detalle:        'Seguimiento de vencimiento operativo',
       },
       {
         id:             'V-305',
@@ -376,9 +364,6 @@ export const reportConfigs = {
         establecimiento:'Planta Norte',
         obs:            'Gestión iniciada',
         usuario:        'M. Rojas',
-        cliente:        'ALBERTO BERARDI S.A.',
-        estado:         'En plazo',
-        detalle:        'Renovacion de licencia de importacion',
       },
       {
         id:             'V-306',
@@ -389,9 +374,6 @@ export const reportConfigs = {
         establecimiento:'Campo Norte',
         obs:            'Documentacion lista',
         usuario:        'G. Perez',
-        cliente:        'BERARDI JOSE',
-        estado:         'En plazo',
-        detalle:        'Renovacion certificado semillas',
       },
     ],
   },
