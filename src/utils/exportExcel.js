@@ -155,7 +155,7 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
       }
 
       // Estilo Vencimiento / Fecha
-      if (['fecha', 'vencimiento', 'fechaVto', 'fechaInicio', 'fechaFin'].includes(colKey) && cellValue) {
+      if (['fecha', 'vencimiento', 'fechaVto', 'fechaInicio', 'fechaFin', 'fechaVtoRegistro'].includes(colKey) && cellValue) {
         const style = getDueDateStyle(cellValue);
         if (style) {
           cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: style.bg } };
