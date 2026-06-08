@@ -63,11 +63,13 @@ tareas: [
   ],
 
   engordes: [
+    { key: 'id',                   label: 'ID' },
     { key: 'renspa',               label: 'RENSPA' },
     { key: 'establecimiento',      label: 'Establecimiento' },
     { key: 'titular',              label: 'Titular' },
     { key: 'cuit',                 label: 'CUIT' },
     { key: 'tipo',                 label: 'Tipo' },
+    { key: 'estado',               label: 'Estado' },
     { key: 'provincia',            label: 'Provincia' },
     { key: 'partido',              label: 'Partido' },
     { key: 'explotacion',          label: 'Explotación' },
@@ -76,6 +78,7 @@ tareas: [
   ],
 
   pedidosPendientes: [
+    { key: 'id',                   label: 'ID' },
     { key: 'codigoCliente',        label: 'Código Cliente' },
     { key: 'tipoDocCliente',       label: 'Tipo Doc. Cliente' },
     { key: 'nroDocCliente',        label: 'Nro. Doc. Cliente' },

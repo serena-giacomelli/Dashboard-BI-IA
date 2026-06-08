@@ -67,3 +67,10 @@ export const getDueDateStyle = (dateString) => {
   return { bg: 'FFC6EFCE', text: 'FF006100' }; // OK: Verde
 };
 
+//Estados para engordes
+export const FAT_STYLES = {
+  '1. Pendiente de asignacion': { bg: 'FFCC0000', text: 'FFFFFFFF' },
+  '2. Observado':              { bg: 'FFFFEB3B', text: 'FF000000' },
+  '3. Activo':                { bg: 'FF2196F3', text: 'FFFFFFFF'  },
+  '4. Cerrado':              { bg: 'FFD6D6D6', text: 'FF555555' },
+}

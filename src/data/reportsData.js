@@ -421,8 +421,9 @@ export const reportConfigs = {
       { key: 'id',            label: 'Registro' },
       { key: 'provincia',     label: 'Provincia' },
       { key: 'partido',       label: 'Partido / localidad' },
-      { key: 'pertenencia',   label: 'Perfil' },
+      { key: 'pertenencia',   label: 'Pertenencia' },
       { key: 'establecimiento', label: 'Establecimiento' },
+      { key: 'titular',       label: 'Titular' },
       { key: 'estado',        label: 'Estado' },
     ],
     rows: [
@@ -439,7 +440,7 @@ export const reportConfigs = {
         explotacion:    'Engorde a corral',
         latitud:        -34.6037,
         longitud:       -58.3816,
-        estado:         'Activo',
+        estado:         '3. Activo',
       },
       {
         id:             'E-9002',
@@ -454,7 +455,7 @@ export const reportConfigs = {
         explotacion:    'Engorde pastoril',
         latitud:        -32.9468,
         longitud:       -60.6393,
-        estado:         'Activo',
+        estado:         '3. Activo',
       },
       {
         id:             'E-9003',
@@ -469,7 +470,7 @@ export const reportConfigs = {
         explotacion:    'Mixto corral y pastoril',
         latitud:        -31.4167,
         longitud:       -64.1833,
-        estado:         'Observado',
+        estado:         '2. Observado',
       },
       {
         id:             'E-9004',
@@ -484,7 +485,7 @@ export const reportConfigs = {
         explotacion:    'Engorde a corral',
         latitud:        -32.9333,
         longitud:       -68.8500,
-        estado:         'Activo',
+        estado:         '3. Activo',
       },
       {
         id:             'E-9005',
@@ -499,7 +500,7 @@ export const reportConfigs = {
         explotacion:    'Engorde pastoril extensivo',
         latitud:        -38.9516,
         longitud:       -68.0591,
-        estado:         'Activo',
+        estado:         '3. Activo',
       },
       {
         id:             'E-9006',
@@ -514,7 +515,7 @@ export const reportConfigs = {
         explotacion:    'Engorde a corral intensivo',
         latitud:        -27.4514,
         longitud:       -58.9867,
-        estado:         'Activo',
+        estado:         '4. Cerrado',
       },
     ],
   },
