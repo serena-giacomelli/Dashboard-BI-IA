@@ -166,7 +166,7 @@ function Informes() {
   // ── PDF con columnas seleccionadas ──────────────────────────────────────────
 
   const handleExportPdf = (selectedColumnKeys) => {
-    if (selectedColumnKeys.length > 10) {
+    if (selectedColumnKeys.length > 15) {
        // Backup de seguridad
        console.warn("Demasiadas columnas seleccionadas para PDF");
     }
