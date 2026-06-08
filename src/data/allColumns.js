@@ -66,6 +66,7 @@ tareas: [
     { key: 'id',                   label: 'ID' },
     { key: 'renspa',               label: 'RENSPA' },
     { key: 'establecimiento',      label: 'Establecimiento' },
+    { key: 'pertenencia',           label: 'Pertenencia' },
     { key: 'titular',              label: 'Titular' },
     { key: 'cuit',                 label: 'CUIT' },
     { key: 'tipo',                 label: 'Tipo' },
