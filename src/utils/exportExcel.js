@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { STATE_STYLES, getDueDateStyle, COMPANY_CONFIG } from '../styles/reportTheme';
+import { BUDGET_STATE_STYLES } from '../styles/budgetTheme';
 
 // ── Helpers de formato ────────────────────────────────────────────────────────
 
