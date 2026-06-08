@@ -69,7 +69,7 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
       const logoId = workbook.addImage({ base64: COMPANY_CONFIG.logo, extension: 'png' });
       sheet.addImage(logoId, {
       tl: { col: 0, row: 0, nativeColOff: 9525 * 3, nativeRowOff: 9525 * 3 },
-      ext: { width: 150, height: 98 },
+      ext: { width: 200, height: 98 },
       editAs: 'absolute',
     });
     } catch (e) { console.warn('Logo error:', e); }
