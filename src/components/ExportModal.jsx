@@ -12,7 +12,7 @@ import styles from '../styles/ExportModal.module.css';
  */
 function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
   const [selected, setSelected] = useState([]);
-  const MAX_COLUMNS = 10; // Límite de seguridad para PDF
+  const MAX_COLUMNS = 15; // Límite de seguridad para PDF
 
   // Al abrir el modal, pre-seleccionar todas las columnas
   useEffect(() => {
@@ -65,7 +65,7 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
           {format === 'pdf' && (
             <span style={{ display: 'block', color: isOverLimit ? '#c0392b' : '#666', fontWeight: isOverLimit ? 'bold' : 'normal', marginTop: '5px' }}>
               {isOverLimit 
-                ? `⚠️ Límite excedido: ${selected.length}/${MAX_COLUMNS} columnas seleccionadas. El PDF podría verse desordenado.`
+                ? `Límite excedido: ${selected.length}/${MAX_COLUMNS} columnas seleccionadas. El PDF podría verse desordenado.`
                 : `Máximo recomendado para PDF: ${MAX_COLUMNS} columnas.`}
             </span>
           )}
