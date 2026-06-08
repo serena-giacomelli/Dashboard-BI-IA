@@ -15,44 +15,52 @@ export const COMPANY_CONFIG = {
 
 // Mapa de colores para estados (Background: Texto)
 export const STATE_STYLES = {
-  // 🔴 Crítico
-  '1. Pendiente de asignacion':               { bg: 'FFCC0000', text: 'FFFFFFFF' },
-
-  // 🟠 Bloqueado
-  '3. Tarea no aceptada':                     { bg: 'FFFF6B35', text: 'FFFFFFFF' },
-  '7.Demorada por el cliente':                { bg: 'FFFF6B35', text: 'FFFFFFFF' },
-  '8. Demorada por el organismo':             { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+  // 🔴 Pendiente
+  '1. Pendiente de asignacion': { bg: 'FFCC0000', text: 'FFFFFFFF' },
 
   // 🟡 Seguimiento
-  '2. Asignada':                              { bg: 'FFFFC107', text: 'FF000000' },
-  '9. Observada':                             { bg: 'FFFFEB3B', text: 'FF000000' },
+  '2. Asignada':               { bg: 'FFFFC107', text: 'FF000000' },
+  '9. Observada':              { bg: 'FFFFC107', text: 'FF000000' },
+
+  // 🟠 Bloqueado
+  '3. Tarea no aceptada':      { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+  '7.Demorada por el cliente': { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+  '8. Demorada por el organismo': { bg: 'FFFF6B35', text: 'FFFFFFFF' },
 
   // 🔵 Activo
-  '5. En obra':                               { bg: 'FF2196F3', text: 'FFFFFFFF' },
-  '6. Presentada':                            { bg: 'FF0D6EFD', text: 'FFFFFFFF' },
+  '5. En obra':    { bg: 'FF2196F3', text: 'FFFFFFFF' },
+  '6. Presentada': { bg: 'FF2196F3', text: 'FFFFFFFF' },
 
   // ⚪ Cerrado
-  '10. Finalizada':                           { bg: 'FFD6D6D6', text: 'FF555555' },
-  '11. Finalizada. no corresponde facturar':  { bg: 'FFD6D6D6', text: 'FF555555' },
-  '12. Anualidad':                            { bg: 'FFD6D6D6', text: 'FF555555' },
+  '10. Finalizada':                          { bg: 'FFD6D6D6', text: 'FF555555' },
+  '11. Finalizada. no corresponde facturar': { bg: 'FFD6D6D6', text: 'FF555555' },
+  '12. Anualidad':                           { bg: 'FFD6D6D6', text: 'FF555555' },
 };
 
 export const BUDGET_STATE_STYLES = {
   // 🔵 En proceso
-  '1. Proceso Interno':          { bg: 'FFD1ECF1', text: 'FF0C5460' },
-  '2. Enviado':                  { bg: 'FFCCE5FF', text: 'FF004085' },
-  '3. Analisis de Condiciones':  { bg: 'FFCCE5FF', text: 'FF004085' },
-  '4. Revision':                 { bg: 'FFFFC107', text: 'FF000000' },
+  '1. Proceso Interno':         { bg: 'FF2196F3', text: 'FFFFFFFF' },
+  '2. Enviado':                 { bg: 'FF2196F3', text: 'FFFFFFFF' },
 
-  // 🔴 Negativo
-  '5. Rechazado':                { bg: 'FFCC0000', text: 'FFFFFFFF' },
-  '7. Demorado por el Cliente':  { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+  // 🟡 Revisión
+  '3. Analisis de Condiciones': { bg: 'FFFFC107', text: 'FF000000' },
+  '4. Revision':                { bg: 'FFFFC107', text: 'FF000000' },
 
-  // 🟢 Positivo
-  '6. Aceptado':                 { bg: 'FF28A745', text: 'FFFFFFFF' },
-  '8. Finalizado':               { bg: 'FFD6D6D6', text: 'FF555555' },
-  '9. Mensual':                  { bg: 'FFD4EDDA', text: 'FF155724' },
-  '10. VALIDADO':                { bg: 'FF16324F', text: 'FFFFFFFF' },
+  // 🔴 Rechazado
+  '5. Rechazado':               { bg: 'FFCC0000', text: 'FFFFFFFF' },
+
+  // 🟢 Aprobado
+  '6. Aceptado':                { bg: 'FF28A745', text: 'FFFFFFFF' },
+  '10. VALIDADO':               { bg: 'FF28A745', text: 'FFFFFFFF' },
+
+  // 🟠 Demorado
+  '7. Demorado por el Cliente': { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+
+  // ⚪ Cerrado
+  '8. Finalizado':              { bg: 'FFD6D6D6', text: 'FF555555' },
+
+  // ⚫ Especial
+  '9. Mensual':                 { bg: 'FF16324F', text: 'FFFFFFFF' },
 };
 
 // Lógica para vencimientos
@@ -69,8 +77,8 @@ export const getDueDateStyle = (dateString) => {
 
 //Estados para engordes
 export const FAT_STYLES = {
-  '1. Pendiente de asignacion': { bg: 'FFCC0000', text: 'FFFFFFFF' },
-  '2. Observado':              { bg: 'FFFFEB3B', text: 'FF000000' },
-  '3. Activo':                { bg: 'FF2196F3', text: 'FFFFFFFF'  },
-  '4. Cerrado':              { bg: 'FFD6D6D6', text: 'FF555555' },
+  '1. Pendiente de asignacion': { bg: 'FFCC0000', text: 'FFFFFFFF' }, // 🔴
+  '2. Observado':              { bg: 'FFFFC107', text: 'FF000000' }, // 🟡
+  '3. Activo':                 { bg: 'FF2196F3', text: 'FFFFFFFF' }, // 🔵
+  '4. Cerrado':                { bg: 'FFD6D6D6', text: 'FF555555' }, // ⚪
 };
