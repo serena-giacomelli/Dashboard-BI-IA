@@ -8,6 +8,7 @@ import { exportToExcel } from '../utils/exportExcel.js';
 import ExportModal from '../components/ExportModal.jsx';
 import styles from '../styles/Reports.module.css';
 import { COMPANY_CONFIG } from '../styles/reportTheme';
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
@@ -103,13 +104,9 @@ function Informes() {
   const navigate = useNavigate();
   const [reportId, setReportId] = useState('tareas');
   const [filters, setFilters] = useState(() => createInitialFilters('tareas'));
-
-  // Estado del modal: null = cerrado, 'pdf' | 'excel' = abierto con ese formato
   const [exportFormat, setExportFormat] = useState(null);
 
   const reportConfig = reportConfigs[reportId];
-
-  // Todas las columnas disponibles para el informe actual (modal + exportación)
   const allColumns = allColumnsByReport[reportId] ?? reportConfig.columns;
 
   useEffect(() => {
@@ -147,8 +144,6 @@ function Informes() {
   const openExportModal = (format) => setExportFormat(format);
   const closeExportModal = () => setExportFormat(null);
 
-  // ── Exportación efectiva (llamada desde el modal al confirmar) ───────────────
-
   const handleExportConfirm = async (selectedColumnKeys, format) => {
     const configForExport = { ...reportConfig, allColumns };
 
@@ -171,37 +166,33 @@ function Informes() {
   // ── PDF con columnas seleccionadas ──────────────────────────────────────────
 
   const handleExportPdf = (selectedColumnKeys) => {
+    if (selectedColumnKeys.length > 10) {
+       // Backup de seguridad
+       console.warn("Demasiadas columnas seleccionadas para PDF");
+    }
+    
     const exportColumns = allColumns.filter((col) => selectedColumnKeys.includes(col.key));
     const doc = new jsPDF({ orientation: 'landscape' });
     const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 
-   // ── Encabezado Profesional ──
     const addHeader = () => {
-      // 1. Logo (Solo si lo configuraste)
       if (COMPANY_CONFIG.logo) {
         doc.addImage(COMPANY_CONFIG.logo, 'PNG', 14, 10, 30, 15);
       }
-
-    // 2. Nombre Empresa
       doc.setFont(COMPANY_CONFIG.font, 'bold');
       doc.setFontSize(16);
       doc.setTextColor(22, 50, 79); // Azul corporativo
       doc.text(COMPANY_CONFIG.name, 48, 18);
-
-      // 3. Título Informe
       doc.setFont(COMPANY_CONFIG.font, 'normal');
       doc.setFontSize(14);
       doc.text(`Informe: ${reportConfig.label}`, 48, 24);
-
-      // 4. Línea Divisoria
       doc.setDrawColor(200, 200, 200);
       doc.line(14, 28, 280, 28);
     };
-   
       addHeader();
 
    //metadata y filtros
-      let cursorY = 35;
+    let cursorY = 35;
     doc.setFont(COMPANY_CONFIG.font, 'normal');
     doc.setFontSize(9);
     doc.setTextColor(80, 80, 80);
@@ -231,7 +222,9 @@ function Informes() {
         styles: { font: COMPANY_CONFIG.font, fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: [22, 50, 79], textColor: 255, fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [245, 248, 255] },
-        margin: { left: 14, right: 14 }
+        margin: { left: 14, right: 14 },
+        horizontalPageBreak: true, // Solución para tablas anchas
+
       });
     } else {
       doc.setFontSize(9);
@@ -253,7 +246,6 @@ function Informes() {
       </header>
 
       <div className={styles.layout}>
-        {/* Panel izquierdo: filtros */}
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
             <div>

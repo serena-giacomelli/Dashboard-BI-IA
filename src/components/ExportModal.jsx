@@ -4,14 +4,15 @@ import styles from '../styles/ExportModal.module.css';
 /**
  * ExportModal
  * Props:
- *  - isOpen: boolean
- *  - onClose: () => void
- *  - onConfirm: (selectedColumns: string[], format: 'pdf' | 'excel') => void
- *  - format: 'pdf' | 'excel'
- *  - columns: Array<{ key: string, label: string }>   ← todas las columnas disponibles del informe
+ * - isOpen: boolean
+ * - onClose: () => void
+ * - onConfirm: (selectedColumns: string[], format: 'pdf' | 'excel') => void
+ * - format: 'pdf' | 'excel'
+ * - columns: Array<{ key: string, label: string }>
  */
 function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
   const [selected, setSelected] = useState([]);
+  const MAX_COLUMNS = 10; // Límite de seguridad para PDF
 
   // Al abrir el modal, pre-seleccionar todas las columnas
   useEffect(() => {
@@ -34,12 +35,12 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
 
   const handleConfirm = () => {
     if (selected.length === 0) return;
-    // Mantener el orden original de las columnas
     const ordered = columns.filter((col) => selected.includes(col.key)).map((col) => col.key);
     onConfirm(ordered, format);
     onClose();
   };
 
+  const isOverLimit = format === 'pdf' && selected.length > MAX_COLUMNS;
   const allChecked = selected.length === columns.length;
   const someChecked = selected.length > 0 && !allChecked;
   const formatLabel = format === 'pdf' ? 'PDF' : 'Excel';
@@ -61,6 +62,13 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
 
         <p className={styles.subtitle}>
           Elegí qué columnas incluir en el archivo exportado.
+          {format === 'pdf' && (
+            <span style={{ display: 'block', color: isOverLimit ? '#c0392b' : '#666', fontWeight: isOverLimit ? 'bold' : 'normal', marginTop: '5px' }}>
+              {isOverLimit 
+                ? `⚠️ Límite excedido: ${selected.length}/${MAX_COLUMNS} columnas seleccionadas. El PDF podría verse desordenado.`
+                : `Máximo recomendado para PDF: ${MAX_COLUMNS} columnas.`}
+            </span>
+          )}
         </p>
 
         <div className={styles.selectAllRow}>
@@ -98,10 +106,10 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
           <button
             className={styles.confirmBtn}
             onClick={handleConfirm}
-            disabled={selected.length === 0}
+            disabled={selected.length === 0 || isOverLimit}
             data-format={format}
           >
-            Exportar {formatLabel}
+            {isOverLimit ? 'Demasiadas columnas' : `Exportar ${formatLabel}`}
           </button>
         </footer>
       </div>
