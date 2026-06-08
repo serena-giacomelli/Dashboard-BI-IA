@@ -16,51 +16,51 @@ export const COMPANY_CONFIG = {
 // Mapa de colores para estados (Background: Texto)
 export const STATE_STYLES = {
   // 🔴 Pendiente
-  '1. Pendiente de asignacion': { bg: 'FFCC0000', text: 'FFFFFFFF' },
+  '1. Pendiente de asignacion': { bg: 'FFCC0000', text: 'FF000000' },
 
   // 🟡 Seguimiento
   '2. Asignada':               { bg: 'FFFFC107', text: 'FF000000' },
   '9. Observada':              { bg: 'FFFFC107', text: 'FF000000' },
 
   // 🟠 Bloqueado
-  '3. Tarea no aceptada':      { bg: 'FFFF6B35', text: 'FFFFFFFF' },
-  '7.Demorada por el cliente': { bg: 'FFFF6B35', text: 'FFFFFFFF' },
-  '8. Demorada por el organismo': { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+  '3. Tarea no aceptada':      { bg: 'FFFF6B35', text: 'FF000000' },
+  '7.Demorada por el cliente': { bg: 'FFFF6B35', text: 'FF000000' },
+  '8. Demorada por el organismo': { bg: 'FFFF6B35', text: 'FF000000' },
 
   // 🔵 Activo
-  '5. En obra':    { bg: 'FF2196F3', text: 'FFFFFFFF' },
-  '6. Presentada': { bg: 'FF2196F3', text: 'FFFFFFFF' },
+  '5. En obra':    { bg: 'FF2196F3', text: 'FF000000' },
+  '6. Presentada': { bg: 'FF2196F3', text: 'FF000000' },
 
   // ⚪ Cerrado
-  '10. Finalizada':                          { bg: 'FFD6D6D6', text: 'FF555555' },
-  '11. Finalizada. no corresponde facturar': { bg: 'FFD6D6D6', text: 'FF555555' },
-  '12. Anualidad':                           { bg: 'FFD6D6D6', text: 'FF555555' },
+  '10. Finalizada':                          { bg: 'FFD6D6D6', text: 'FF000000' },
+  '11. Finalizada. no corresponde facturar': { bg: 'FFD6D6D6', text: 'FF000000' },
+  '12. Anualidad':                           { bg: 'FFD6D6D6', text: 'FF000000' },
 };
 
 export const BUDGET_STATE_STYLES = {
   // 🔵 En proceso
-  '1. Proceso Interno':         { bg: 'FF2196F3', text: 'FFFFFFFF' },
-  '2. Enviado':                 { bg: 'FF2196F3', text: 'FFFFFFFF' },
+  '1. Proceso Interno':         { bg: 'FF2196F3', text: 'FF000000' },
+  '2. Enviado':                 { bg: 'FF2196F3', text: 'FF000000' },
 
   // 🟡 Revisión
   '3. Analisis de Condiciones': { bg: 'FFFFC107', text: 'FF000000' },
   '4. Revision':                { bg: 'FFFFC107', text: 'FF000000' },
 
   // 🔴 Rechazado
-  '5. Rechazado':               { bg: 'FFCC0000', text: 'FFFFFFFF' },
+  '5. Rechazado':               { bg: 'FFCC0000', text: 'FF000000' },
 
   // 🟢 Aprobado
-  '6. Aceptado':                { bg: 'FF28A745', text: 'FFFFFFFF' },
-  '10. VALIDADO':               { bg: 'FF28A745', text: 'FFFFFFFF' },
+  '6. Aceptado':                { bg: 'FF28A745', text: 'FF000000' },
+  '10. VALIDADO':               { bg: 'FF28A745', text: 'FF000000' },
 
   // 🟠 Demorado
-  '7. Demorado por el Cliente': { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+  '7. Demorado por el Cliente': { bg: 'FFFF6B35', text: 'FF000000' },
 
   // ⚪ Cerrado
-  '8. Finalizado':              { bg: 'FFD6D6D6', text: 'FF555555' },
+  '8. Finalizado':              { bg: 'FFD6D6D6', text: 'FF000000' },
 
   // ⚫ Especial
-  '9. Mensual':                 { bg: 'FF16324F', text: 'FFFFFFFF' },
+  '9. Mensual':                 { bg: 'FF16324F', text: 'FF000000' },
 };
 
 // Lógica para vencimientos
@@ -77,8 +77,8 @@ export const getDueDateStyle = (dateString) => {
 
 //Estados para engordes
 export const FAT_STYLES = {
-  '1. Pendiente de asignacion': { bg: 'FFCC0000', text: 'FFFFFFFF' }, // 🔴
+  '1. Pendiente de asignacion': { bg: 'FFCC0000', text: 'FF000000' }, // 🔴
   '2. Observado':              { bg: 'FFFFC107', text: 'FF000000' }, // 🟡
-  '3. Activo':                 { bg: 'FF2196F3', text: 'FFFFFFFF' }, // 🔵
-  '4. Cerrado':                { bg: 'FFD6D6D6', text: 'FF555555' }, // ⚪
+  '3. Activo':                 { bg: 'FF2196F3', text: 'FF000000' }, // 🔵
+  '4. Cerrado':                { bg: 'FFD6D6D6', text: 'FF000000' }, // ⚪
 };
