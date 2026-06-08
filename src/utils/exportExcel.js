@@ -68,10 +68,10 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
     try {
       const logoId = workbook.addImage({ base64: COMPANY_CONFIG.logo, extension: 'png' });
       sheet.addImage(logoId, {
-        tl: { col: 0, row: 0 },
-        br: { col: 2, row: 4 },
-        editAs: 'oneCell',
-      });
+      tl: { col: 0, row: 0, nativeColOff: 9525 * 3, nativeRowOff: 9525 * 3 },
+      ext: { width: 130, height: 98 },
+      editAs: 'absolute',
+    });
     } catch (e) { console.warn('Logo error:', e); }
   }
 
@@ -142,10 +142,16 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
 
       if (isAlt) cell.fill = ALT_ROW_FILL;
 
-      // Estilo Estado
+      // Estilo Estado de tarea
       if (colKey === 'estado' && STATE_STYLES[cellValue]) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: STATE_STYLES[cellValue].bg } };
         cell.font = { size: 10, color: { argb: STATE_STYLES[cellValue].text }, bold: true };
+      }
+
+            // Estilo Estado de presupuesto
+      if (colKey === 'estadoPresupuesto' && BUDGET_STATE_STYLES[cellValue]) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BUDGET_STATE_STYLES[cellValue].bg } };
+        cell.font = { size: 10, color: { argb: BUDGET_STATE_STYLES[cellValue].text }, bold: true };
       }
 
       // Estilo Vencimiento / Fecha

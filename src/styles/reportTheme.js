@@ -15,17 +15,44 @@ export const COMPANY_CONFIG = {
 
 // Mapa de colores para estados (Background: Texto)
 export const STATE_STYLES = {
-  '1. Pendiente de asignacion': { bg: 'FFFFFF00', text: 'FF000000' }, // Amarillo
-  '2. Asignada':               { bg: 'FFCCE5FF', text: 'FF004085' }, // Azul claro
-  '3. Tarea no aceptada':      { bg: 'FFF8D7DA', text: 'FF721C24' }, // Rojo claro
-  '5. En obra':                { bg: 'FFD1ECF1', text: 'FF0C5460' }, // Cian
-  '6. Presentada':             { bg: 'FFD4EDDA', text: 'FF155724' }, // Verde éxito
-  '7.Demorada por el cliente': { bg: 'FFFFC107', text: 'FF000000' }, // Naranja alerta
-  '8. Demorada por el organismo': { bg: 'FFFFC107', text: 'FF000000' },
-  '9. Observada':              { bg: 'FFF8D7DA', text: 'FF721C24' }, // Rojo suave
-  '10. Finalizada':            { bg: 'FFE2E3E5', text: 'FF383D41' }, // Gris neutro
-  '11. Finalizada. no corresponde facturar': { bg: 'FFE2E3E5', text: 'FF383D41' },
-  '12. Anualidad':             { bg: 'FFD1ECF1', text: 'FF0C5460' },
+  // 🔴 Crítico
+  '1. Pendiente de asignacion':               { bg: 'FFCC0000', text: 'FFFFFFFF' },
+
+  // 🟠 Bloqueado
+  '3. Tarea no aceptada':                     { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+  '7.Demorada por el cliente':                { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+  '8. Demorada por el organismo':             { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+
+  // 🟡 Seguimiento
+  '2. Asignada':                              { bg: 'FFFFC107', text: 'FF000000' },
+  '9. Observada':                             { bg: 'FFFFEB3B', text: 'FF000000' },
+
+  // 🔵 Activo
+  '5. En obra':                               { bg: 'FF2196F3', text: 'FFFFFFFF' },
+  '6. Presentada':                            { bg: 'FF0D6EFD', text: 'FFFFFFFF' },
+
+  // ⚪ Cerrado
+  '10. Finalizada':                           { bg: 'FFD6D6D6', text: 'FF555555' },
+  '11. Finalizada. no corresponde facturar':  { bg: 'FFD6D6D6', text: 'FF555555' },
+  '12. Anualidad':                            { bg: 'FFD6D6D6', text: 'FF555555' },
+};
+
+export const BUDGET_STATE_STYLES = {
+  // 🔵 En proceso
+  '1. Proceso Interno':          { bg: 'FFD1ECF1', text: 'FF0C5460' },
+  '2. Enviado':                  { bg: 'FFCCE5FF', text: 'FF004085' },
+  '3. Analisis de Condiciones':  { bg: 'FFCCE5FF', text: 'FF004085' },
+  '4. Revision':                 { bg: 'FFFFC107', text: 'FF000000' },
+
+  // 🔴 Negativo
+  '5. Rechazado':                { bg: 'FFCC0000', text: 'FFFFFFFF' },
+  '7. Demorado por el Cliente':  { bg: 'FFFF6B35', text: 'FFFFFFFF' },
+
+  // 🟢 Positivo
+  '6. Aceptado':                 { bg: 'FF28A745', text: 'FFFFFFFF' },
+  '8. Finalizado':               { bg: 'FFD6D6D6', text: 'FF555555' },
+  '9. Mensual':                  { bg: 'FFD4EDDA', text: 'FF155724' },
+  '10. VALIDADO':                { bg: 'FF16324F', text: 'FFFFFFFF' },
 };
 
 // Lógica para vencimientos

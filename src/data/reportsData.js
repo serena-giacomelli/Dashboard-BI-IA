@@ -164,7 +164,7 @@ export const reportConfigs = {
       { key: 'organismo', label: 'Organismo' },
       { key: 'area',      label: 'Area' },
       { key: 'tramite',   label: 'Tramite' },
-      { key: 'estado',    label: 'Estado' },
+      { key: 'estadoPresupuesto',  label: 'Estado Presupuesto' },
       { key: 'fecha',     label: 'Fecha' },
     ],
     rows: [
@@ -187,7 +187,7 @@ export const reportConfigs = {
         honorarioMonto:      45000,
         subcompania:         'CIFAS Norte',
         porcDistribucion:    30,
-        estado:              'En curso',
+        estadoPresupuesto:      '1. Proceso interno',
         fecha:               '2026-05-20',
       },
       {
@@ -209,7 +209,7 @@ export const reportConfigs = {
         honorarioMonto:      60000,
         subcompania:         'CIFAS Sur',
         porcDistribucion:    25,
-        estado:              'Pendiente',
+        estadoPresupuesto:      '2. Enviado',
         fecha:               '2026-05-23',
       },
       {
@@ -231,7 +231,7 @@ export const reportConfigs = {
         honorarioMonto:      25000,
         subcompania:         'CIFAS Centro',
         porcDistribucion:    20,
-        estado:              'Finalizado',
+        estadoPresupuesto:      '3. Analisis de condiciones',
         fecha:               '2026-05-28',
       },
       {
@@ -253,7 +253,7 @@ export const reportConfigs = {
         honorarioMonto:      18000,
         subcompania:         'CIFAS Sur',
         porcDistribucion:    15,
-        estado:              'Observado',
+        estadoPresupuesto:      '10. Validado',
         fecha:               '2026-06-01',
       },
       {
@@ -273,9 +273,9 @@ export const reportConfigs = {
         tipoArancel:         'Arancel fijo',
         montoArancel:        30000,
         honorarioMonto:      80000,
-        subcompania:         'CIFAS Norte',
+        subcompania:         '4. Revision',
         porcDistribucion:    35,
-        estado:              'En curso',
+        estadoPresupuesto:      'En curso',
         fecha:               '2026-06-03',
       },
     ],

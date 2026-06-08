@@ -37,6 +37,7 @@ tareas: [
     { key: 'nombreExpediente',     label: 'Nombre Expediente' },
     { key: 'fechaNotificacion',    label: 'Fecha Notificación Requeridos' },
     { key: 'fechaVtoRegistro',     label: 'Fecha Vto. Registro' },
+    { key: 'estadoPresupuesto',    label: 'Estado Presupuesto' },
     { key: 'nroExpedienteSec',     label: 'N° Expediente Secundario' },
     { key: 'nombreExpedienteSec',  label: 'Nombre Expediente Secundario' },
     { key: 'marca',                label: 'Marca' },
