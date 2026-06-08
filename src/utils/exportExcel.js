@@ -19,6 +19,16 @@ function getCellValue(row, columnKey) {
   return row[columnKey] ?? '-';
 }
 
+function colIndexToLetter(n) {
+  let result = '';
+  while (n > 0) {
+    const remainder = (n - 1) % 26;
+    result = String.fromCharCode(65 + remainder) + result;
+    n = Math.floor((n - 1) / 26);
+  }
+  return result;
+}
+
 function downloadBlob(blob, fileName) {
   const url = window.URL.createObjectURL(blob);
   const anchor = document.createElement('a');
@@ -153,10 +163,8 @@ headerRow.eachCell((cell) => {
 currentRow++;
 
 // ── AutoFilter sobre el rango completo ──
-sheet.autoFilter = {
-  from: { row: headerRowIndex, column: 1 },
-  to:   { row: headerRowIndex + sortedRows.length, column: colCount },
-};
+const lastCol = colIndexToLetter(colCount);
+sheet.autoFilter = `A${headerRowIndex}:${lastCol}${headerRowIndex + sortedRows.length}`;
 
 sheet.views = [{ state: 'frozen', ySplit: headerRowIndex }];
 
