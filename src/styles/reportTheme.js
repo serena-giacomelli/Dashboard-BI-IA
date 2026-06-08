@@ -73,4 +73,4 @@ export const FAT_STYLES = {
   '2. Observado':              { bg: 'FFFFEB3B', text: 'FF000000' },
   '3. Activo':                { bg: 'FF2196F3', text: 'FFFFFFFF'  },
   '4. Cerrado':              { bg: 'FFD6D6D6', text: 'FF555555' },
-}
+};
