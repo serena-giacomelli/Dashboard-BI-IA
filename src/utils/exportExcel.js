@@ -145,13 +145,13 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
       // Estilo Estado de tarea
       if (colKey === 'estado' && STATE_STYLES[cellValue]) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: STATE_STYLES[cellValue].bg } };
-        cell.font = { size: 10, color: { argb: STATE_STYLES[cellValue].text }, bold: true };
+        cell.font = { size: 10, color: { argb: STATE_STYLES[cellValue].text }, bold: false };
       }
 
       // Estilo Estado de presupuesto
       if (colKey === 'estadoPresupuesto' && BUDGET_STATE_STYLES[cellValue]) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BUDGET_STATE_STYLES[cellValue].bg } };
-        cell.font = { size: 10, color: { argb: BUDGET_STATE_STYLES[cellValue].text }, bold: true };
+        cell.font = { size: 10, color: { argb: BUDGET_STATE_STYLES[cellValue].text }, bold: false };
       }
 
       // Estilo Vencimiento / Fecha
@@ -165,7 +165,7 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
       // Estilo para estados de engorde
       } else if (colKey === 'estado' && FAT_STYLES[cellValue]) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: FAT_STYLES[cellValue].bg } };
-        cell.font = { size: 10, color: { argb: FAT_STYLES[cellValue].text }, bold: true };
+        cell.font = { size: 10, color: { argb: FAT_STYLES[cellValue].text }, bold: false };
       }
     });
   });
