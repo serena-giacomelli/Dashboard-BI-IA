@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         from: "Prototipo Boletines <onboarding@resend.dev>",
-        to: destinatarios, // Acá va a llegar tu mail de prueba
+        to: "sere22giacomelli@gmail.com", // Acá va a llegar tu mail de prueba
         subject: asunto,
         html: cuerpoHtml
       })

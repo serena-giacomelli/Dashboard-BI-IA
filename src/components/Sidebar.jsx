@@ -12,23 +12,17 @@ function Sidebar() {
       </div>
 
       <nav className={styles.nav}>
-        <NavLink
-          to="/dashboard"
-          className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
-        >
+        <NavLink to="/dashboard" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           REPORTES
         </NavLink>
-        <NavLink
-          to="/detalle"
-          className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
-        >
+        <NavLink to="/detalle" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           GESTIÓN ESTRATÉGICA
         </NavLink>
-        {/* Nueva opción de Boletines */}
-        <NavLink
-          to="/boletines"
-          className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
-        >
+        {/* Nueva sección Clientes separada */}
+        <NavLink to="/clientes" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+          CLIENTES
+        </NavLink>
+        <NavLink to="/boletines" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           BOLETINES
         </NavLink>
       </nav>
