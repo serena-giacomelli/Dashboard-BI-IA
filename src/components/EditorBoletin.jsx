@@ -9,10 +9,10 @@ const EditorBoletin = ({ clientesDB }) => {
   const [cuerpoHtml, setCuerpoHtml] = useState('');
   const [cargando, setCargando] = useState(false);
   
-  // Estado para almacenar el histórico
+  // 📜 Estado para almacenar el histórico
   const [historial, setHistorial] = useState([]);
   
-  // Estado para controlar qué boletín se está mirando en el modal
+  // 👁️ Estado para controlar qué boletín se está mirando en el modal
   const [boletinSeleccionado, setBoletinSeleccionado] = useState(null);
 
   // Cargar el historial del localStorage al montar el componente
@@ -23,49 +23,64 @@ const EditorBoletin = ({ clientesDB }) => {
 
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
 
-  // CORREGIDO: Estructura HTML ultra compatible con el viejo motor de renderizado de Word
+  // BLINDADO PARA WORD: XML namespaces y forzado de Vista de Impresión (Print View)
   const generarTemplateEmpresa = (contenido, cliente) => {
     return `
 <!DOCTYPE html>
-<html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Boletín de Novedades</title>
+  <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
   <style>
-    /* Estilos de respaldo para visualizadores web/emails modernos */
     body { margin: 0; padding: 0; background-color: #ffffff; }
-    p, ul, ol { font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #000000; text-align: justify; }
-    h1 { font-size: 32px; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #333333; text-align: center; margin: 0; }
-    h2 { font-size: 22px; font-family: Arial, Helvetica, sans-serif; font-weight: normal; color: #555555; text-align: center; margin: 0; }
+    p, ul, ol { font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #000000; text-align: justify; margin: 0 0 12px 0; }
+    h1 { font-size: 28px; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #333333; text-align: center; margin: 0 0 8px 0; }
+    h2 { font-size: 18px; font-family: Arial, Helvetica, sans-serif; font-weight: normal; color: #555555; text-align: center; margin: 0 0 20px 0; }
     a { color: #11B4FF; text-decoration: underline; }
+    
+    /* Configuración de página física para el motor de Microsoft Word */
+    @page {
+      size: 8.5in 11in;
+      margin: 1.0in 1.0in 1.0in 1.0in;
+    }
+    div.WordSection1 { page: WordSection1; }
+    table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
   </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #ffffff;">
-  <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
-    <tbody>
-      <tr>
-        <td align="center" style="padding: 20px 0; text-align: center;">
-          <img src="${LOGO_CIFAS_URL}" width="154" alt="Logo CIFAS" style="display: block; border: 0; width: 154px; height: auto; margin: 0 auto;" />
-        </td>
-      </tr>
-      <tr>
-        <td align="center" style="padding: 10px 20px; text-align: center;">
-          <h1 style="font-size: 32px; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #333333; text-align: center; margin: 0 0 10px 0;"><strong>BOLETIN DE NOVEDADES</strong></h1>
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#E2E2E2" style="background-color: #E2E2E2; padding: 30px 25px; border-radius: 4px; text-align: justify;">
-          <p style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #000000; margin: 0 0 15px 0; text-align: justify;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-          
-          <div style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #000000; text-align: justify;">
-            ${contenido}
-          </div>
-          
-          <p style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #000000; margin: 25px 0 0 0; text-align: justify;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="WordSection1">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; min-width: 600px; max-width: 600px; margin: 0 auto; border-collapse: collapse; table-layout: fixed;">
+      <tbody>
+        <tr>
+          <td align="center" width="600" style="width: 600px; padding: 20px 0; text-align: center;">
+            <img src="${LOGO_CIFAS_URL}" width="154" alt="Logo CIFAS" style="display: block; border: 0; width: 154px; height: auto; margin: 0 auto;" />
+          </td>
+        </tr>
+        <tr>
+          <td align="center" width="600" style="width: 600px; padding: 10px 0; text-align: center;">
+            <h1 style="font-size: 28px; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #333333; text-align: center; margin: 0 0 8px 0;"><strong>BOLETIN DE NOVEDADES</strong></h1>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#E2E2E2" align="left" width="600" style="background-color: #E2E2E2; width: 600px; padding: 30px 25px; border-radius: 4px; text-align: justify; box-sizing: border-box;">
+            <p style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #000000; margin: 0 0 15px 0; text-align: justify;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
+            
+            <div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #000000; text-align: justify;">
+              ${contenido}
+            </div>
+            
+            <p style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #000000; margin: 25px 0 0 0; text-align: justify;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </body>
 </html>
     `;
@@ -73,7 +88,7 @@ const EditorBoletin = ({ clientesDB }) => {
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
-    if (destinatarios.length === 0) return alert("No hay clientes habilitados.");
+    if (destinatarios.length === 0) return alert("⚠️ No hay clientes habilitados.");
     if (!asunto.trim() || !cuerpoHtml || cuerpoHtml === '<p><br></p>') {
       return alert("Por favor, completa el asunto y el mensaje.");
     }
@@ -96,7 +111,6 @@ const EditorBoletin = ({ clientesDB }) => {
         if (!response.ok) throw new Error(`Error enviando a ${cliente.razonSocial}`);
       }
 
-      // Guardar en el histórico local con el cuerpo completo
       const nuevoRegistro = {
         id: Date.now(),
         fecha: new Date().toLocaleString('es-AR'),
@@ -110,12 +124,12 @@ const EditorBoletin = ({ clientesDB }) => {
       setHistorial(historialActualizado);
       localStorage.setItem('historial_boletines', JSON.stringify(historialActualizado));
 
-      alert("Todos los boletines fueron procesados correctamente.");
+      alert("✅ Todos los boletines fueron procesados correctamente.");
       setAsunto('');
       setCuerpoHtml('');
     } catch (error) {
       console.error(error);
-      alert("Hubo un error al despachar los boletines.");
+      alert("❌ Hubo un error al despachar los boletines.");
     } finally {
       setCargando(false);
     }
@@ -240,7 +254,7 @@ const EditorBoletin = ({ clientesDB }) => {
         )}
       </div>
 
-      {/* VENTANA MODAL DE VISUALIZACIÓN */}
+      {/* 👁️ VENTANA MODAL DE VISUALIZACIÓN */}
       {boletinSeleccionado && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
