@@ -23,7 +23,7 @@ const EditorBoletin = ({ clientesDB }) => {
 
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
 
-  // BLINDADO PARA WORD: XML namespaces y forzado de Vista de Impresión (Print View)
+  // ULTRA COMPATIBILIDAD: Anidación por atributos nativos y sobreescritura de estilos MSO
   const generarTemplateEmpresa = (contenido, cliente) => {
     return `
 <!DOCTYPE html>
@@ -31,56 +31,92 @@ const EditorBoletin = ({ clientesDB }) => {
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Boletín de Novedades</title>
-  <w:Zoom>100</w:Zoom>
-      <w:DoNotOptimizeForBrowser/>
-    </w:WordDocument>
-  </xml>
-  <![endif]-->
   <style>
+    /* Estilos globales forzados para el motor de descompresión de Word */
     body { margin: 0; padding: 0; background-color: #ffffff; }
-    p, ul, ol { font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #000000; text-align: justify; margin: 0 0 12px 0; }
-    h1 { font-size: 28px; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #333333; text-align: center; margin: 0 0 8px 0; }
-    h2 { font-size: 18px; font-family: Arial, Helvetica, sans-serif; font-weight: normal; color: #555555; text-align: center; margin: 0 0 20px 0; }
-    a { color: #11B4FF; text-decoration: underline; }
     
-    /* Configuración de página física para el motor de Microsoft Word */
+    p, li, span, td, div {
+      font-family: Arial, Helvetica, sans-serif !important;
+      color: #000000 !important;
+    }
+    
+    p {
+      font-size: 11pt !important;
+      line-height: 1.4 !important;
+      text-align: justify !important;
+      margin: 0 0 10pt 0 !important;
+    }
+    
+    h1 { 
+      font-size: 24pt !important; 
+      font-weight: bold !important; 
+      color: #333333 !important; 
+      text-align: center !important; 
+      margin: 0 0 6pt 0 !important; 
+    }
+    
+    h2 { 
+      font-size: 15pt !important; 
+      font-weight: normal !important; 
+      color: #555555 !important; 
+      text-align: center !important; 
+      margin: 0 0 18pt 0 !important; 
+    }
+    
+    a { color: #11B4FF !important; text-decoration: underline !important; }
+    
+    /* Normalización de listas de Quill dentro de Word */
+    ul, ol { margin-top: 0in !important; margin-bottom: 10pt !important; padding-left: 20pt !important; }
+    li { font-size: 11pt !important; margin-bottom: 4pt !important; text-align: justify !important; }
+    
     @page {
       size: 8.5in 11in;
       margin: 1.0in 1.0in 1.0in 1.0in;
     }
-    div.WordSection1 { page: WordSection1; }
     table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-    td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #ffffff;">
-  <div class="WordSection1">
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; min-width: 600px; max-width: 600px; margin: 0 auto; border-collapse: collapse; table-layout: fixed;">
-      <tbody>
-        <tr>
-          <td align="center" width="600" style="width: 600px; padding: 20px 0; text-align: center;">
-            <img src="${LOGO_CIFAS_URL}" width="154" alt="Logo CIFAS" style="display: block; border: 0; width: 154px; height: auto; margin: 0 auto;" />
-          </td>
-        </tr>
-        <tr>
-          <td align="center" width="600" style="width: 600px; padding: 10px 0; text-align: center;">
-            <h1 style="font-size: 28px; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #333333; text-align: center; margin: 0 0 8px 0;"><strong>BOLETIN DE NOVEDADES</strong></h1>
-          </td>
-        </tr>
-        <tr>
-          <td bgcolor="#E2E2E2" align="left" width="600" style="background-color: #E2E2E2; width: 600px; padding: 30px 25px; border-radius: 4px; text-align: justify; box-sizing: border-box;">
-            <p style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #000000; margin: 0 0 15px 0; text-align: justify;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-            
-            <div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #000000; text-align: justify;">
-              ${contenido}
-            </div>
-            
-            <p style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #000000; margin: 25px 0 0 0; text-align: justify;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<body style="background-color: #ffffff; margin: 0; padding: 0;">
+  
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; margin: 0 auto; border-collapse: collapse;">
+    <tbody>
+      <tr>
+        <td align="center" style="padding: 20px 0; text-align: center;">
+          <img src="${LOGO_CIFAS_URL}" width="154" alt="Logo CIFAS" style="display: block; border: 0; width: 154px; height: auto; margin: 0 auto;" />
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="padding: 10px 0; text-align: center;">
+          <h1 style="font-family: Arial, sans-serif; font-size: 24pt; font-weight: bold; color: #333333; margin: 0 0 6pt 0; text-align: center;">BOLETIN DE NOVEDADES</h1>
+          <h2 style="font-family: Arial, sans-serif; font-size: 16pt; font-weight: normal; color: #555555; margin: 0 0 18pt 0; text-align: center;">DEL 01/06/2026 AL 07/06/2026</h2>
+        </td>
+      </tr>
+      <tr>
+        <td bgcolor="#E2E2E2" style="background-color: #E2E2E2; border-radius: 4px;">
+          
+          <table border="0" cellpadding="25" cellspacing="0" width="100%" style="width: 100%; border-collapse: collapse;">
+            <tbody>
+              <tr>
+                <td align="left" style="text-align: justify; font-family: Arial, sans-serif;">
+                  
+                  <p style="margin: 0 0 12pt 0; font-size: 11pt; font-family: Arial, sans-serif;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
+                  
+                  <div style="text-align: justify; font-family: Arial, sans-serif; font-size: 11pt;">
+                    ${contenido}
+                  </div>
+                  
+                  <p style="margin: 20pt 0 0 0; font-size: 11pt; font-family: Arial, sans-serif;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
+                  
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
 </body>
 </html>
     `;
@@ -199,7 +235,7 @@ const EditorBoletin = ({ clientesDB }) => {
         </button>
       </form>
 
-      {/* 📜 SECCIÓN: HISTORIAL DE ENVIADOS */}
+      {/* 📜 HISTORIAL */}
       <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '2px solid #e2e8f0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
           <h3 style={{ margin: 0, color: '#1e293b' }}>Historial de Boletines Enviados</h3>
@@ -254,7 +290,7 @@ const EditorBoletin = ({ clientesDB }) => {
         )}
       </div>
 
-      {/* 👁️ VENTANA MODAL DE VISUALIZACIÓN */}
+      {/* 👁️ VENTANA MODAL */}
       {boletinSeleccionado && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
