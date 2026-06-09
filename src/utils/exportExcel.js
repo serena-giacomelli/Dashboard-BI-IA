@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { STATE_STYLES, BUDGET_STATE_STYLES, FAT_STYLES, getDueDateStyle, COMPANY_CONFIG } from '../styles/reportTheme';
+import { LOGO_CIFAS_BASE64 } from '../constants/assets';
 
 // ── Helpers de formato ────────────────────────────────────────────────────────
 
@@ -42,8 +43,8 @@ function downloadBlob(blob, fileName) {
 
 const HEADER_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
 const HEADER_FONT = { bold: true, size: 11, color: { argb: 'FF16324F' } };
-const TITLE_FILL  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF16324F' } };
-const META_FONT   = { size: 10, color: { argb: 'FF555555' } };
+const TITLE_FILL   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF16324F' } };
+const META_FONT    = { size: 10, color: { argb: 'FF555555' } };
 const FILTER_FONT = { size: 10, italic: true, color: { argb: 'FF444444' } };
 const THIN_BORDER = {
   top:    { style: 'thin', color: { argb: 'FFD1D5DB' } },
@@ -92,9 +93,10 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
   sheet.addRow([]); sheet.getRow(4).height = 20;
 
   // ── Logo ──
-  if (COMPANY_CONFIG.logo) {
+  // CAMBIO AQUÍ: Se usa LOGO_CIFAS_BASE64 en lugar de COMPANY_CONFIG.logo
+  if (LOGO_CIFAS_BASE64) {
     try {
-      const logoId = workbook.addImage({ base64: COMPANY_CONFIG.logo, extension: 'png' });
+      const logoId = workbook.addImage({ base64: LOGO_CIFAS_BASE64, extension: 'png' });
       sheet.addImage(logoId, {
         tl: { col: 0, row: 0, nativeColOff: 9525 * 3, nativeRowOff: 9525 * 3 },
         ext: { width: 200, height: 98 },

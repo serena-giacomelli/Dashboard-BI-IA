@@ -8,6 +8,7 @@ import { exportToExcel } from '../utils/exportExcel.js';
 import ExportModal from '../components/ExportModal.jsx';
 import styles from '../styles/Reports.module.css';
 import { COMPANY_CONFIG } from '../styles/reportTheme';
+import { LOGO_CIFAS_BASE64 } from '../constants/assets';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -176,8 +177,9 @@ function Informes() {
     const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 
     const addHeader = () => {
-      if (COMPANY_CONFIG.logo) {
-        doc.addImage(COMPANY_CONFIG.logo, 'PNG', 14, 10, 30, 15);
+      // CAMBIO AQUÍ: Se usa LOGO_CIFAS_BASE64 directamente en lugar de COMPANY_CONFIG.logo
+      if (LOGO_CIFAS_BASE64) {
+        doc.addImage(LOGO_CIFAS_BASE64, 'PNG', 14, 10, 30, 15);
       }
       doc.setFont(COMPANY_CONFIG.font, 'bold');
       doc.setFontSize(16);
@@ -265,6 +267,7 @@ function Informes() {
               {reportEntries.map((entry) => (
                 <option key={entry.value} value={entry.value}>
                   {entry.label}
+                
                 </option>
               ))}
             </select>
@@ -349,6 +352,7 @@ function Informes() {
             >
               Excel
             </button>
+            
           </div>
         </section>
 
