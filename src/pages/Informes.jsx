@@ -8,7 +8,7 @@ import { exportToExcel } from '../utils/exportExcel.js';
 import ExportModal from '../components/ExportModal.jsx';
 import styles from '../styles/Reports.module.css';
 import { COMPANY_CONFIG } from '../styles/reportTheme';
-import { LOGO_CIFAS_BASE64 } from '../constants/assets';
+import { LOGO_CIFAS_BASE64 } from '../utils/assets.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

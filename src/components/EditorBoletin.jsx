@@ -2,9 +2,7 @@
 import { useState } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
-
-// 1. Importamos la constante del logo (Ajusta la ruta '../' según tu estructura de carpetas)
-import { LOGO_CIFAS_BASE64 } from '../constants/assets';
+import { LOGO_CIFAS_URL } from '../utils/assets.js';
 
 const EditorBoletin = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
@@ -42,7 +40,7 @@ const EditorBoletin = ({ clientesDB }) => {
         <tbody>
           <tr>
             <td style="padding: 20px; text-align: center;">
-              <img src="${LOGO_CIFAS_BASE64}" width="154" alt="Logo CIFAS" style="max-width: 100% !important; vertical-align: middle !important; width: 154px; height: auto;" />
+              <img src="${LOGO_CIFAS_URL}" width="154" alt="Logo CIFAS" style="max-width: 100% !important; vertical-align: middle !important; width: 154px; height: auto;" />
             </td>
           </tr>
           <tr>

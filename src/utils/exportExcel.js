@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import { STATE_STYLES, BUDGET_STATE_STYLES, FAT_STYLES, getDueDateStyle, COMPANY_CONFIG } from '../styles/reportTheme';
-import { LOGO_CIFAS_BASE64 } from '../constants/assets';
+import { LOGO_CIFAS_BASE64 } from '../utils/assets.js';
 
 // ── Helpers de formato ────────────────────────────────────────────────────────
 
