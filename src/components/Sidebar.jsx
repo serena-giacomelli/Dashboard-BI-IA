@@ -24,6 +24,13 @@ function Sidebar() {
         >
           GESTIÓN ESTRATÉGICA
         </NavLink>
+        {/* Nueva opción de Boletines */}
+        <NavLink
+          to="/boletines"
+          className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
+        >
+          BOLETINES
+        </NavLink>
       </nav>
     </aside>
   );
