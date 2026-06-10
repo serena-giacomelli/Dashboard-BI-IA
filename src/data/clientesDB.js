@@ -32,7 +32,7 @@ export const initialClientes = [
     domicilioFiscal: "Av. San Martín 1200",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: true
+    enviarBoletin: false
   },
 
   {
@@ -50,7 +50,7 @@ export const initialClientes = [
     domicilioFiscal: "Bv. Oroño 1450",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: true
+    enviarBoletin: false
   },
 
   {
@@ -86,7 +86,7 @@ export const initialClientes = [
     domicilioFiscal: "San Lorenzo 2145",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: true
+    enviarBoletin: false
   },
 
   {
@@ -158,7 +158,7 @@ export const initialClientes = [
     domicilioFiscal: "Córdoba 2140",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: true
+    enviarBoletin: false
   },
 
   {
@@ -176,7 +176,7 @@ export const initialClientes = [
     domicilioFiscal: "Av. Pellegrini 2850",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: true
+    enviarBoletin: false
   },
 
   {
@@ -212,7 +212,7 @@ export const initialClientes = [
     domicilioFiscal: "25 de Mayo 720",
     localidadFiscal: "Venado Tuerto",
     tipoCliente: "CIFAS",
-    enviarBoletin: true
+    enviarBoletin: false
   },
 
   {
@@ -248,7 +248,7 @@ export const initialClientes = [
     domicilioFiscal: "Wheelwright 1650",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: true
+    enviarBoletin: false
   },
 
   {
@@ -266,7 +266,7 @@ export const initialClientes = [
     domicilioFiscal: "Laprida 980",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: true
+    enviarBoletin: false
   },
 
   {
@@ -302,6 +302,6 @@ export const initialClientes = [
     domicilioFiscal: "Av. Francia 1850",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: true
+    enviarBoletin: false
   }
 ];
