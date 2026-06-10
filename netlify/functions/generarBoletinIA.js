@@ -1,43 +1,48 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 exports.handler = async (event) => {
-  // Vamos a ver qué ve la función realmente
-  const apiKey = process.env.GEMINI_API_KEY;
-  console.log("DEBUG - Contenido de GEMINI_API_KEY:", apiKey); 
-
-  if (!apiKey || apiKey === undefined) {
-    console.error("ERROR: La variable GEMINI_API_KEY llega como undefined o nula.");
-    return { statusCode: 500, body: JSON.stringify({ error: "La variable de entorno no existe en este scope" }) };
-  }
+  const apiKey = process.env.OPENAI_API_KEY;
+  const { puntosClave } = JSON.parse(event.body);
 
   try {
-    const { puntosClave } = JSON.parse(event.body);
-    
-    // Inicialización directa
-    const genAI = new GoogleGenerativeAI(apiKey.trim());
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // Modelo rápido y económico
+        messages: [
+          {
+            role: "system",
+            content: "Actúa como un experto en comunicación corporativa de la empresa CIFAS. Devuelve solo el cuerpo del boletín en formato HTML."
+          },
+          {
+            role: "user",
+            content: `Redacta un boletín basado en: "${puntosClave}".`
+          }
+        ],
+        temperature: 0.7
+      })
+    });
 
-    const prompt = `
-    Actúa como un experto en comunicación corporativa de la empresa CIFAS.
-    Redacta un boletín informativo profesional y claro basado en estos puntos:
-    "${puntosClave}"
-    
-    Reglas:
-    - Usa un tono cercano pero muy profesional.
-    - No escribas saludos iniciales genéricos (ya tenemos el "Estimado/a...").
-    - Ve directo a la información importante.
-    - Asegúrate de que el texto sea coherente y fácil de leer.
-    - Devuelve solo el texto del cuerpo del boletín en formato HTML (etiquetas <p>, <strong>, etc).
-    `;
+    const data = await response.json();
 
-    const result = await model.generateContent(prompt);
-    
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Error al conectar con OpenAI");
+    }
+
+    const contenido = data.choices[0].message.content;
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ contenido: result.response.text() }),
+      body: JSON.stringify({ contenido: contenido }),
     };
   } catch (error) {
-    console.error("ERROR DETALLADO:", error.message);
-    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+    console.error("❌ ERROR OPENAI:", error);
+    return { 
+      statusCode: 500, 
+      body: JSON.stringify({ error: error.message }) 
+    };
   }
 };
