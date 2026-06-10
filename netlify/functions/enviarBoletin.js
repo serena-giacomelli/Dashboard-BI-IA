@@ -13,22 +13,26 @@ exports.handler = async (event, context) => {
       return { statusCode: 500, body: JSON.stringify({ error: "Falta configurar la API KEY en Netlify" }) };
     }
 
+    // Payload para Resend
     const emailPayload = {
       from: "Prototipo Boletines <onboarding@resend.dev>",
-      // Para tus pruebas, mantengo tu mail fijo para que Resend no te bloquee
+      
+      // ⚠️ RESTRICCIÓN TESTING: Mientras uses "onboarding@resend.dev", 
+      // SOLO podés enviarte correos a vos misma. 
+      // Cuando tengas dominio propio, cambiá esto por: to: destinatario
       to: "sere22giacomelli@gmail.com", 
+      
       subject: asunto,
-      html: cuerpoHtml
+      html: cuerpoHtml, // El mail llega con HTML corporativo impecable
+      attachments: []
     };
 
-    // 🚀 NUEVO: Si recibimos el string del PDF desde el frontend, se adjunta con extensión .pdf
+    // 🚀 ADJUNTAR PDF: Si recibimos el Base64 blindado, lo adjuntamos como PDF
     if (adjuntoPdf) {
-      emailPayload.attachments = [
-        {
-          filename: "boletin-novedades.pdf",
-          content: adjuntoPdf 
-        }
-      ];
+      emailPayload.attachments.push({
+        filename: "boletin-novedades.pdf", // 👈 Revisá que termine en .pdf y NO en .docx
+        content: adjuntoPdf // Base64 del PDF blindado
+      });
     }
 
     const response = await fetch("https://api.resend.com/emails", {

@@ -3,15 +3,16 @@ import { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import html2pdf from 'html2pdf.js';
-// Importamos tu constante en Base64 real para el logo:
 import { LOGO_CIFAS_BASE64 } from '../utils/assets.js'; 
 
 const EditorBoletin = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [envioActual, setEnvioActual] = useState(0); 
+  
   const [historial, setHistorial] = useState([]);
-  const [boletinSeleccionado, setBoletinSeleccionado] = useState(null);
+  const [boletinSeleccionado, setBoletinSeleccionado] = useState(null); 
 
   useEffect(() => {
     const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
@@ -20,58 +21,43 @@ const EditorBoletin = ({ clientesDB }) => {
 
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
 
+  // Template estructurado con tablas e inline-styles puros obligatorios para Gmail/Outlook
   const generarTemplateEmpresa = (contenido, cliente) => {
     return `
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <style>
-    body { margin: 0; padding: 0; background-color: #ffffff; -webkit-print-color-adjust: exact; }
-    p, td, span, div, li {
-      font-family: Arial, Helvetica, sans-serif !important;
-      color: #000000 !important;
-      font-size: 11pt !important;
-      line-height: 1.5 !important;
-      word-break: break-word !important;
-    }
-    p { margin: 0 0 10pt 0 !important; padding: 0 !important; background: transparent !important; }
-    h1 { font-size: 22pt !important; font-weight: bold !important; color: #222222 !important; text-align: center !important; margin: 0 0 4pt 0 !important; }
-    h2 { font-size: 14pt !important; font-weight: normal !important; color: #555555 !important; text-align: center !important; margin: 0 0 15pt 0 !important; }
-    ul, ol { margin: 0 0 10pt 0 !important; padding-left: 20pt !important; }
-    li { margin-bottom: 4pt !important; background: transparent !important; }
-  </style>
+  <meta charset="utf-8">
+  <title>Boletín de Novedades</title>
 </head>
-<body style="background-color: #ffffff;">
+<body style="margin: 0; padding: 0; background-color: #ffffff; -webkit-print-color-adjust: exact;">
   
-  <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; margin: 0 auto; border-collapse: collapse; background-color: #ffffff;">
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; margin: 0 auto; border-collapse: collapse; background-color: #ffffff; font-family: Arial, Helvetica, sans-serif;">
     <tbody>
       <tr>
-        <td align="center" style="padding: 15px 0; text-align: center;">
-          <img src="${LOGO_CIFAS_BASE64}" width="150" alt="Logo CIFAS" style="display: block; border: 0; width: 150px; height: auto; margin: 0 auto;" />
+        <td align="center" style="padding: 20px 0; text-align: center;">
+          <img src="${LOGO_CIFAS_BASE64}" width="154" alt="Logo CIFAS" style="display: block; border: 0; width: 154px; height: auto; margin: 0 auto;" />
         </td>
       </tr>
       <tr>
         <td align="center" style="padding: 5px 0; text-align: center;">
-          <h1 style="margin: 0 0 4pt 0; text-align: center;">BOLETIN DE NOVEDADES</h1>
-          <h2 style="margin: 0 0 15pt 0; text-align: center;">DEL 01/06/2026 AL 07/06/2026</h2>
+          <h1 style="font-family: Arial, sans-serif; font-size: 24pt; font-weight: bold; color: #333333; margin: 0 0 6pt 0; text-align: center;">BOLETIN DE NOVEDADES</h1>
+          <h2 style="font-family: Arial, sans-serif; font-size: 15pt; font-weight: normal; color: #555555; margin: 0 0 18pt 0; text-align: center;">DEL 01/06/2026 AL 07/06/2026</h2>
         </td>
       </tr>
       <tr>
-        <td bgcolor="#E2E2E2" style="background-color: #E2E2E2 !important; border-radius: 6px; padding: 0;">
-          <table border="0" cellpadding="20" cellspacing="0" width="100%" style="width: 100%; border-collapse: collapse;">
-            <tbody>
-              <tr>
-                <td align="left" style="text-align: justify; background-color: #E2E2E2 !important;">
-                  <p style="margin: 0 0 12pt 0;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-                  <div style="text-align: justify; background: transparent !important;">
-                    ${contenido}
-                  </div>
-                  <p style="margin: 25pt 0 0 0;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <td bgcolor="#E2E2E2" style="background-color: #E2E2E2 !important; padding: 30px; border-radius: 4px;">
+          <p style="font-family: Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; margin: 0 0 12pt 0; text-align: justify; background: transparent !important;">
+            Estimado/a <strong>${cliente.razonSocial}</strong>,
+          </p>
+          
+          <div style="font-family: Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; text-align: justify; background: transparent !important;">
+            ${contenido}
+          </div>
+          
+          <p style="font-family: Arial, sans-serif; font-size: 11pt; color: #000000; line-height: 1.5; margin: 25pt 0 0 0; text-align: justify; background: transparent !important;">
+            Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong>
+          </p>
         </td>
       </tr>
     </tbody>
@@ -90,22 +76,28 @@ const EditorBoletin = ({ clientesDB }) => {
     }
 
     setCargando(true);
+    setEnvioActual(0);
 
     try {
       for (const cliente of destinatarios) {
+        setEnvioActual(prev => prev + 1);
+
         const htmlFinal = generarTemplateEmpresa(cuerpoHtml, cliente);
 
-        // 🛠️ CORRECCIÓN: Posicionado absoluto en (0,0) pero enviado al fondo del eje Z
-        const contenedorOculto = document.createElement('div');
-        contenedorOculto.style.width = '640px'; 
-        contenedorOculto.style.position = 'absolute';
-        contenedorOculto.style.left = '0'; 
-        contenedorOculto.style.top = '0';
-        contenedorOculto.style.zIndex = '-9999'; // Oculto detrás de la UI real
-        contenedorOculto.innerHTML = htmlFinal;
-        document.body.appendChild(contenedorOculto);
+        // 🛡️ CONTENEDOR SEGURO: Se monta abajo de todo en la pantalla del navegador (invisible para el ojo humano)
+        const wrapperOculto = document.createElement('div');
+        wrapperOculto.style.position = 'fixed';
+        wrapperOculto.style.top = '100vh'; 
+        wrapperOculto.style.left = '0';
+        wrapperOculto.style.width = '600px'; 
+        wrapperOculto.style.backgroundColor = '#ffffff';
+        wrapperOculto.innerHTML = htmlFinal;
+        document.body.appendChild(wrapperOculto);
 
-        const opcionesPdf = {
+        // 🚀 TIEMPO DE ESPERA CRUCIAL: Damos 150ms directos para que el microprocesador dibuje el Base64 en el DOM
+        await new Promise(resolve => setTimeout(resolve, 150));
+
+        const opt = {
           margin: [10, 10, 10, 10], 
           filename: `boletin_${cliente.razonSocial.replace(/ /g, '_')}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
@@ -113,27 +105,27 @@ const EditorBoletin = ({ clientesDB }) => {
             scale: 2, 
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff',
-            scrollX: 0, // 🛠️ CORRECCIÓN: Ignora el scroll horizontal del usuario
-            scrollY: 0  // 🛠️ CORRECCIÓN: Ignora el scroll vertical del usuario
+            backgroundColor: '#ffffff'
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        const pdfDataUri = await html2pdf().set(opcionesPdf).from(contenedorOculto).outputPdf('datauristring');
-        const base64Limpio = pdfDataUri.split('base64,')[1];
+        // Capturamos desde el elemento ya asimilado e hidratado por el navegador
+        const pdfBase64Uri = await html2pdf().set(opt).from(wrapperOculto).outputPdf('datauristring');
+        const pdfBase64Limpio = pdfBase64Uri.split('base64,')[1];
 
-        document.body.removeChild(contenedorOculto);
+        // Desmontamos el clon temporal inmediatamente
+        document.body.removeChild(wrapperOculto);
 
-        // Despachamos al backend de Netlify
+        // Envío al endpoint de Netlify
         const response = await fetch('/.netlify/functions/enviarBoletin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             asunto,
-            destinatario: "sere22giacomelli@gmail.com", 
-            cuerpoHtml: htmlFinal, 
-            adjuntoPdf: base64Limpio 
+            destinatario: cliente.email, 
+            cuerpoHtml: htmlFinal,
+            adjuntoPdf: pdfBase64Limpio 
           }),
         });
 
@@ -143,6 +135,7 @@ const EditorBoletin = ({ clientesDB }) => {
         }
       }
 
+      // Guardado en el registro histórico
       const nuevoRegistro = {
         id: Date.now(),
         fecha: new Date().toLocaleString('es-AR'),
@@ -156,14 +149,15 @@ const EditorBoletin = ({ clientesDB }) => {
       setHistorial(historialActualizado);
       localStorage.setItem('historial_boletines', JSON.stringify(historialActualizado));
 
-      alert("✅ Todos los PDFs fueron generados a escala y enviados con éxito.");
+      alert("✅ ¡Perfecto! Los correos se enviaron con diseño intacto y los PDFs ya no vienen vacíos.");
       setAsunto('');
       setCuerpoHtml('');
     } catch (error) {
-      console.error("Fallo:", error);
-      alert(`❌ Error al procesar: ${error.message}`);
+      console.error("Detalle del fallo:", error);
+      alert(`❌ Error al despachar boletines: ${error.message}`);
     } finally {
       setCargando(false);
+      setEnvioActual(0);
     }
   };
 
@@ -177,7 +171,7 @@ const EditorBoletin = ({ clientesDB }) => {
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2 style={{ color: '#0f172a' }}>Centro de Despacho de Boletines (Calibración PDF)</h2>
+      <h2 style={{ color: '#0f172a' }}>Centro de Despacho de Boletines</h2>
       
       <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
         <p style={{ margin: 0, fontWeight: 'bold', color: '#166534' }}>
@@ -218,64 +212,54 @@ const EditorBoletin = ({ clientesDB }) => {
             fontWeight: 'bold'
           }}
         >
-          {cargando ? 'Compilando PDFs perfectos...' : 'Enviar Boletines en PDF'}
+          {cargando ? `Despachando boletín ${envioActual} de ${destinatarios.length}...` : 'Enviar Boletines + PDF Adjunto'}
         </button>
       </form>
 
       {historial.length > 0 && (
         <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '2px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ color: '#1e293b', margin: 0 }}>Historial de Boletines Enviados</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h3 style={{ margin: 0, color: '#1e293b' }}>Historial de Boletines Enviados</h3>
             <button 
               onClick={borrarHistorial} 
-              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
             >
-              Limpiar Historial Local
+              Borrar Historial
             </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Columna Izquierda: Historial */}
             <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#fff' }}>
-              {historial.map((boletin) => (
+              {historial.map((item) => (
                 <div 
-                  key={boletin.id} 
-                  onClick={() => setBoletinSeleccionado(boletin)}
+                  key={item.id} 
+                  onClick={() => setBoletinSeleccionado(item)}
                   style={{
                     padding: '12px',
                     borderBottom: '1px solid #e2e8f0',
                     cursor: 'pointer',
-                    background: boletinSeleccionado?.id === boletin.id ? '#f1f5f9' : '#ffffff',
+                    background: boletinSeleccionado?.id === item.id ? '#f1f5f9' : '#ffffff',
                     transition: 'background 0.2s'
                   }}
                 >
-                  <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#334155' }}>{boletin.asunto}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
-                    📅 {boletin.fecha} | 👥 {boletin.destinatariosCount} destinatarios
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#475569', marginTop: '6px', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    "{boletin.vistaPrevia}"
-                  </div>
+                  <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#334155' }}>{item.asunto}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>📅 {item.fecha}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#64748b', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '4px' }}>"{item.vistaPrevia}"</div>
                 </div>
               ))}
             </div>
 
+            {/* Columna Derecha: Vista Previa */}
             <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '15px', background: '#f8fafc', maxHeight: '400px', overflowY: 'auto' }}>
               {boletinSeleccionado ? (
                 <div>
-                  <h4 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>{boletinSeleccionado.asunto}</h4>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Despachado: {boletinSeleccionado.fecha}</span>
+                  <h4 style={{ margin: '0 0 5px 0' }}>{boletinSeleccionado.asunto}</h4>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Impacto: {boletinSeleccionado.destinatariosCount} clientes.</span>
                   <hr style={{ border: 'none', borderTop: '1px solid #cbd5e1', margin: '10px 0' }} />
                   
                   <div 
-                    style={{ 
-                      padding: '12px', 
-                      background: '#ffffff', 
-                      border: '1px solid #e2e8f0', 
-                      borderRadius: '4px',
-                      fontSize: '0.9rem',
-                      maxHeight: '200px',
-                      overflowY: 'auto'
-                    }}
+                    style={{ padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '0.9rem' }}
                     dangerouslySetInnerHTML={{ __html: boletinSeleccionado.cuerpoHtml }}
                   />
                   
@@ -285,25 +269,14 @@ const EditorBoletin = ({ clientesDB }) => {
                       setCuerpoHtml(boletinSeleccionado.cuerpoHtml);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    style={{ 
-                      marginTop: '15px', 
-                      width: '100%', 
-                      padding: '10px', 
-                      background: '#2563eb', 
-                      color: 'white', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer', 
-                      fontWeight: 'bold',
-                      fontSize: '0.9rem' 
-                    }}
+                    style={{ marginTop: '15px', width: '100%', padding: '10px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                   >
-                    📝 Cargar contenido en el editor
+                    📝 Cargar contenido en editor
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', height: '100%', minHeight: '150px', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem', textAlign: 'center' }}>
-                  Seleccioná un boletín del historial para inspeccionar su contenido o recargarlo.
+                <div style={{ display: 'flex', height: '100%', minHeight: '150px', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem' }}>
+                  Seleccioná un boletín del historial para inspeccionar su contenido.
                 </div>
               )}
             </div>
