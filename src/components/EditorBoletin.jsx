@@ -2,20 +2,16 @@
 import { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
+import html2pdf from 'html2pdf.js'; // 📦 NUEVO: Importamos la librería
 import { LOGO_CIFAS_URL } from '../utils/assets.js';
 
 const EditorBoletin = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
   const [cargando, setCargando] = useState(false);
-  
-  // 📜 Estado para almacenar el histórico
   const [historial, setHistorial] = useState([]);
-  
-  // 👁️ Estado para controlar qué boletín se está mirando en el modal
   const [boletinSeleccionado, setBoletinSeleccionado] = useState(null);
 
-  // Cargar el historial del localStorage al montar el componente
   useEffect(() => {
     const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
     setHistorial(historialGuardado);
@@ -23,62 +19,25 @@ const EditorBoletin = ({ clientesDB }) => {
 
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
 
-  // ULTRA COMPATIBILIDAD: Anidación por atributos nativos y sobreescritura de estilos MSO
   const generarTemplateEmpresa = (contenido, cliente) => {
+    const contenidoLimpiado = contenido
+      .replace(/<p>/g, '<p style="background-color: transparent !important; background: transparent !important; mso-shading: transparent !important; margin: 0 0 10pt 0; text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; color: #000000;">')
+      .replace(/<li>/g, '<li style="background-color: transparent !important; background: transparent !important; mso-shading: transparent !important; font-family: Arial, sans-serif; font-size: 11pt; color: #000000; margin-bottom: 4pt;">');
+
     return `
 <!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Boletín de Novedades</title>
   <style>
-    /* Estilos globales forzados para el motor de descompresión de Word */
-    body { margin: 0; padding: 0; background-color: #ffffff; }
-    
-    p, li, span, td, div {
-      font-family: Arial, Helvetica, sans-serif !important;
-      color: #000000 !important;
-    }
-    
-    p {
-      font-size: 11pt !important;
-      line-height: 1.4 !important;
-      text-align: justify !important;
-      margin: 0 0 10pt 0 !important;
-    }
-    
-    h1 { 
-      font-size: 24pt !important; 
-      font-weight: bold !important; 
-      color: #333333 !important; 
-      text-align: center !important; 
-      margin: 0 0 6pt 0 !important; 
-    }
-    
-    h2 { 
-      font-size: 15pt !important; 
-      font-weight: normal !important; 
-      color: #555555 !important; 
-      text-align: center !important; 
-      margin: 0 0 18pt 0 !important; 
-    }
-    
-    a { color: #11B4FF !important; text-decoration: underline !important; }
-    
-    /* Normalización de listas de Quill dentro de Word */
-    ul, ol { margin-top: 0in !important; margin-bottom: 10pt !important; padding-left: 20pt !important; }
-    li { font-size: 11pt !important; margin-bottom: 4pt !important; text-align: justify !important; }
-    
-    @page {
-      size: 8.5in 11in;
-      margin: 1.0in 1.0in 1.0in 1.0in;
-    }
-    table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    body, table, td, p, a, li, blockquote { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
+    body { margin: 0; padding: 0; width: 100% !important; background-color: #ffffff; }
+    p, span, td, div, li, strong { font-family: Arial, Helvetica, sans-serif !important; color: #000000 !important; }
   </style>
 </head>
-<body style="background-color: #ffffff; margin: 0; padding: 0;">
-  
-  <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; margin: 0 auto; border-collapse: collapse;">
+<body style="margin: 0; padding: 0; background-color: #ffffff;">
+
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; max-width: 600px; margin: 0 auto; border-collapse: collapse;">
     <tbody>
       <tr>
         <td align="center" style="padding: 20px 0; text-align: center;">
@@ -88,30 +47,28 @@ const EditorBoletin = ({ clientesDB }) => {
       <tr>
         <td align="center" style="padding: 10px 0; text-align: center;">
           <h1 style="font-family: Arial, sans-serif; font-size: 24pt; font-weight: bold; color: #333333; margin: 0 0 6pt 0; text-align: center;">BOLETIN DE NOVEDADES</h1>
-          <h2 style="font-family: Arial, sans-serif; font-size: 16pt; font-weight: normal; color: #555555; margin: 0 0 18pt 0; text-align: center;">DEL 01/06/2026 AL 07/06/2026</h2>
+          <h2 style="font-family: Arial, sans-serif; font-size: 15pt; font-weight: normal; color: #555555; margin: 0 0 18pt 0; text-align: center;">DEL 01/06/2026 AL 07/06/2026</h2>
         </td>
       </tr>
       <tr>
-        <td bgcolor="#E2E2E2" style="background-color: #E2E2E2; border-radius: 4px;">
-          
+        <td bgcolor="#E2E2E2" style="background-color: #E2E2E2; border-radius: 4px; padding: 0;">
           <table border="0" cellpadding="25" cellspacing="0" width="100%" style="width: 100%; border-collapse: collapse;">
             <tbody>
               <tr>
-                <td align="left" style="text-align: justify; font-family: Arial, sans-serif;">
-                  
-                  <p style="margin: 0 0 12pt 0; font-size: 11pt; font-family: Arial, sans-serif;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-                  
-                  <div style="text-align: justify; font-family: Arial, sans-serif; font-size: 11pt;">
-                    ${contenido}
+                <td align="left" style="text-align: justify; background-color: #E2E2E2;">
+                  <p style="margin: 0 0 12pt 0; font-size: 11pt; font-family: Arial, sans-serif; color: #000000;">
+                    Estimado/a <strong>${cliente.razonSocial}</strong>,
+                  </p>
+                  <div style="text-align: justify; font-family: Arial, sans-serif; font-size: 11pt; color: #000000;">
+                    ${contenidoLimpiado}
                   </div>
-                  
-                  <p style="margin: 20pt 0 0 0; font-size: 11pt; font-family: Arial, sans-serif;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
-                  
+                  <p style="margin: 20pt 0 0 0; font-size: 11pt; font-family: Arial, sans-serif; color: #000000;">
+                    Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong>
+                  </p>
                 </td>
               </tr>
             </tbody>
           </table>
-          
         </td>
       </tr>
     </tbody>
@@ -135,18 +92,37 @@ const EditorBoletin = ({ clientesDB }) => {
       for (const cliente of destinatarios) {
         const htmlFinal = generarTemplateEmpresa(cuerpoHtml, cliente);
         
+        // 🚀 NUEVO: Configuramos html2pdf para que dibuje el PDF preservando todo tu formato
+        const worker = html2pdf().set({
+          margin: 15,
+          filename: 'boletin.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true }, // Clave para que pueda renderizar tu URL de Cloudinary
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(htmlFinal);
+
+        // Extraemos el PDF en texto (Base64) puro
+        const pdfDataUri = await worker.outputPdf('datauristring');
+        const pdfBase64Limpio = pdfDataUri.split('base64,')[1];
+        
         const response = await fetch('/.netlify/functions/enviarBoletin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             asunto,
-            cuerpoHtml: htmlFinal
+            destinatario: cliente.mailFacturacionPrimario || "sere22giacomelli@gmail.com",
+            cuerpoHtml: htmlFinal,
+            adjuntoPdf: pdfBase64Limpio // 🚀 Le inyectamos el PDF al backend
           }),
         });
 
-        if (!response.ok) throw new Error(`Error enviando a ${cliente.razonSocial}`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Error mandando a ${cliente.razonSocial}`);
+        }
       }
 
+      // Se guarda el registro igual que ayer
       const nuevoRegistro = {
         id: Date.now(),
         fecha: new Date().toLocaleString('es-AR'),
@@ -156,36 +132,25 @@ const EditorBoletin = ({ clientesDB }) => {
         cuerpoHtml: cuerpoHtml 
       };
 
-      const historialActualizado = [nuevoRegistro, ...historial];
-      setHistorial(historialActualizado);
-      localStorage.setItem('historial_boletines', JSON.stringify(historialActualizado));
+      setHistorial([nuevoRegistro, ...historial]);
+      localStorage.setItem('historial_boletines', JSON.stringify([nuevoRegistro, ...historial]));
 
-      alert("✅ Todos los boletines fueron procesados correctamente.");
+      alert("✅ Todos los boletines fueron procesados y adjuntados en PDF correctamente.");
       setAsunto('');
       setCuerpoHtml('');
     } catch (error) {
-      console.error(error);
-      alert("❌ Hubo un error al despachar los boletines.");
+      console.error("Detalle del fallo:", error);
+      alert(`❌ Error al despachar: ${error.message}`);
     } finally {
       setCargando(false);
     }
   };
 
   const borrarHistorial = () => {
-    if (window.confirm("¿Seguro querés eliminar todo el historial de envíos de este navegador?")) {
+    if (window.confirm("¿Seguro querés eliminar todo el historial?")) {
       localStorage.removeItem('historial_boletines');
       setHistorial([]);
     }
-  };
-
-  const modulosQuill = { 
-    toolbar: [
-      [{ 'header': [1, 2, false] }], 
-      ['bold', 'italic', 'underline'], 
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }], 
-      ['link'], 
-      ['clean']
-    ] 
   };
 
   return (
@@ -212,7 +177,7 @@ const EditorBoletin = ({ clientesDB }) => {
             theme="snow" 
             value={cuerpoHtml} 
             onChange={setCuerpoHtml} 
-            modules={modulosQuill} 
+            modules={{ toolbar: [[{ 'header': [1, 2, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link'], ['clean']] }} 
             style={{ height: '200px' }} 
           />
         </div>
@@ -231,106 +196,15 @@ const EditorBoletin = ({ clientesDB }) => {
             fontWeight: 'bold'
           }}
         >
-          {cargando ? 'Enviando boletines...' : 'Enviar Boletín + Word Adjunto'}
+          {cargando ? 'Enviando boletines...' : 'Enviar Boletines + PDF Adjunto'}
         </button>
       </form>
 
-      {/* 📜 HISTORIAL */}
-      <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '2px solid #e2e8f0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h3 style={{ margin: 0, color: '#1e293b' }}>Historial de Boletines Enviados</h3>
-          {historial.length > 0 && (
-            <button 
-              onClick={borrarHistorial} 
-              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
-            >
-              Borrar Historial
-            </button>
-          )}
-        </div>
-
-        {historial.length === 0 ? (
-          <p style={{ color: '#64748b', fontStyle: 'italic', fontSize: '14px' }}>No registrás boletines enviados recientemente en este equipo.</p>
-        ) : (
-          <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff', fontSize: '14px', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
-                  <th style={{ padding: '12px 16px' }}>Fecha / Hora</th>
-                  <th style={{ padding: '12px 16px' }}>Asunto</th>
-                  <th style={{ padding: '12px 16px' }}>Contenido de Referencia</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center' }}>Impacto</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center' }}>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historial.map((item) => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', color: '#334155' }}>
-                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', color: '#64748b' }}>{item.fecha}</td>
-                    <td style={{ padding: '12px 16px', fontWeight: '600' }}>{item.asunto}</td>
-                    <td style={{ padding: '12px 16px', color: '#64748b', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.vistaPrevia}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      <span style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>
-                        {item.destinatariosCount} clts.
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      <button
-                        onClick={() => setBoletinSeleccionado(item)}
-                        style={{ background: '#0f172a', color: 'white', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        Ver contenido
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* 👁️ VENTANA MODAL */}
-      {boletinSeleccionado && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(2px)',
-          display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999
-        }}>
-          <div style={{
-            background: '#fff', padding: '24px', borderRadius: '12px',
-            maxWidth: '650px', width: '90%', maxHeight: '80vh', overflowY: 'auto',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            fontFamily: 'sans-serif'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', marginBottom: '15px' }}>
-              <div>
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '18px', color: '#0f172a' }}>{boletinSeleccionado.asunto}</h4>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>Enviado el: {boletinSeleccionado.fecha}</span>
-              </div>
-              <button 
-                onClick={() => setBoletinSeleccionado(null)}
-                style={{ background: '#f1f5f9', border: 'none', color: '#64748b', fontSize: '16px', fontWeight: 'bold', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div 
-              className="ql-editor"
-              style={{ padding: '15px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', minHeight: '150px', color: '#334155', textAlign: 'left' }}
-              dangerouslySetInnerHTML={{ __html: boletinSeleccionado.cuerpoHtml || '<p style="color:#ef4444;">Sin contenido HTML registrado.</p>' }}
-            />
-
-            <div style={{ marginTop: '20px', textAlign: 'right' }}>
-              <button 
-                onClick={() => setBoletinSeleccionado(null)}
-                style={{ padding: '8px 16px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}
-              >
-                Cerrar Vista
-              </button>
-            </div>
-          </div>
+      {historial.length > 0 && (
+        <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+          <button onClick={borrarHistorial} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
+            Limpiar Historial Local
+          </button>
         </div>
       )}
     </div>
