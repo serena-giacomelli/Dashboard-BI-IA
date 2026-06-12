@@ -25,6 +25,9 @@ function Sidebar() {
         <NavLink to="/boletines" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           BOLETINES
         </NavLink>
+        <NavLink to="/novedades" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+          NOVEDADES
+        </NavLink>
       </nav>
     </aside>
   );

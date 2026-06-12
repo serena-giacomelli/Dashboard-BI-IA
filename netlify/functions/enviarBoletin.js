@@ -4,7 +4,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { asunto, cuerpoHtml, destinatario, adjuntoPdf } = JSON.parse(event.body);
+    const { asunto, cuerpoHtml, destinatario, adjuntoPdf, filename } = JSON.parse(event.body);
     const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey) {
@@ -25,13 +25,12 @@ exports.handler = async (event, context) => {
       attachments: []
     };
 
-    // 🚀 ADJUNTAR PDF: Si recibimos el Base64 blindado, lo adjuntamos como PDF
     if (adjuntoPdf) {
-      emailPayload.attachments.push({
-        filename: "boletin-novedades.pdf", // 👈 Revisá que termine en .pdf y NO en .docx
-        content: adjuntoPdf // Base64 del PDF blindado
-      });
-    }
+  emailPayload.attachments.push({
+    filename: filename || "documento.pdf", // Usa el nombre que le pases, o uno por defecto
+    content: adjuntoPdf
+  });
+}
 
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
