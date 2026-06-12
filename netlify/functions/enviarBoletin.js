@@ -1,5 +1,3 @@
-// netlify/functions/enviarBoletin.js
-
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: JSON.stringify({ error: "Método no permitido" }) };

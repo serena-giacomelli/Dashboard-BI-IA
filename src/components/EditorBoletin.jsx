@@ -57,24 +57,41 @@ const EditorBoletin = ({ clientesDB }) => {
   };
 
   const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
-    const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
-    return `
-      <!DOCTYPE html>
-      <html>
-      <body>
-        <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif;">
-          <tr><td align="center"><img src="${logoSeleccionado}" width="154" /></td></tr>
-          <tr><td align="center"><h1>BOLETIN DE NOVEDADES</h1><h2>${obtenerRangoSemana()}</h2></td></tr>
-          <tr><td bgcolor="#E2E2E2" style="padding: 30px;">
-            <p>Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-            <div>${contenido}</div>
-            <p>Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
-          </td></tr>
-        </table>
-      </body>
-      </html>
-    `;
-  };
+  const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+        .wrapper { width: 100%; max-width: 550px; margin: 0 auto; }
+        .header { text-align: center; padding: 20px 0 10px 0; }
+        .header img { width: 120px; }
+        .header h1 { font-size: 22px; margin: 8px 0 4px 0; }
+        .header h2 { font-size: 16px; font-weight: normal; margin: 0; }
+        .body { background: #E2E2E2; padding: 20px 25px; margin-top: 10px; }
+        .body p { font-size: 14px; line-height: 1.5; margin: 0 0 8px 0; }
+        .body strong { font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <div class="header">
+          <img src="${logoSeleccionado}" />
+          <h1>BOLETIN DE NOVEDADES</h1>
+          <h2>${obtenerRangoSemana()}</h2>
+        </div>
+        <div class="body">
+          <p>Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
+          <div style="font-size:14px; line-height:1.5;">${contenido}</div>
+          <p style="margin-top:12px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
@@ -89,7 +106,24 @@ const EditorBoletin = ({ clientesDB }) => {
         const htmlPdf = generarTemplateEmpresa(cuerpoHtml, cliente, true);
         const workerContenedor = document.createElement('div');
         workerContenedor.innerHTML = htmlPdf.trim();
-        const pdfBase64Uri = await html2pdf().from(workerContenedor).outputPdf('datauristring');
+        const pdfBase64Uri = await html2pdf()
+          .set({
+            margin: [10, 15, 10, 15],
+            filename: `boletin_${cliente.razonSocial}.pdf`,
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              letterRendering: true,
+              width: 800
+            },
+            jsPDF: {
+              unit: 'mm',
+              format: 'a4',
+              orientation: 'portrait'
+            }
+          })
+          .from(workerContenedor)
+          .outputPdf('datauristring');
         const pdfBase64Limpio = pdfBase64Uri.split('base64,')[1];
         
         await fetch('/.netlify/functions/enviarBoletin', {
