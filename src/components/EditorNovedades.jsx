@@ -288,19 +288,42 @@ const EditorNovedades = ({ clientesDB }) => {
       {/* HISTORIAL SIMPLIFICADO ABAJO */}
       {historial.length > 0 && (
         <div style={{ marginTop: '50px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                <h3>Historial de Novedades</h3>
-                <button onClick={borrarHistorial} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Borrar todo</button>
-            </div>
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px' }}>
-                {historialPaginado.map((item) => (
-                    <div key={item.id} onClick={() => setNovedadSeleccionada(item)} style={{ padding: '12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                        <span>{item.asunto}</span>
-                        <span style={{ color: '#64748b', fontSize: '13px' }}>{item.fecha}</span>
-                    </div>
-                ))}
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <h3>Historial de Novedades</h3>
+          <button onClick={borrarHistorial} style={{ color: '#fff', background: '#ef4444', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>Borrar Historial</button>
         </div>
+
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'center', background: '#f8fafc', padding: '15px', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+          <input type="text" placeholder="Filtrar historial por asunto..." value={filtroHistorial} onChange={(e) => { setFiltroHistorial(e.target.value); setPaginaActual(1); }} style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+          <select value={ordenHistorial} onChange={(e) => setOrdenHistorial(e.target.value)} style={{ padding: '8px' }}>
+            <option value="recientes">Más recientes primero</option>
+            <option value="antiguos">Más antiguos primero</option>
+            <option value="alfa-asc">A-Z</option>
+            <option value="alfa-desc">Z-A</option>
+          </select>
+          <select value={itemsPorPagina} onChange={(e) => { setItemsPorPagina(Number(e.target.value)); setPaginaActual(1); }} style={{ padding: '8px' }}>
+            <option value={5}>Ver 5</option>
+            <option value={10}>Ver 10</option>
+          </select>
+        </div>
+
+        <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
+          {historialPaginado.map((item) => (
+            <div key={item.id} onClick={() => setNovedadSeleccionada(item)} style={{ padding: '12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', background: '#fff' }}>
+              <span>{item.asunto}</span>
+              <span style={{ color: '#64748b', fontSize: '13px' }}>{item.fecha}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px', fontSize: '14px', color: '#64748b' }}>
+          <span>Mostrando página {paginaValida} de {totalPaginas || 1} ({historialOrdenado.length} resultados)</span>
+          <div>
+            <button disabled={paginaActual === 1} onClick={() => setPaginaActual(p => p - 1)} style={{ cursor: 'pointer', marginRight: '10px' }}>Anterior</button>
+            <button disabled={paginaActual >= totalPaginas} onClick={() => setPaginaActual(p => p + 1)} style={{ cursor: 'pointer' }}>Siguiente</button>
+          </div>
+        </div>
+      </div>
       )}
 
       {/* MODAL DE VISTA PREVIA */}
