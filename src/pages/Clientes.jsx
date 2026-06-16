@@ -133,6 +133,19 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
     boxSizing: 'border-box',
     outline: 'none'  };
 
+
+const todosFiltradosMarcados = clientesFiltrados.length > 0 && clientesFiltrados.every(c => c.enviarBoletin);
+
+  const toggleTodosFiltrados = () => {
+    const nuevoEstado = !todosFiltradosMarcados;
+    const idsVisibles = clientesFiltrados.map(c => c.id);
+    setClientes(prevClientes => 
+      prevClientes.map(c => 
+        idsVisibles.includes(c.id) ? { ...c, enviarBoletin: nuevoEstado } : c
+      )
+    );
+  };
+
   return (
     <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif', color: '#334155', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
       {!clienteEditando && (
@@ -201,8 +214,65 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                 </button>
               )}
             </div>
-            <div style={{ marginTop: '12px', fontSize: '12px', color: '#94a3b8', fontWeight: '500' }}>
-              Mostrando {clientesFiltrados.length} de {clientes.length} clientes encontrados.
+            <div style={{ 
+              marginTop: '16px', 
+              fontSize: '12px', 
+              color: '#94a3b8', 
+              fontWeight: '500',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              <span>
+                Mostrando {clientesFiltrados.length} de {clientes.length} clientes encontrados.
+              </span>
+
+<div style={{ 
+              marginTop: '16px', 
+              fontSize: '12px', 
+              color: '#94a3b8', 
+              fontWeight: '500',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              <span>
+                Mostrando {clientesFiltrados.length} de {clientes.length} clientes encontrados.
+              </span>
+
+              {clientesFiltrados.length > 0 && (
+                <button
+                  type="button"
+                  onClick={toggleTodosFiltrados}
+                  style={{
+                    padding: '6px 14px',
+                    backgroundColor: todosFiltradosMarcados ? '#e0f2fe' : '#f1f5f9',
+                    color: todosFiltradosMarcados ? '#0369a1' : '#475569',
+                    border: todosFiltradosMarcados ? '1px solid #bae6fd' : '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <input 
+                    type="checkbox" 
+                    checked={todosFiltradosMarcados} 
+                    readOnly 
+                    style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px' }} 
+                  />
+                  <span>Todos ({clientesFiltrados.length})</span>
+                </button>
+              )}
+            </div>
             </div>
           </div>
           <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
