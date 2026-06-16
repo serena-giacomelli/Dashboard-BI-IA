@@ -11,12 +11,17 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@google/generative-ai@~0.24.1",
         "npm:@vitejs/plugin-react@^4.4.1",
+        "npm:docx@^9.7.1",
+        "npm:dotenv@^17.4.2",
         "npm:exceljs@^4.4.0",
+        "npm:html2pdf.js@0.14",
         "npm:jspdf-autotable@^5.0.2",
         "npm:jspdf@^3.0.1",
         "npm:pdf-lib@^1.17.1",
         "npm:react-dom@^19.1.0",
+        "npm:react-quill-new@^3.8.3",
         "npm:react-router-dom@^7.6.1",
         "npm:react@^19.1.0",
         "npm:vite@^6.3.5",

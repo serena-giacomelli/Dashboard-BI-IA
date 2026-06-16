@@ -1,3 +1,4 @@
+// src/components/Sidebar.jsx
 import { NavLink } from 'react-router-dom';
 import styles from '../styles/Sidebar.module.css';
 
@@ -18,9 +19,16 @@ function Sidebar() {
         <NavLink to="/detalle" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           GESTIÓN ESTRATÉGICA
         </NavLink>
-        {/* Nueva sección Clientes separada */}
         <NavLink to="/clientes" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           CLIENTES
+        </NavLink>
+        {/* Sección del nomenclador ARCA */}
+        <NavLink to="/actividades" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+          ACTIVIDADES
+        </NavLink>
+        {/* Sección de prestaciones de la consultora */}
+        <NavLink to="/servicios" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+          SERVICIOS
         </NavLink>
         <NavLink to="/boletines" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           BOLETINES

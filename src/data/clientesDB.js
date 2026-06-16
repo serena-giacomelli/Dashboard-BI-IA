@@ -1,4 +1,28 @@
 // src/data/clientesDB.js
+
+// 1. PORTFOLIO DE SERVICIOS REALES (Extraídos de Servicios.jsx)
+export const portfolioServicios = [
+  {
+    id: 1,
+    nombre: 'Gestión de Habilitaciones e Inscripciones',
+    descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
+    categoria: 'Regulaciones',
+    modalidad: 'Por Proyecto',
+    precioBase: 450000,
+    actividadesArca: ['016119', '749009']
+  },
+  {
+    id: 2,
+    nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío',
+    descripcion: 'Evaluación técnica de eficiencia energética en cámaras frigoríficas y túneles de congelado.',
+    categoria: 'Ingeniería',
+    modalidad: 'Por Hora',
+    precioBase: 25000,
+    actividadesArca: ['101011', '711003']
+  }
+];
+
+// 2. DIRECTORIO DE CLIENTES CON EL FLUJO DE INFORMACIÓN CORREGIDO (CON ARCA EN CASCADA)
 export const initialClientes = [
   { 
     id: 1, 
@@ -15,7 +39,16 @@ export const initialClientes = [
     domicilioFiscal: "Av. Carballo 180, Piso 4",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: false 
+    enviarBoletin: false,
+    contactos: [
+      { nombre: 'Carlos', apellido: 'Gómez', telefono: '0341-4321122', interno: '101', celular: '3415111222', mail: 'cgomez@agrorosario.com', cargo: 'TITULAR', obs: 'Firmante de contratos' }
+    ],
+    historia: [
+      { descripcion: 'Alta de cliente en el sistema y configuración de abonos.', fecha: '12/01/2026', tipo: 'Historia' }
+    ],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '01/02/2026', actividadesArca: ['016119', '749009'] }
+    ]
   },
   { 
     id: 2, 
@@ -32,9 +65,17 @@ export const initialClientes = [
     domicilioFiscal: "Av. San Martín 1200",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [
+      { nombre: 'Ricardo', apellido: 'Ferreyra', telefono: '03400-474849', interno: '', celular: '3400611223', mail: 'rferreyra@metanucleo.com.ar', cargo: 'APODERADO', obs: 'Contactar por deudas pend.' }
+    ],
+    historia: [
+      { descripcion: 'Se reclamó pago de cuotas atrasadas del servicio suspendido.', fecha: '05/06/2026', tipo: 'Llamada' }
+    ],
+    servicios: [
+      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '90000', estado: 'Activo', fechaInicio: '15/05/2025', actividadesArca: ['101011', '711003'] }
+    ]
   },
-
   {
     id: 3,
     razonSocial: "Lácteos del Sur S.A.",
@@ -50,9 +91,18 @@ export const initialClientes = [
     domicilioFiscal: "Bv. Oroño 1450",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [
+      { nombre: 'María Laura', apellido: 'Piazza', telefono: '0341-4809000', interno: '42', celular: '3416554433', mail: 'mlpiazza@lacteosdelsur.com', cargo: 'CONTADOR', obs: 'Envío directo de facturación' }
+    ],
+    historia: [
+      { descripcion: 'Ajuste de tarifas por volumen de personal liquidado.', fecha: '20/04/2026', tipo: 'Reunión' }
+    ],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '01/01/2025', actividadesArca: ['016119', '749009'] },
+      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '120000', estado: 'Activo', fechaInicio: '15/03/2025', actividadesArca: ['101011', '711003'] }
+    ]
   },
-
   {
     id: 4,
     razonSocial: "Frigorífico La Esperanza S.R.L.",
@@ -68,9 +118,13 @@ export const initialClientes = [
     domicilioFiscal: "Mitre 820",
     localidadFiscal: "Casilda",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [],
+    history: [],
+    servicios: [
+      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '180000', estado: 'Suspendido', fechaInicio: '01/03/2025', actividadesArca: ['101011', '711003'] }
+    ]
   },
-
   {
     id: 5,
     razonSocial: "Agroinsumos Pampeanos S.A.",
@@ -86,9 +140,15 @@ export const initialClientes = [
     domicilioFiscal: "San Lorenzo 2145",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [
+      { nombre: 'Andrés', apellido: 'Vignatti', telefono: '', interno: '', celular: '3415998877', mail: 'avignatti@agropampeanos.com', cargo: 'TITULAR', obs: '' }
+    ],
+    historia: [],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '380000', estado: 'Activo', fechaInicio: '15/11/2025', actividadesArca: ['016119', '749009'] }
+    ]
   },
-
   {
     id: 6,
     razonSocial: "Servicios Industriales Delta S.R.L.",
@@ -104,9 +164,13 @@ export const initialClientes = [
     domicilioFiscal: "Urquiza 3550",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [],
+    historia: [],
+    servicios: [
+      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '75000', estado: 'Suspendido', fechaInicio: '01/08/2025', actividadesArca: ['101011', '711003'] }
+    ]
   },
-
   {
     id: 7,
     razonSocial: "Alimentos Premium S.A.",
@@ -122,9 +186,15 @@ export const initialClientes = [
     domicilioFiscal: "España 980",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: true
+    enviarBoletin: true,
+    contactos: [
+      { nombre: 'Esteban', apellido: 'Quito', telefono: '0341-4261155', interno: '12', celular: '', mail: 'equito@alimentospremium.com', cargo: 'TITULAR', obs: 'Prefiere contacto vía email' }
+    ],
+    historia: [],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '20/10/2025', actividadesArca: ['016119', '749009'] }
+    ]
   },
-
   {
     id: 8,
     razonSocial: "BioNutrición Animal S.R.L.",
@@ -140,9 +210,11 @@ export const initialClientes = [
     domicilioFiscal: "Belgrano 1220",
     localidadFiscal: "Rafaela",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [],
+    historia: [],
+    servicios: [] // Vacío de forma intencional para tests visuales
   },
-
   {
     id: 9,
     razonSocial: "Aceitera Regional S.A.",
@@ -158,9 +230,17 @@ export const initialClientes = [
     domicilioFiscal: "Córdoba 2140",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [
+      { nombre: 'Laura', apellido: 'Méndez', telefono: '0341-4103000', interno: '310', celular: '3413998811', mail: 'lmendez@aceiteraregional.com', cargo: 'APODERADO', obs: 'Gerente Financiera' }
+    ],
+    historia: [
+      { descripcion: 'Reunión presencial por cierre de auditoría anual.', fecha: '14/05/2026', tipo: 'Reunión' }
+    ],
+    servicios: [
+      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '250000', estado: 'Activo', fechaInicio: '01/01/2024', actividadesArca: ['101011', '711003'] }
+    ]
   },
-
   {
     id: 10,
     razonSocial: "Ganadera del Litoral S.A.",
@@ -176,9 +256,13 @@ export const initialClientes = [
     domicilioFiscal: "Av. Pellegrini 2850",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [],
+    historia: [],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '120000', estado: 'Activo', fechaInicio: '12/09/2025', actividadesArca: ['016119', '749009'] }
+    ]
   },
-
   {
     id: 11,
     razonSocial: "Molinos del Paraná S.R.L.",
@@ -194,9 +278,13 @@ export const initialClientes = [
     domicilioFiscal: "Sarmiento 1800",
     localidadFiscal: "San Nicolás",
     tipoCliente: "CIFAS",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [],
+    historia: [],
+    servicios: [
+      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '85000', estado: 'Activo', fechaInicio: '01/11/2025', actividadesArca: ['101011', '711003'] }
+    ]
   },
-
   {
     id: 12,
     razonSocial: "Campo Fértil Agropecuaria S.A.",
@@ -212,9 +300,15 @@ export const initialClientes = [
     domicilioFiscal: "25 de Mayo 720",
     localidadFiscal: "Venado Tuerto",
     tipoCliente: "CIFAS",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [
+      { nombre: 'Federico', apellido: 'Ibañez', telefono: '03462-422554', interno: '', celular: '3462155544', mail: 'fibanez@campofertil.com', cargo: 'TITULAR', obs: '' }
+    ],
+    historia: [],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '01/01/2026', actividadesArca: ['016119', '749009'] }
+    ]
   },
-
   {
     id: 13,
     razonSocial: "Proteínas Argentinas S.R.L.",
@@ -230,9 +324,13 @@ export const initialClientes = [
     domicilioFiscal: "Moreno 1350",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [],
+    historia: [],
+    servicios: [
+      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '150000', estado: 'Suspendido', fechaInicio: '15/06/2025', actividadesArca: ['101011', '711003'] }
+    ]
   },
-
   {
     id: 14,
     razonSocial: "Exportadora Santa Fe S.A.",
@@ -248,9 +346,17 @@ export const initialClientes = [
     domicilioFiscal: "Wheelwright 1650",
     localidadFiscal: "Rosario",
     tipoCliente: "CIFAS",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [
+      { nombre: 'Gonzalo', apellido: 'Palacios', telefono: '0341-4498000', interno: '502', celular: '3415887766', mail: 'gpalacios@exportsf.com', cargo: 'APODERADO', obs: 'Contacto Corporativo Directo' }
+    ],
+    historia: [
+      { descripcion: 'Llamada telefónica para coordinar auditoría externa de aduanas.', fecha: '11/06/2026', tipo: 'Llamada' }
+    ],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '01/01/2024', actividadesArca: ['016119', '749009'] }
+    ]
   },
-
   {
     id: 15,
     razonSocial: "Tecnología Alimentaria Integral S.R.L.",
@@ -266,9 +372,13 @@ export const initialClientes = [
     domicilioFiscal: "Laprida 980",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [],
+    historia: [],
+    servicios: [
+      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '95000', estado: 'Activo', fechaInicio: '10/02/2026', actividadesArca: ['101011', '711003'] }
+    ]
   },
-
   {
     id: 16,
     razonSocial: "NutriFeed Argentina S.A.",
@@ -284,9 +394,13 @@ export const initialClientes = [
     domicilioFiscal: "Rivadavia 2540",
     localidadFiscal: "Esperanza",
     tipoCliente: "CIFAS",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [],
+    historia: [],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '320000', estado: 'Activo', fechaInicio: '01/03/2026', actividadesArca: ['016119', '749009'] }
+    ]
   },
-
   {
     id: 17,
     razonSocial: "Logística Agroexportadora S.R.L.",
@@ -302,6 +416,13 @@ export const initialClientes = [
     domicilioFiscal: "Av. Francia 1850",
     localidadFiscal: "Rosario",
     tipoCliente: "POTENCIAL",
-    enviarBoletin: false
+    enviarBoletin: false,
+    contactos: [
+      { nombre: 'Juan Manuel', apellido: 'Rosas', telefono: '0341-4354040', interno: '', cellular: '3416001122', mail: 'jmrosas@logagro.com', cargo: 'TITULAR', obs: '' }
+    ],
+    historia: [],
+    servicios: [
+      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '01/01/2025', actividadesArca: ['016119', '749009'] }
+    ]
   }
 ];
