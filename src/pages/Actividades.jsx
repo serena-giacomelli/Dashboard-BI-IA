@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { actividadesArca } from '../data/actividadesDB';
+import { actividadesArca } from '../data/mockDB.js';
 
 const Actividades = () => {
   const [busqueda, setBusqueda] = useState('');

@@ -1,8 +1,6 @@
-// src/App.jsx
 import { useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { initialClientes } from './data/clientesDB';
-import { initialServicios } from './data/serviciosDB'; // Importamos la data
+import { mockDB } from './data/mockDB'; 
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Detail from './pages/Detail';
@@ -14,9 +12,37 @@ import Actividades from './pages/Actividades';
 import styles from './styles/AppShell.module.css';
 
 function App() {
-  const [clientes, setClientes] = useState(initialClientes);
-  // Usamos el archivo externo para inicializar el estado
-  const [servicios, setServicios] = useState(initialServicios);
+  // 1. Inicializamos los estados leyendo directamente del mockDB
+  const [clientes, setClientesState] = useState(() => mockDB.getClientes());
+  const [servicios, setServiciosState] = useState(() => mockDB.getServicios());
+
+  // 2. Interceptor personalizado para guardar Clientes en LocalStorage automáticamente
+  const setClientes = (nuevoValor) => {
+    if (typeof nuevoValor === 'function') {
+      setClientesState((prev) => {
+        const calculado = nuevoValor(prev);
+        mockDB.saveClientes(calculado);
+        return calculado;
+      });
+    } else {
+      mockDB.saveClientes(nuevoValor);
+      setClientesState(nuevoValor);
+    }
+  };
+
+  // 3. Interceptor personalizado para guardar Servicios en LocalStorage automáticamente
+  const setServicios = (nuevoValor) => {
+    if (typeof nuevoValor === 'function') {
+      setServiciosState((prev) => {
+        const calculado = nuevoValor(prev);
+        mockDB.saveServicios(calculado);
+        return calculado;
+      });
+    } else {
+      mockDB.saveServicios(nuevoValor);
+      setServiciosState(nuevoValor);
+    }
+  };
 
   return (
     <div className={styles.shell}>
@@ -26,22 +52,37 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/detalle" element={<Detail />} />
-                    <Route 
+          
+          <Route 
             path="/clientes" 
-            element={<Clientes clientes={clientes} setClientes={setClientes} catalogoServicios={servicios} />} 
+            element={
+              <Clientes 
+                clientes={clientes} 
+                setClientes={setClientes} 
+                catalogoServicios={servicios} 
+              />
+            } 
           />
+          
           <Route 
             path="/servicios" 
-            element={<Servicios servicios={servicios} setServicios={setServicios} />} 
+            element={
+              <Servicios 
+                servicios={servicios} 
+                setServicios={setServicios} 
+              />
+            } 
           />
           
           <Route path="/actividades" element={<Actividades />} /> 
           <Route path="/boletines" element={<EditorBoletin clientesDB={clientes} />} />
           <Route path="/novedades" element={<EditorNovedades clientesDB={clientes} />} /> 
+          
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
     </div>
   );
 }
+
 export default App;

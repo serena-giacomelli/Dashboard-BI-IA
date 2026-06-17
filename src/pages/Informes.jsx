@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { reportConfigs } from '../data/reportsData';
-import { allColumnsByReport } from '../data/allColumns';
+import { allColumnsByReport } from '../data/mockDB.js';
 import { exportToExcel } from '../utils/exportExcel.js';
 import ExportModal from '../components/ExportModal.jsx';
 import styles from '../styles/Reports.module.css';

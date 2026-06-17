@@ -1,6 +1,6 @@
 // src/pages/Servicios.jsx
 import { useState } from 'react';
-import { actividadesArca } from '../data/actividadesDB';
+import { actividadesArca } from '../data/mockDB.js';
 
 const Servicios = () => {
   // Simulación de un nomenclador ARCA extenso
