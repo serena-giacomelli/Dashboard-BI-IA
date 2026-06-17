@@ -1,0 +1,343 @@
+/* =============================================
+   Servicios.css — Estilos del módulo Portfolio
+   ============================================= */
+
+/* --- Layout Principal --- */
+.servicios-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: sans-serif;
+  color: #334155;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+/* --- Encabezado --- */
+.servicios-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 16px;
+  margin-bottom: 25px;
+}
+
+.servicios-header h2 {
+  margin: 2px 0 0 0;
+  color: #0f172a;
+  font-size: 24px;
+}
+
+/* --- Panel de la Tabla --- */
+.tabla-panel {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.tabla-portfolio {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.tabla-portfolio thead tr {
+  border-bottom: 2px solid #cbd5e1;
+  color: #475569;
+  background-color: #f8fafc;
+}
+
+.tabla-portfolio th,
+.tabla-portfolio td {
+  padding: 12px;
+  vertical-align: top;
+}
+
+/* --- Columnas de la Tabla --- */
+.th-servicio { width: 220px; }
+.th-arca { width: 180px; }
+.th-categoria { width: 110px; }
+.th-modalidad { width: 110px; }
+.th-precio { width: 120px; text-align: right; }
+.th-acciones { width: 140px; text-align: center; }
+
+.tabla-portfolio tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.td-nombre {
+  font-weight: bold;
+  color: #0f172a;
+}
+
+.td-descripcion {
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.td-modalidad {
+  color: #475569;
+  font-weight: 500;
+}
+
+.td-precio {
+  text-align: right;
+  font-weight: bold;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.td-acciones {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* --- Badges y Chips en Tabla --- */
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip-codigo {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: bold;
+  color: #3b82f6;
+}
+
+.badge-categoria {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #eff6ff;
+  font-size: 11px;
+  font-weight: bold;
+  color: #2563eb;
+  text-transform: uppercase;
+}
+
+/* =============================================
+   Formulario de Carga y Edición
+   ============================================= */
+
+.form-panel {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-grupo {
+  margin-bottom: 20px;
+}
+
+.form-grid-2-1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-grid-1-1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+/* Estilos de inputs compartidos */
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: bold;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #334155;
+  font-size: 14px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.form-textarea {
+  resize: none;
+  font-family: sans-serif;
+}
+
+/* --- Sección Vincular ARCA --- */
+.arca-vincular-seccion {
+  margin-bottom: 30px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.arca-vincular-seccion .form-label-arca {
+  color: #475569;
+  margin-bottom: 10px;
+}
+
+.arca-busqueda-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.form-input--white {
+  background-color: #fff;
+}
+
+.arca-input-filtro { flex: 1; }
+.arca-select-filtro { flex: 2; }
+
+.form-label-sub {
+  color: #94a3b8;
+  font-size: 10px;
+  margin-bottom: 8px;
+}
+
+/* --- Chips Seleccionados en Formulario --- */
+.chips-seleccionados-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-seleccionado-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.chip-seleccionado__codigo {
+  font-family: monospace;
+  font-weight: bold;
+  color: #3b82f6;
+}
+
+.chip-seleccionado__desc {
+  color: #64748b;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-seleccionado__btn-remover {
+  border: none;
+  background: none;
+  color: #ef4444;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+}
+
+.chips-vacio {
+  color: #94a3b8;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* =============================================
+   Botones de Acción Comunes
+   ============================================= */
+
+.btn-base {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.btn-crear {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.btn-crear:hover { background-color: #1d4ed8; }
+
+.btn-tabla {
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.btn-tabla-editar {
+  margin-right: 8px;
+  background-color: #fff;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+}
+
+.btn-tabla-editar:hover {
+  background-color: #eff6ff;
+}
+
+.btn-tabla-borrar {
+  background-color: #fff;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.btn-tabla-borrar:hover {
+  background-color: #fef2f2;
+}
+
+.form-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+
+.btn-cancelar {
+  padding: 10px 24px;
+  background-color: #fff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-cancelar:hover { background-color: #f1f5f9; }
+
+.btn-guardar {
+  padding: 10px 32px;
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.btn-guardar:hover { background-color: #1d4ed8; }

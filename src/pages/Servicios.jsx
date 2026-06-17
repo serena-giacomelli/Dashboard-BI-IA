@@ -1,36 +1,13 @@
-// src/pages/Servicios.jsx
 import { useState } from 'react';
-import { actividadesArca } from '../data/mockDB.js';
+import { actividadesArca, serviciosData } from '../data/mockDB.js';
+import '../styles/servicios.css';
 
 const Servicios = () => {
-  // Simulación de un nomenclador ARCA extenso
   const actividadesDisponibles = actividadesArca.map(a => ({ codigo: a.codigo, descripcion: a.nombre }));
+  const [servicios, setServicios] = useState(serviciosData);
 
-  // 1. READ: Estado inicial del catálogo de servicios
-  const [servicios, setServicios] = useState([
-    {
-      id: 1,
-      nombre: 'Gestión de Habilitaciones e Inscripciones',
-      descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
-      categoria: 'Regulaciones',
-      modalidad: 'Por Proyecto',
-      precioBase: 450000,
-      actividadesArca: ['016119', '749009']
-    },
-    {
-      id: 2,
-      nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío',
-      descripcion: 'Evaluación técnica de eficiencia energética en cámaras frigoríficas y túneles de congelado.',
-      categoria: 'Ingeniería',
-      modalidad: 'Por Hora',
-      precioBase: 25000,
-      actividadesArca: ['101011', '711003']
-    }
-  ]);
-
-  // Estados del formulario y el nuevo buscador
   const [editandoId, setEditandoId] = useState(null); 
-  const [busquedaArca, setBusquedaArca] = useState(''); // <--- Estado para el filtro de texto
+  const [busquedaArca, setBusquedaArca] = useState(''); 
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -40,7 +17,6 @@ const Servicios = () => {
     actividadesArca: []
   });
 
-  // Filtrado lógico en tiempo real del nomenclador
   const actividadesFiltradas = actividadesDisponibles.filter(act => 
     act.codigo.includes(busquedaArca) || 
     act.descripcion.toLowerCase().includes(busquedaArca.toLowerCase())
@@ -60,19 +36,16 @@ const Servicios = () => {
 
   const eliminarServicio = (id) => {
     if (window.confirm('¿Seguro querés eliminar este servicio del portfolio comercial?')) {
-      setServicios(servicios.filter(s => s.id !== id));
-    }
+      setServicios(servicios.filter(s => s.id !== id));    }
   };
 
   const manejarCambioInput = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'precioBase' ? parseFloat(value) || 0 : value
-    }));
+      [name]: name === 'precioBase' ? parseFloat(value) || 0 : value    }));
   };
 
-  // AGREGAR actividad y limpiar el buscador
   const manejarSeleccionArca = (e) => {
     const codigoSeleccionado = e.target.value;
     if (!codigoSeleccionado) return;
@@ -81,19 +54,17 @@ const Servicios = () => {
       if (prev.actividadesArca.includes(codigoSeleccionado)) return prev; 
       return {
         ...prev,
-        actividadesArca: [...prev.actividadesArca, codigoSeleccionado]
-      };
+        actividadesArca: [...prev.actividadesArca, codigoSeleccionado]      };
     });
 
-    setBusquedaArca(''); // Resetea el texto escrito para la próxima búsqueda
-    e.target.value = ''; // Resetea el select
+    setBusquedaArca(''); 
+    e.target.value = ''; 
   };
 
   const removerActividadArca = (codigo) => {
     setFormData(prev => ({
       ...prev,
-      actividadesArca: prev.actividadesArca.filter(c => c !== codigo)
-    }));
+      actividadesArca: prev.actividadesArca.filter(c => c !== codigo)    }));
   };
 
   const guardarServicio = (e) => {
@@ -106,77 +77,70 @@ const Servicios = () => {
     setEditandoId(null);
   };
 
-  const estiloLabel = { display: 'block', fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', marginBottom: '6px', letterSpacing: '0.5px' };
-  const estiloInput = { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', color: '#334155', fontSize: '14px', boxSizing: 'border-box', outline: 'none' };
-
   return (
-    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif', color: '#334155', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-      
-      {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e2e8f0', paddingBottom: '16px', marginBottom: '25px' }}>
+    <div className="servicios-wrapper">
+        <div className="servicios-header">
         <div>
-          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '0.5px' }}>MÓDULO COMERCIAL</span>
-          <h2 style={{ margin: '2px 0 0 0', color: '#0f172a', fontSize: '24px' }}>
+          <h2>
             {editandoId ? (editandoId === 'nuevo' ? 'Añadir Nuevo Servicio' : 'Modificar Servicio') : 'Portfolio de Servicios CIFAS'}
           </h2>
         </div>
         {!editandoId && (
-          <button onClick={iniciarNuevo} style={{ padding: '10px 20px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}>
+          <button onClick={iniciarNuevo} className="btn-base btn-crear">
             + Crear Servicio
           </button>
         )}
       </div>
 
-      {/* VISTA TABLA */}
       {!editandoId && (
-        <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+        <div className="tabla-panel">
+          <div className="tabla-scroll">
+            <table className="tabla-portfolio">
               <thead>
-                <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#475569', backgroundColor: '#f8fafc' }}>
-                  <th style={{ padding: '12px', width: '220px' }}>Servicio</th>
-                  <th style={{ padding: '12px', width: '180px' }}>Actividades ARCA</th>
-                  <th style={{ padding: '12px' }}>Descripción</th>
-                  <th style={{ padding: '12px', width: '110px' }}>Categoría</th>
-                  <th style={{ padding: '12px', width: '110px' }}>Modalidad</th>
-                  <th style={{ padding: '12px', textAlign: 'right', width: '120px' }}>Precio Base</th>
-                  <th style={{ padding: '12px', textAlign: 'center', width: '140px' }}>Acciones</th>
+                <tr>
+                  <th className="th-servicio">Servicio</th>
+                  <th className="th-arca">Actividades ARCA</th>
+                  <th>Descripción</th>
+                  <th className="th-categoria">Categoría</th>
+                  <th className="th-modalidad">Modalidad</th>
+                  <th className="th-precio">Precio Base</th>
+                  <th className="th-acciones">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {servicios.map((servicio) => (
-                  <tr key={servicio.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold', color: '#0f172a', verticalAlign: 'top' }}>
+                  <tr key={servicio.id}>
+                    <td className="td-nombre">
                       {servicio.nombre}
                     </td>
-                    <td style={{ padding: '12px', verticalAlign: 'top' }}>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    <td>
+                      <div className="chips-container">
                         {servicio.actividadesArca.map(cod => (
-                          <span key={cod} style={{ padding: '2px 5px', borderRadius: '4px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', fontFamily: 'monospace', fontSize: '11px', fontWeight: 'bold', color: '#3b82f6' }}>
+                          <span key={cod} className="chip-codigo">
                             {cod}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td style={{ padding: '12px', color: '#64748b', lineHeight: '1.4', verticalAlign: 'top' }}>
+                    <td className="td-descripcion">
                       {servicio.descripcion}
                     </td>
-                    <td style={{ padding: '12px', verticalAlign: 'top' }}>
-                      <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: '#eff6ff', fontSize: '11px', fontWeight: 'bold', color: '#2563eb', textTransform: 'uppercase' }}>
+                    <td>
+                      <span className="badge-categoria">
                         {servicio.categoria}
                       </span>
                     </td>
-                    <td style={{ padding: '12px', color: '#475569', fontWeight: '500', verticalAlign: 'top' }}>
+                    <td className="td-modalidad">
                       {servicio.modalidad}
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', fontSize: '14px', verticalAlign: 'top' }}>
+                    <td className="td-precio">
                       ${servicio.precioBase.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
-                      <button onClick={() => iniciarEditar(servicio)} style={{ marginRight: '8px', padding: '5px 10px', backgroundColor: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                    <td className="td-acciones">
+                      <button onClick={() => iniciarEditar(servicio)} className="btn-tabla btn-tabla-editar">
                         Editar
                       </button>
-                      <button onClick={() => eliminarServicio(servicio.id)} style={{ padding: '5px 10px', backgroundColor: '#fff', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                      <button onClick={() => eliminarServicio(servicio.id)} className="btn-tabla btn-tabla-borrar">
                         Borrar
                       </button>
                     </td>
@@ -187,67 +151,62 @@ const Servicios = () => {
           </div>
         </div>
       )}
-
-      {/* FORMULARIO */}
       {editandoId && (
-        <form onSubmit={guardarServicio} style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <form onSubmit={guardarServicio} className="form-panel">
           
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label style={estiloLabel}>Nombre del Servicio</label>
-              <input type="text" name="nombre" value={formData.nombre} onChange={manejarCambioInput} required style={estiloInput} />
+          <div className="form-grid-2-1">
+            <div className="form-grupo">
+              <label className="form-label">Nombre del Servicio</label>
+              <input type="text" name="nombre" value={formData.nombre} onChange={manejarCambioInput} required className="form-input" />
             </div>
-            <div>
-              <label style={estiloLabel}>Honorarios Base ($)</label>
-              <input type="number" name="precioBase" value={formData.precioBase} onChange={manejarCambioInput} min="0" required style={estiloInput} />
+            <div className="form-grupo">
+              <label className="form-label">Honorarios Base ($)</label>
+              <input type="number" name="precioBase" value={formData.precioBase} onChange={manejarCambioInput} min="0" required className="form-input" />
             </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={estiloLabel}>Descripción Operativa</label>
-            <textarea name="descripcion" value={formData.descripcion} onChange={manejarCambioInput} required rows="3" style={{ ...estiloInput, resize: 'none', fontFamily: 'sans-serif' }} />
+          <div className="form-grupo">
+            <label className="form-label">Descripción Operativa</label>
+            <textarea name="descripcion" value={formData.descripcion} onChange={manejarCambioInput} required rows="3" className="form-input form-textarea" />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
-            <div>
-              <label style={estiloLabel}>Categoría</label>
-              <select name="categoria" value={formData.categoria} onChange={manejarCambioInput} style={estiloInput}>
+          <div className="form-grid-1-1">
+            <div className="form-grupo">
+              <label className="form-label">Categoría</label>
+              <select name="categoria" value={formData.categoria} onChange={manejarCambioInput} className="form-input">
                 <option value="Regulaciones">Regulaciones / Habilitaciones</option>
                 <option value="Ingeniería">Ingeniería & Termomecánica</option>
                 <option value="Calidad">Calidad & Inocuidad</option>
                 <option value="Estrategia">Gestión Estratégica</option>
               </select>
             </div>
-            <div>
-              <label style={estiloLabel}>Modalidad</label>
-              <select name="modalidad" value={formData.modalidad} onChange={manejarCambioInput} style={estiloInput}>
+            <div className="form-grupo">
+              <label className="form-label">Modalidad</label>
+              <select name="modalidad" value={formData.modalidad} onChange={manejarCambioInput} className="form-input">
                 <option value="Por Proyecto">Por Hito / Proyecto Cerrado</option>
                 <option value="Por Hora">Por Hora de Consultoría</option>
                 <option value="Abono Mensual">Abono Fijo Mensual</option>
               </select>
             </div>
           </div>
-
-          {/* DESPLEGABLE CON FILTRADO ACTIVO */}
-          <div style={{ marginBottom: '30px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-            <label style={{ ...estiloLabel, color: '#475569', marginBottom: '10px' }}>
+          <div className="arca-vincular-seccion">
+            <label className="form-label form-label-arca">
               Vincular Actividades Oficiales ARCA (CLAE)
             </label>
             
-            {/* Input Buscador + Select al lado */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+            <div className="arca-busqueda-row">
               <input 
                 type="text" 
-                placeholder="🔍 Filtrar por código o nombre..." 
+                placeholder="Filtrar por código o nombre..." 
                 value={busquedaArca}
                 onChange={(e) => setBusquedaArca(e.target.value)}
-                style={{ ...estiloInput, backgroundColor: '#fff', flex: '1' }}
+                className="form-input form-input--white arca-input-filtro"
               />
               
               <select 
                 onChange={manejarSeleccionArca} 
                 defaultValue="" 
-                style={{ ...estiloInput, backgroundColor: '#fff', flex: '2' }}
+                className="form-input form-input--white arca-select-filtro"
               >
                 <option value="" disabled>
                   {actividadesFiltradas.length === 0 ? 'No hay coincidencias' : `-- Seleccionar (${actividadesFiltradas.length} encontradas) --`}
@@ -259,25 +218,23 @@ const Servicios = () => {
                 ))}
               </select>
             </div>
-
-            {/* Listado de Chips */}
-            <label style={{ ...estiloLabel, color: '#94a3b8', fontSize: '10px', marginBottom: '8px' }}>
+            <label className="form-label form-label-sub">
               Actividades seleccionadas para este servicio:
             </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div className="chips-seleccionados-lista">
               {formData.actividadesArca.length > 0 ? (
                 formData.actividadesArca.map(codigo => {
                   const infoAct = actividadesDisponibles.find(a => a.codigo === codigo);
                   return (
-                    <div key={codigo} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', backgroundColor: '#fff', border: '1px solid #cbd5e1', borderRadius: '20px', fontSize: '12px' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#3b82f6' }}>{codigo}</span>
-                      <span style={{ color: '#64748b', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div key={codigo} className="chip-seleccionado-item">
+                      <span className="chip-seleccionado__codigo">{codigo}</span>
+                      <span className="chip-seleccionado__desc">
                         {infoAct ? infoAct.descripcion : ''}
                       </span>
                       <button 
                         type="button" 
                         onClick={() => removerActividadArca(codigo)}
-                        style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', padding: '0 2px' }}
+                        className="chip-seleccionado__btn-remover"
                       >
                         ×
                       </button>
@@ -285,17 +242,15 @@ const Servicios = () => {
                   );
                 })
               ) : (
-                <span style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>Ninguna actividad vinculada. Usá el buscador de arriba.</span>
+                <span className="chips-vacio">Ninguna actividad vinculada. Usá el buscador de arriba.</span>
               )}
             </div>
           </div>
-
-          {/* CONTROL BOTONES */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-            <button type="button" onClick={() => setEditandoId(null)} style={{ padding: '10px 24px', backgroundColor: '#fff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+          <div className="form-acciones">
+            <button type="button" onClick={() => setEditandoId(null)} className="btn-base btn-cancelar">
               Cancelar
             </button>
-            <button type="submit" style={{ padding: '10px 32px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+            <button type="submit" className="btn-base btn-guardar">
               {editandoId === 'nuevo' ? 'Agregar al Catálogo' : 'Guardar Cambios'}
             </button>
           </div>
