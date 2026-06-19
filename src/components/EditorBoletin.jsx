@@ -4,7 +4,6 @@ import 'react-quill-new/dist/quill.snow.css';
 import html2pdf from 'html2pdf.js';
 import { LOGO_CIFAS_BASE64, LOGO_CIFAS_URL } from '../utils/assets.js';
 
-
 const EditorBoletin = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState(''); // Maneja el Resumen del Email
@@ -17,11 +16,7 @@ const EditorBoletin = ({ clientesDB }) => {
   const [boletinSeleccionado, setBoletinSeleccionado] = useState(null);
   const [verDestinatariosModal, setVerDestinatariosModal] = useState(false);
   const [busquedaDestinatario, setBusquedaDestinatario] = useState('');
-
-  // ESTADO NUEVO PARA LAS PESTAÑAS
   const [tabActivo, setTabActivo] = useState('resumen');
-
-  // Control de filtros, orden y paginación del historial
   const [filtroHistorial, setFiltroHistorial] = useState('');
   const [ordenHistorial, setOrdenHistorial] = useState('recientes');
   const [paginaActual, setPaginaActual] = useState(1);
@@ -29,22 +24,17 @@ const EditorBoletin = ({ clientesDB }) => {
 
   useEffect(() => {
     const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
-    setHistorial(historialGuardado);
-  }, []);
+    setHistorial(historialGuardado);  }, []);
 
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
 
   const destinatariosFiltrados = destinatarios.filter(c =>
     c.razonSocial?.toLowerCase().includes(busquedaDestinatario.toLowerCase()) ||
-    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase())
-  );
+    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase())  );
 
-  // 1. Filtrar historial por asunto
   const historialFiltrado = historial.filter(item =>
-    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase())
-  );
+    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase())  );
 
-  // 2. Ordenar historial según criterio
   const historialOrdenado = [...historialFiltrado].sort((a, b) => {
     switch (ordenHistorial) {
       case 'recientes':
@@ -56,11 +46,7 @@ const EditorBoletin = ({ clientesDB }) => {
       case 'alfa-desc':
         return (b.asunto || '').localeCompare(a.asunto || '');
       default:
-        return 0;
-    }
-  });
-
-  // 3. Calcular paginación de forma segura
+        return 0;    }  });
 
   const totalPaginas = Math.ceil(historialOrdenado.length / itemsPorPagina);
   const paginaValida = Math.min(paginaActual, totalPaginas || 1);
@@ -75,8 +61,7 @@ const EditorBoletin = ({ clientesDB }) => {
     const domingo = new Date(lunes);
     domingo.setDate(lunes.getDate() + 6);
     const formatoFecha = (fecha) => fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(domingo)}`;
-  };
+    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(domingo)}`;  };
 
   const generarConIA = async () => {
     if (!puntosClave.trim()) return alert("Por favor, ingresa algunos puntos clave antes de generar.");
@@ -85,8 +70,7 @@ const EditorBoletin = ({ clientesDB }) => {
       const response = await fetch('/.netlify/functions/generarBoletinIA', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ puntosClave })
-      });
+        body: JSON.stringify({ puntosClave })      });
       const data = await response.json();
     
       if (data.resumenEmail && data.boletinCompleto) {
@@ -94,18 +78,13 @@ const EditorBoletin = ({ clientesDB }) => {
         setBoletinCompleto(data.boletinCompleto);
         setTabActivo('resumen'); // Para que vuelva a la vista principal por defecto al generar uno nuevo
       } else {
-        throw new Error("La respuesta de la IA no contiene los bloques requeridos.");
-      }
+        throw new Error("La respuesta de la IA no contiene los bloques requeridos.");      }
     } catch (error) {
       alert("Error al conectar con el asistente de IA: " + error.message);
     } finally {
-      setGenerandoIA(false);
-    }
-  };
+      setGenerandoIA(false);    }  };
 
-
-
-  const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
+ const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
     if (paraPdf) {
       return `
@@ -113,8 +92,7 @@ const EditorBoletin = ({ clientesDB }) => {
           <style>
             .evitar-corte p, .evitar-corte li, .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte strong {
               page-break-inside: avoid !important;
-              break-inside: avoid !important;
-            }
+              break-inside: avoid !important;            }
           </style>
           <div style="text-align: center; margin-bottom: 20px;">
             <img src="${logoSeleccionado}" width="154" style="display: inline-block;" />
@@ -131,8 +109,7 @@ const EditorBoletin = ({ clientesDB }) => {
             <p style="margin-bottom: 0; margin-top: 25px; font-size: 15px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
           </div>
         </div>
-      `;
-    }
+      `;    }
 
     const tablaCore = `
       <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
@@ -143,8 +120,7 @@ const EditorBoletin = ({ clientesDB }) => {
           <div style="line-height: 1.6; color: #222;">${contenido}</div>
           <p style="margin-bottom: 0; margin-top: 20px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
         </td></tr>
-      </table>
-    `;
+      </table>    `;
 
     return `
       <!DOCTYPE html>
@@ -153,9 +129,7 @@ const EditorBoletin = ({ clientesDB }) => {
       <body style="margin: 0; padding: 20px; background-color: #f4f4f4;">
         ${tablaCore}
       </body>
-      </html>
-    `;
-  };
+      </html>    `;  };
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
@@ -166,17 +140,14 @@ const EditorBoletin = ({ clientesDB }) => {
       for (const cliente of destinatarios) {
         setEnvioActual(prev => prev + 1);
         const htmlEmail = generarTemplateEmpresa(cuerpoHtml, cliente, false);
-        // Usamos el boletín técnico detallado para el PDF adjunto (si está vacío, hace fallback al cuerpo)
         const htmlPdf = generarTemplateEmpresa(boletinCompleto || cuerpoHtml, cliente, true);
-
         const opcionesPdf = {
           margin:       [15, 15, 15, 15],
           filename:     'boletin.pdf',
           image:        { type: 'jpeg', quality: 0.98 },
           html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
           jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak:    { mode: ['css', 'legacy'] }
-        };
+          pagebreak:    { mode: ['css', 'legacy'] }        };
 
         const pdfBase64Uri = await html2pdf().set(opcionesPdf).from(htmlPdf).outputPdf('datauristring');
         const pdfBase64Limpio = pdfBase64Uri.split('base64,')[1];
@@ -184,9 +155,7 @@ const EditorBoletin = ({ clientesDB }) => {
         await fetch('/.netlify/functions/enviarBoletin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ asunto, destinatario: cliente.email, cuerpoHtml: htmlEmail, adjuntoPdf: pdfBase64Limpio }),
-        });
-      }
+          body: JSON.stringify({ asunto, destinatario: cliente.email, cuerpoHtml: htmlEmail, adjuntoPdf: pdfBase64Limpio }),        });      }
 
       const nuevoRegistro = {
         id: Date.now(),
@@ -194,8 +163,7 @@ const EditorBoletin = ({ clientesDB }) => {
         asunto,
         cuerpoHtml,       // Resumen guardado
         boletinCompleto,  // Detalle de PDF guardado en historial
-        clientes: destinatarios.map(c => c.razonSocial)
-      };
+        clientes: destinatarios.map(c => c.razonSocial)      };
 
       const nuevoHistorial = [nuevoRegistro, ...historial];
       setHistorial(nuevoHistorial);
@@ -205,24 +173,19 @@ const EditorBoletin = ({ clientesDB }) => {
       alert(`❌ Error: ${error.message}`);
     } finally {
       setCargando(false);
-      setEnvioActual(0);
-    }
-  };
+      setEnvioActual(0);    }  };
 
   const borrarHistorial = () => {
     if (window.confirm("¿Seguro querés borrar el historial?")) {
       localStorage.removeItem('historial_boletines');
       setHistorial([]);
-      setBoletinSeleccionado(null);
-    }
-  };
+      setBoletinSeleccionado(null);    }  };
 
   const cargarEnEditor = (boletin) => {
     setAsunto(boletin.asunto);
     setCuerpoHtml(boletin.cuerpoHtml);
     setBoletinCompleto(boletin.boletinCompleto || '');
-    setBoletinSeleccionado(null);
-  };
+    setBoletinSeleccionado(null);  };
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
@@ -233,9 +196,7 @@ const EditorBoletin = ({ clientesDB }) => {
         <textarea value={puntosClave} onChange={(e) => setPuntosClave(e.target.value)} placeholder="Puntos clave..." style={{ width: '100%', height: '80px', marginBottom: '10px', padding: '8px', boxSizing: 'border-box' }} />
         <button type="button" onClick={generarConIA} disabled={generandoIA} style={{ padding: '8px 12px', cursor: 'pointer' }}>{generandoIA ? 'Generando...' : 'Generar Boletín Dual'}</button>
       </div>
-
-      {/* Formulario Principal */}
-      <form onSubmit={manejarEnvio} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+     <form onSubmit={manejarEnvio} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <input
           type="text"
           value={asunto}
@@ -243,31 +204,24 @@ const EditorBoletin = ({ clientesDB }) => {
           placeholder="Asunto del boletín..."
           style={{ width: '100%', padding: '10px', fontSize: '16px', boxSizing: 'border-box' }}
         />
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '-5px' }}>
           <button
             type="button"
             onClick={() => {
               setBusquedaDestinatario('');
-              setVerDestinatariosModal(true);
-            }}
-
+              setVerDestinatariosModal(true);            }}
             style={{
               padding: '6px 12px', background: '#f1f5f9', border: '1px solid #cbd5e1',
               borderRadius: '16px', cursor: 'pointer', fontSize: '13px', color: '#334155',
-              fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s'
-            }}
-
+              fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s'            }}
             onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'}
             onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}
           >
-
             Destinatarios actuales ({destinatarios.length})
           </button>
           <span style={{ fontSize: '12px', color: '#64748b' }}>Hacé clic para ver la lista filtrada de envío.</span>
         </div>
 
-        {/* INTERFAZ DE PESTAÑAS (TABS) PARA LOS EDITORES */}
         <div style={{ background: '#ffffff', borderRadius: '8px', border: '1px solid #cbd5e1', overflow: 'hidden', marginBottom: '20px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
           {/* Cabecera de las Pestañas */}
           <div style={{ display: 'flex', background: '#f8fafc', borderBottom: '1px solid #cbd5e1' }}>
@@ -279,8 +233,7 @@ const EditorBoletin = ({ clientesDB }) => {
                 background: tabActivo === 'resumen' ? '#ffffff' : 'transparent',
                 color: tabActivo === 'resumen' ? '#0284c7' : '#64748b',
                 borderBottom: tabActivo === 'resumen' ? '3px solid #0284c7' : '3px solid transparent',
-                outline: 'none'
-              }}
+                outline: 'none'              }}
             >
               Resumen para el Email
             </button>
@@ -294,14 +247,12 @@ const EditorBoletin = ({ clientesDB }) => {
                 color: tabActivo === 'completo' ? '#0284c7' : (boletinCompleto ? '#64748b' : '#cbd5e1'),
                 borderBottom: tabActivo === 'completo' ? '3px solid #0284c7' : '3px solid transparent',
                 opacity: !boletinCompleto ? 0.6 : 1,
-                outline: 'none'
-              }}
+                outline: 'none'              }}
             >
               Detalle para el PDF { !boletinCompleto && '(Generá con IA primero)' }
             </button>
           </div>
 
-        {/* Contenedor del Editor Activo */}
           <div style={{ padding: '20px', background: '#ffffff', minHeight: '300px' }}>
             <div style={{ display: tabActivo === 'resumen' ? 'block' : 'none' }}>
               <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#475569' }}>
@@ -309,7 +260,6 @@ const EditorBoletin = ({ clientesDB }) => {
               </p>
               <ReactQuill theme="snow" value={cuerpoHtml} onChange={setCuerpoHtml} style={{ height: '220px', marginBottom: '45px', background: '#fff' }} />
             </div>
-
             <div style={{ display: tabActivo === 'completo' ? 'block' : 'none' }}>
                <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#475569' }}>
                 Este contenido se convertirá automáticamente en el PDF que los clientes descargarán.
@@ -322,8 +272,6 @@ const EditorBoletin = ({ clientesDB }) => {
           {cargando ? `Enviando (${envioActual}/${destinatarios.length})...` : 'Enviar Boletines'}
         </button>
       </form>
-
-      {/* MODAL 1: BUSCADOR DE DESTINATARIOS */}
 
       {verDestinatariosModal && (
         <div style={{
@@ -342,7 +290,6 @@ const EditorBoletin = ({ clientesDB }) => {
               </div>
               <button type="button" onClick={() => setVerDestinatariosModal(false)} style={{ background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
             </div>
-
             <div style={{ padding: '12px 20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
               <input
                 type="text" value={busquedaDestinatario} onChange={(e) => setBusquedaDestinatario(e.target.value)}
@@ -356,28 +303,22 @@ const EditorBoletin = ({ clientesDB }) => {
                   <div key={cli.id || cli.email} style={{ padding: '10px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '14px' }}>{cli.razonSocial}</span>
                     <span style={{ color: '#64748b', fontSize: '12px' }}>{cli.email}</span>
-                  </div>
-                ))
+                  </div>                ))
               ) : (
-                <div style={{ padding: '30px 0', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>No se encontraron destinatarios activos.</div>
-              )}
-
+                <div style={{ padding: '30px 0', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>No se encontraron destinatarios activos.</div>              )}
             </div>
             <div style={{ padding: '12px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', background: '#f8fafc', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px' }}>
               <button type="button" onClick={() => setVerDestinatariosModal(false)} style={{ padding: '6px 16px', background: '#334155', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer', fontSize: '13px' }}>Entendido</button>
             </div>
           </div>
-        </div>
-      )}
+        </div>)}
 
-      {/* SECCIÓN DEL HISTORIAL */}
       {historial.length > 0 && (
         <div style={{ marginTop: '50px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ margin: 0 }}>Historial de Boletines Enviados</h3>
             <button type="button" onClick={borrarHistorial} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '500', fontSize: '13px' }}>Borrar Historial</button>
           </div>
-
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '15px', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', gap: '10px', flex: 1, minWidth: '260px' }}>
               <input
@@ -389,8 +330,7 @@ const EditorBoletin = ({ clientesDB }) => {
                 }}
                 placeholder="Filtrar historial por asunto..."
                 style={{ flex: 1, padding: '6px 12px', fontSize: '14px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-              />
-            </div>
+              />            </div>
 
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <label style={{ fontSize: '13px', color: '#475569', fontWeight: '500' }}>Ordenar por:</label>
@@ -398,8 +338,7 @@ const EditorBoletin = ({ clientesDB }) => {
                 value={ordenHistorial}
                 onChange={(e) => {
                   setOrdenHistorial(e.target.value);
-                  setPaginaActual(1);
-                }}
+                  setPaginaActual(1);                }}
                 style={{ padding: '6px 10px', fontSize: '13px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }}
               >
                 <option value="recientes">Más recientes primero</option>
@@ -412,8 +351,7 @@ const EditorBoletin = ({ clientesDB }) => {
                 value={itemsPorPagina}
                 onChange={(e) => {
                   setItemsPorPagina(Number(e.target.value));
-                  setPaginaActual(1);
-                }}
+                  setPaginaActual(1);                }}
                 style={{ padding: '6px 6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #cbd5e1', background: '#fff' }}
               >
                 <option value={5}>Ver 5</option>
@@ -439,13 +377,11 @@ const EditorBoletin = ({ clientesDB }) => {
                 >
                   <span style={{ fontWeight: '500', color: '#1e293b' }}>{item.asunto}</span>
                   <span style={{ color: '#64748b', fontSize: '14px' }}>{item.fecha}</span>
-                </div>
-              ))
+                </div>              ))
             ) : (
               <div style={{ padding: '30px', textAlign: 'center', color: '#64748b', background: '#fff', fontSize: '14px' }}>
                 No se encontraron boletines en el historial.
-              </div>
-            )}
+              </div>            )}
           </div>
 
           {totalPaginas > 1 && (
@@ -462,8 +398,7 @@ const EditorBoletin = ({ clientesDB }) => {
                     padding: '6px 12px', fontSize: '13px', borderRadius: '4px', border: '1px solid #cbd5e1',
                     background: paginaValida === 1 ? '#f1f5f9' : '#fff',
                     color: paginaValida === 1 ? '#94a3b8' : '#334155',
-                    cursor: paginaValida === 1 ? 'not-allowed' : 'pointer', fontWeight: '500'
-                  }}
+                    cursor: paginaValida === 1 ? 'not-allowed' : 'pointer', fontWeight: '500'                  }}
                 >
                   Anterior
                 </button>
@@ -475,34 +410,26 @@ const EditorBoletin = ({ clientesDB }) => {
                     padding: '6px 12px', fontSize: '13px', borderRadius: '4px', border: '1px solid #cbd5e1',
                     background: paginaValida === totalPaginas ? '#f1f5f9' : '#fff',
                     color: paginaValida === totalPaginas ? '#94a3b8' : '#334155',
-                    cursor: paginaValida === totalPaginas ? 'not-allowed' : 'pointer', fontWeight: '500'
-                  }}
+                    cursor: paginaValida === totalPaginas ? 'not-allowed' : 'pointer', fontWeight: '500'                  }}
                 >
                   Siguiente
                 </button>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* MODAL 2: VISTA PREVIA HISTORIAL */}
+            </div>          )}
+        </div>      )}
 
       {boletinSeleccionado && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex',
-          justifyContent: 'center', alignItems: 'center', zIndex: 9999, backdropFilter: 'blur(2px)'
-        }}>
+          justifyContent: 'center', alignItems: 'center', zIndex: 9999, backdropFilter: 'blur(2px)'        }}>
           <div style={{
             background: '#ffffff', borderRadius: '8px', width: '90%', maxWidth: '750px',
-            maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-          }}>
+            maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'          }}>
             <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ width: '90%' }}>
                 <h3 style={{ margin: '0 0 5px 0', color: '#0f172a' }}>{boletinSeleccionado.asunto}</h3>
                 <span style={{ fontSize: '13px', color: '#64748b' }}>Enviado el: {boletinSeleccionado.fecha}</span>
-
                 {boletinSeleccionado.clientes && boletinSeleccionado.clientes.length > 0 && (
                   <div style={{ marginTop: '12px' }}>
                     <strong style={{ fontSize: '12px', color: '#475569', display: 'block', marginBottom: '4px' }}>Destinatarios en ese momento:</strong>
@@ -510,11 +437,9 @@ const EditorBoletin = ({ clientesDB }) => {
                       {boletinSeleccionado.clientes.map((cli, idx) => (
                         <span key={idx} style={{ background: '#f1f5f9', color: '#334155', fontSize: '11px', padding: '2px 8px', borderRadius: '12px', border: '1px solid #cbd5e1', fontWeight: '500' }}>
                           {cli}
-                        </span>
-                      ))}
+                        </span>                      ))}
                     </div>
-                  </div>
-                )}
+                  </div>                )}
               </div>
               <button type="button" onClick={() => setBoletinSeleccionado(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8', lineHeight: '1' }}>&times;</button>
             </div>
@@ -527,18 +452,14 @@ const EditorBoletin = ({ clientesDB }) => {
                 <div style={{ background: '#ffffff', padding: '20px', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                   <h5 style={{ margin: '0 0 10px 0', color: '#166534' }}>Contenido del PDF Adjunto:</h5>
                   <div dangerouslySetInnerHTML={{ __html: boletinSeleccionado.boletinCompleto }} />
-                </div>
-              )}
+                </div>              )}
             </div>
             <div style={{ padding: '15px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button type="button" onClick={() => setBoletinSeleccionado(null)} style={{ padding: '8px 16px', background: '#e2e8f0', border: 'none', borderRadius: '4px', color: '#334155', cursor: 'pointer', fontWeight: '500' }}>Cerrar</button>
               <button type="button" onClick={() => cargarEnEditor(boletinSeleccionado)} style={{ padding: '8px 16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}>Cargar en Editor</button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+        </div>      )}
+    </div>  );};
 
 export default EditorBoletin;

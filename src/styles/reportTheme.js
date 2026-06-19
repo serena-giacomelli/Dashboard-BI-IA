@@ -23,7 +23,7 @@ export const STATE_STYLES = {
   '9. Observada':              { bg: 'FFFFC107', text: 'FF000000' },
 
   // 🟠 Bloqueado
-  '3. Tarea no aceptada':      { bg: 'FFFF6B35', text: 'FF000000' },
+  '3. Servicio no aceptada':      { bg: 'FFFF6B35', text: 'FF000000' },
   '7.Demorada por el cliente': { bg: 'FFFF6B35', text: 'FF000000' },
   '8. Demorada por el organismo': { bg: 'FFFF6B35', text: 'FF000000' },
 

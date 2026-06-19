@@ -5,13 +5,13 @@ import autoTable from 'jspdf-autotable';
 import { allColumnsByReport, reportConfigs } from '../data/mockDB.js';
 import { exportToExcel } from '../utils/exportExcel.js';
 import ExportModal from '../components/ExportModal.jsx';
-import styles from '../styles/Reports.module.css';
 import { COMPANY_CONFIG } from '../styles/reportTheme';
 import { LOGO_CIFAS_BASE64 } from '../utils/assets.js';
 import { PDF_THEME } from '../styles/pdfTheme.js';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+import '../styles/Global.css'; // Cargamos el core de diseño unificado
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
   value,
   label: config.label,
@@ -46,16 +46,16 @@ function describeFilterValue(filter, value) {
 
 function filterRows(rows, reportId, filters) {
   return rows.filter((row) => {
-    if (reportId === 'tareas') {
-  const estados = filters.estados || [];
-  const usuarios = filters.usuarioAsignado || [];
-  return (
-    (!filters.contactoCliente || row.contactoCliente === filters.contactoCliente) &&
-    (!usuarios.length || usuarios.includes(row.usuarioAsignado)) &&
-    (!filters.contactoOrganismo || row.contactoOrganismo === filters.contactoOrganismo) &&
-    (!estados.length || estados.includes(row.estado))
-  );
-}
+    if (reportId === 'servicios') {
+      const estados = filters.estados || [];
+      const usuarios = filters.usuarioAsignado || [];
+      return (
+        (!filters.contactoCliente || row.contactoCliente === filters.contactoCliente) &&
+        (!usuarios.length || usuarios.includes(row.usuarioAsignado)) &&
+        (!filters.contactoOrganismo || row.contactoOrganismo === filters.contactoOrganismo) &&
+        (!estados.length || estados.includes(row.estado))
+      );
+    }
     if (reportId === 'tramites') {
       return (
         (!filters.organismo || row.organismo === filters.organismo) &&
@@ -99,12 +99,11 @@ function buildFilterSummary(reportConfig, filters) {
   }));
 }
 
-// ── Componente ────────────────────────────────────────────────────────────────
-
+// ── Componente Principal ──────────────────────────────────────────────────────
 function Informes() {
   const navigate = useNavigate();
-  const [reportId, setReportId] = useState('tareas');
-  const [filters, setFilters] = useState(() => createInitialFilters('tareas'));
+  const [reportId, setReportId] = useState('servicios');
+  const [filters, setFilters] = useState(() => createInitialFilters('servicios'));
   const [exportFormat, setExportFormat] = useState(null);
 
   const reportConfig = reportConfigs[reportId];
@@ -124,8 +123,6 @@ function Informes() {
     [filters, reportConfig],
   );
 
-  // ── Handlers de filtros ─────────────────────────────────────────────────────
-
   const handleFilterChange = (key, value) => {
     setFilters((current) => ({ ...current, [key]: value }));
   };
@@ -139,8 +136,6 @@ function Informes() {
       return { ...current, [key]: nextValues };
     });
   };
-
-  // ── Abrir modal ─────────────────────────────────────────────────────────────
 
   const openExportModal = (format) => setExportFormat(format);
   const closeExportModal = () => setExportFormat(null);
@@ -164,8 +159,6 @@ function Informes() {
     }
   };
 
-  // ── PDF con columnas seleccionadas ──────────────────────────────────────────
-
   const handleExportPdf = (selectedColumnKeys) => {
     if (selectedColumnKeys.length > 15) {
        console.warn("Demasiadas columnas seleccionadas para PDF");
@@ -177,7 +170,6 @@ function Informes() {
 
     const addHeader = () => {
       if (LOGO_CIFAS_BASE64) {
-        const { x, y, width, height } = PDF_THEME.header.logo;
         doc.addImage(LOGO_CIFAS_BASE64, 'PNG', 14, 10, 30, 15);
       }
       doc.setFont(COMPANY_CONFIG.font, 'bold');
@@ -186,22 +178,12 @@ function Informes() {
       doc.text(COMPANY_CONFIG.name, PDF_THEME.header.companyName.x, PDF_THEME.header.companyName.y);
       doc.setFont(COMPANY_CONFIG.font, 'normal');
       doc.setFontSize(PDF_THEME.header.reportTitle.fontSize);
-      doc.text(
-        `Informe: ${reportConfig.label}`,
-        PDF_THEME.header.reportTitle.x,
-        PDF_THEME.header.reportTitle.y,
-      );      doc.setDrawColor(PDF_THEME.colors.divider);
+      doc.text(`Informe: ${reportConfig.label}`, PDF_THEME.header.reportTitle.x, PDF_THEME.header.reportTitle.y);      
       doc.setDrawColor(...PDF_THEME.colors.divider);
-            doc.line(
-              PDF_THEME.header.dividerX1,
-              PDF_THEME.header.dividerY,
-              PDF_THEME.header.dividerX2,
-              PDF_THEME.header.dividerY,
-            );
+      doc.line(PDF_THEME.header.dividerX1, PDF_THEME.header.dividerY, PDF_THEME.header.dividerX2, PDF_THEME.header.dividerY);
     };
-      addHeader();
+    addHeader();
 
-   //metadata y filtros
     let cursorY = PDF_THEME.body.startY;
     doc.setFont(COMPANY_CONFIG.font, 'normal');
     doc.setFontSize(PDF_THEME.body.metadataFontSize);
@@ -214,7 +196,6 @@ function Informes() {
       cursorY += PDF_THEME.body.filterLineHeight;
     });
 
-    // ── Tabla de datos ──
     const pdfRows = filteredRows.map((row) =>
       exportColumns.map((col) => {
         if (['fecha', 'vencimiento', 'fechaVto', 'ultimoCambio'].includes(col.key)) {
@@ -224,7 +205,6 @@ function Informes() {
       })
     );
 
-    
     if (filteredRows.length) {
       autoTable(doc, {
         startY: cursorY + PDF_THEME.body.tableOffset,
@@ -247,186 +227,172 @@ function Informes() {
         horizontalPageBreak: true,
       });
     } else {
-          doc.setFontSize(PDF_THEME.body.metadataFontSize);
-          doc.setTextColor(...PDF_THEME.colors.textSecondary);
-          doc.text(
-            'No hay registros para exportar con los filtros seleccionados.',
-            14,
-            cursorY + PDF_THEME.body.tableOffset + 5,
-          );
-        }
+      doc.setFontSize(PDF_THEME.body.metadataFontSize);
+      doc.setTextColor(...PDF_THEME.colors.textSecondary);
+      doc.text('No hay registros para exportar con los filtros seleccionados.', 14, cursorY + PDF_THEME.body.tableOffset + 5);
+    }
 
     doc.save(`informe_${reportId}_${formatFileDate()}.pdf`);
   };
 
   return (
-      <section className={styles.page}>
-        <header className={styles.hero}>
-          <div className={styles.heroCopy}>
-            <h1>Generacion de informes operativos</h1>
-          </div>
-        </header>
-          <div className={styles.layout}>
-          <section className={styles.panel}>
-            <div className={styles.panelHeader}>
-              <div>
-                <p className={styles.panelKicker}>Tipo de informe</p>
-                <h2 className={styles.panelTitle}>{reportConfig.label}</h2>
-                <p className={styles.panelDescription}>{reportConfig.description}</p>
-              </div>
-            </div>
-              <label className={styles.field}>
-              <span>Elegir informe</span>
-              <select
-                className={styles.select}
-                value={reportId}
-                onChange={(event) => setReportId(event.target.value)}
-              >
-                {reportEntries.map((entry) => (
-                  <option key={entry.value} value={entry.value}>
-                    {entry.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className={styles.formGrid}>
-              {reportConfig.filters.map((filter) => {
-                if (filter.type === 'date') {
-                  return (
-                    <label key={filter.key} className={styles.field}>
-                      <span>{filter.label}</span>
-                      <input
-                        className={styles.input}
-                        type="date"
-                        value={filters[filter.key]}
-                        onChange={(event) => handleFilterChange(filter.key, event.target.value)}
-                      />
-                    </label>
-                  );                }
-                if (filter.type === 'multiselect') {
-                  return (
-                    <fieldset key={filter.key} className={styles.fieldset}>
-                      <legend>{filter.label}</legend>
-                      <div className={styles.checkboxGroup}>
-                        {filter.options.map((option) => (
-                          <label key={option} className={styles.checkboxItem}>
-                            <input
-                              className={styles.checkboxInput}
-                              type="checkbox"
-                              checked={(filters[filter.key] ?? []).includes(option)}
-                              onChange={() => toggleCheckboxValue(filter.key, option)}
-                            />
-                            <span>{option}</span>
-                          </label>
-                        ))}
-                      </div>
-                      <small className={styles.helper}>Podés marcar más de una opción.</small>
-                    </fieldset>
-                  );                }
+    <section className="cifas-page">
+      <header className="cifas-header">
+        <h1>Generación de Informes Operativos</h1>
+      </header>
+
+      <div className="cifas-layout-split">
+        
+        {/* PANEL IZQUIERDO: CONFIGURACIÓN DE FILTROS */}
+        <section className="cifas-card">
+          <p className="cifas-card__titulo">Parámetros del reporte</p>
+          <h2 className="cifas-card__main-name">{reportConfig.label}</h2>
+          <p className="cifas-card__description">{reportConfig.description}</p>
+          
+          <label className="cifas-field">
+            <span>Elegir informe</span>
+            <select
+              className="cifas-select"
+              value={reportId}
+              onChange={(event) => setReportId(event.target.value)}
+            >
+              {reportEntries.map((entry) => (
+                <option key={entry.value} value={entry.value}>
+                  {entry.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* Renderizado dinámico de filtros */}
+          <div>
+            {reportConfig.filters.map((filter) => {
+              if (filter.type === 'date') {
                 return (
-                  <label key={filter.key} className={styles.field}>
+                  <label key={filter.key} className="cifas-field">
                     <span>{filter.label}</span>
-                    <select
-                      className={styles.select}
+                    <input
+                      className="cifas-input"
+                      type="date"
                       value={filters[filter.key]}
                       onChange={(event) => handleFilterChange(filter.key, event.target.value)}
-                    >
-                      {filter.options.map((option) => (
-                        <option key={option} value={option === 'Todos' || option === 'Todas' ? '' : option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </label>
                 );
-              })}
-            </div>
-            <div className={styles.footerActions}>
-              <button
-                className={`${styles.button} ${styles.secondaryButton}`}
-                type="button"
-                onClick={() => navigate('/dashboard')}
-              >
-                Volver
-              </button>
-              <button
-                className={`${styles.button} ${styles.secondaryButton}`}
-                type="button"
-                onClick={() => openExportModal('pdf')}
-              >
-                PDF
-              </button>
-              <button
-                className={`${styles.button} ${styles.primaryButton}`}
-                type="button"
-                onClick={() => openExportModal('excel')}
-              >
-                Excel
-              </button>
-            </div>
-          </section>
-            <section className={styles.panel}>
-            <div className={styles.panelHeader}>
-              <div>
-                <p className={styles.panelKicker}>Vista previa</p>
-                <h2 className={styles.panelTitle}>Resultados filtrados</h2>
-                <p className={styles.panelDescription}>
-                  El informe actual devuelve {filteredRows.length} registro{filteredRows.length === 1 ? '' : 's'}.
-                </p>
-              </div>
-            </div>
-            <div className={styles.chips}>
-              {filterSummary.map((item) => (
-                <span className={styles.chip} key={item.label}>
-                  <strong>{item.label}:</strong> {item.value}
-                </span>
-              ))}
-            </div>
-  
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    {reportConfig.columns.map((column) => (
-                      <th key={column.key}>{column.label}</th>
+              }
+              if (filter.type === 'multiselect') {
+                return (
+                  <fieldset key={filter.key} className="cifas-fieldset">
+                    <legend>{filter.label}</legend>
+                    <div className="cifas-checkbox-group">
+                      {filter.options.map((option) => (
+                        <label key={option} className="cifas-checkbox-item">
+                          <input
+                            type="checkbox"
+                            checked={(filters[filter.key] ?? []).includes(option)}
+                            onChange={() => toggleCheckboxValue(filter.key, option)}
+                          />
+                          <span>{option}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <small className="cifas-helper">Podés marcar más de una opción.</small>
+                  </fieldset>
+                );
+              }
+              return (
+                <label key={filter.key} className="cifas-field">
+                  <span>{filter.label}</span>
+                  <select
+                    className="cifas-select"
+                    value={filters[filter.key]}
+                    onChange={(event) => handleFilterChange(filter.key, event.target.value)}
+                  >
+                    {filter.options.map((option) => (
+                      <option key={option} value={option === 'Todos' || option === 'Todas' ? '' : option}>
+                        {option}
+                      </option>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.length ? (
-                    filteredRows.map((row) => (
-                      <tr key={row.id}>
-                        {reportConfig.columns.map((column) => (
-                          <td key={column.key}>
-                            {column.key === 'fecha' || column.key === 'vencimiento' || column.key === 'fechaInicio'
-                              ? formatDate(row[column.key])
-                              : row[column.key] ?? '-'}
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td className={styles.emptyState} colSpan={reportConfig.columns.length}>
-                        No hay registros para los filtros seleccionados.
-                      </td>
+                  </select>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="cifas-btn-group">
+            <button className="cifas-btn cifas-btn--secondary" type="button" onClick={() => navigate('/dashboard')}>
+              Volver
+            </button>
+            <button className="cifas-btn cifas-btn--pdf" type="button" onClick={() => openExportModal('pdf')}>
+              PDF
+            </button>
+            <button className="cifas-btn cifas-btn--primary" type="button" onClick={() => openExportModal('excel')}>
+              Excel
+            </button>
+          </div>
+        </section>
+
+        {/* PANEL DERECHO: VISTA PREVIA DE TABLA */}
+        <section className="cifas-card">
+          <p className="cifas-card__titulo">Vista previa en tiempo real</p>
+          <h2 className="cifas-card__main-name">Resultados filtrados</h2>
+          <p className="cifas-card__description">
+            El informe devuelve <strong>{filteredRows.length}</strong> registro{filteredRows.length === 1 ? '' : 's'}.
+          </p>
+
+          <div className="cifas-chips">
+            {filterSummary.map((item) => (
+              <span className="cifas-chip" key={item.label}>
+                <strong>{item.label}:</strong> {item.value}
+              </span>
+            ))}
+          </div>
+
+          <div className="cifas-table-wrap">
+            <table className="cifas-table">
+              <thead>
+                <tr>
+                  {reportConfig.columns.map((column) => (
+                    <th key={column.key}>{column.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRows.length ? (
+                  filteredRows.map((row) => (
+                    <tr key={row.id}>
+                      {reportConfig.columns.map((column) => (
+                        <td key={column.key}>
+                          {column.key === 'fecha' || column.key === 'vencimiento' || column.key === 'fechaInicio'
+                            ? formatDate(row[column.key])
+                            : row[column.key] ?? '-'}
+                        </td>
+                      ))}
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-          <ExportModal
-          isOpen={exportFormat !== null}
-          onClose={closeExportModal}
-          onConfirm={handleExportConfirm}
-          format={exportFormat ?? 'excel'}
-          columns={allColumns}
-        />
-      </section>
-    );
-  }
-  
-  export default Informes;
-  
+                  ))
+                ) : (
+                  <tr>
+                    <td className="cifas-table-empty" colSpan={reportConfig.columns.length}>
+                      No hay registros para los filtros seleccionados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+      <ExportModal
+        isOpen={exportFormat !== null}
+        onClose={closeExportModal}
+        onConfirm={handleExportConfirm}
+        format={exportFormat ?? 'excel'}
+        columns={allColumns}
+      />
+    </section>
+  );
+}
+
+export default Informes;

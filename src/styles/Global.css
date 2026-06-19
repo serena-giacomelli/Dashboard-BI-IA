@@ -41,3 +41,258 @@ textarea,
 select {
   font: inherit;
 }
+
+/* =========================================
+   SISTEMA DE DISEÑO CIFAS - CLASES GLOBALES
+   ========================================= */
+
+/* Contenedor principal de cada página */
+.cifas-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  background-color: #f8fafc; 
+  min-height: 100vh;
+}
+
+/* Encabezado estándar con la línea gris divisoria */
+.cifas-header {
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+  margin-bottom: 25px;
+}
+
+.cifas-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Tarjetas blancas contenedoras */
+.cifas-card {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Subtítulos de sección en mayúsculas chiquitas */
+.cifas-card__titulo {
+  font-size: 11px;
+  font-weight: bold;
+  color: #94a3b8;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cifas-card__main-name {
+  margin: 4px 0;
+  font-size: 20px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.cifas-card__description {
+  margin: 0 0 20px 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.cifas-layout-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 1024px) {
+  .cifas-layout-split {
+    grid-template-columns: 380px minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.cifas-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.cifas-field span {
+  font-size: 11px;
+  font-weight: bold;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cifas-input,
+.cifas-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cifas-input:focus,
+.cifas-select:focus {
+  border-color: #3b82f6;
+}
+
+.cifas-fieldset {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 16px;
+  background-color: #f8fafc;
+}
+
+.cifas-fieldset legend {
+  font-size: 11px;
+  font-weight: bold;
+  color: #64748b;
+  padding: 0 6px;
+  text-transform: uppercase;
+}
+
+.cifas-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 6px;
+}
+
+.cifas-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.cifas-checkbox-item input {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.cifas-helper {
+  font-size: 11px;
+  color: #94a3b8;
+  display: block;
+  margin-top: 6px;
+}
+
+/* --- BOTONES --- */
+.cifas-btn-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.cifas-btn {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.cifas-btn--primary {
+  background-color: #22c55e;
+  color: #fff;
+}
+
+.cifas-btn--primary:hover {
+  background-color: #16a34a;
+}
+
+.cifas-btn--pdf {
+  background-color: #ef4444;
+  color: #fff;
+}
+
+.cifas-btn--pdf:hover {
+  background-color: #dc2626;
+}
+
+.cifas-btn--secondary {
+  background-color: #fff;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.cifas-btn--secondary:hover {
+  background-color: #f1f5f9;
+}
+
+/* --- TABLAS Y CHIPS --- */
+.cifas-table-wrap {
+  overflow-x: auto;
+  margin-top: 14px;
+  width: 100%;
+}
+
+.cifas-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.cifas-table thead tr {
+  border-bottom: 2px solid #cbd5e1;
+  color: #475569;
+  background-color: #f8fafc;
+}
+
+.cifas-table th,
+.cifas-table td {
+  padding: 12px;
+}
+
+.cifas-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cifas-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.cifas-table-empty {
+  text-align: center;
+  padding: 32px !important;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.cifas-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.cifas-chip {
+  background-color: #e2e8f0;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}

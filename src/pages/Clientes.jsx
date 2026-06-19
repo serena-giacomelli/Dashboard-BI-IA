@@ -5,8 +5,7 @@ import '../styles/Clientes.css';
 const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
   const getNombreActividad = (codigo) => {
     const actividad = actividadesArca.find(a => a.codigo === codigo);
-    return actividad ? actividad.nombre : codigo;
-  };
+    return actividad ? actividad.nombre : codigo;  };
 
   const [clienteEditando, setClienteEditando] = useState(null);
   const [formData, setFormData] = useState(null);
@@ -15,15 +14,9 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
   const [filtroTipo, setFiltroTipo] = useState('');
   const [filtroServicio, setFiltroServicio] = useState('');
   const [filtroActividad, setFiltroActividad] = useState('');
-
-  const [nuevoContacto, setNuevoContacto] = useState({
-    nombre: '', apellido: '', telefono: '', interno: '', celular: '', mail: '', cargo: 'TITULAR', obs: ''  });
-
-  const [nuevaHistoria, setNuevaHistoria] = useState({
-    descripcion: '', fecha: '18/03/2026', tipo: 'Historia'  });
-
-  const [nuevoServicio, setNuevoServicio] = useState({
-    nombre: '', abono: '', estado: 'Activo', fechaInicio: '16/06/2026', actividadArca: ''  });
+  const [nuevoContacto, setNuevoContacto] = useState({    nombre: '', apellido: '', telefono: '', interno: '', celular: '', mail: '', cargo: 'TITULAR', obs: ''  });
+  const [nuevaHistoria, setNuevaHistoria] = useState({    descripcion: '', fecha: '18/03/2026', tipo: 'Historia'  });
+  const [nuevoServicio, setNuevoServicio] = useState({    nombre: '', abono: '', estado: 'Activo', fechaInicio: '16/06/2026', actividadArca: ''  });
 
   const tiposUnicos = Array.from(new Set(clientes.map(c => c.tipoCliente).filter(Boolean)));
   const serviciosUnicos = Array.from(new Set(
@@ -35,8 +28,7 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
         servicio.actividadesArca || servicio.actividadArca || servicio.actividades || servicio.actividad || []      );
       const actividadesDirectas = cliente.actividades || [];
       return [...actividadesDirectas, ...actividadesDeServicios];    }).map(actividad =>
-      typeof actividad === 'object' ? (actividad.codigo || actividad.id || actividad.actividadArca) : actividad    ).filter(Boolean)
-  ));
+      typeof actividad === 'object' ? (actividad.codigo || actividad.id || actividad.actividadArca) : actividad    ).filter(Boolean)  ));
 
   const clientesFiltrados = clientes.filter(cliente => {
     const cumpleTexto = !filtroTexto ||
@@ -48,18 +40,15 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
     let cumpleActividad = !filtroActividad;
     if (filtroActividad) {
       const tieneDirecta = (cliente.actividades || []).some(act =>
-        String(typeof act === 'object' ? (act.codigo || act.id || act.actividadArca) : act) === String(filtroActividad)
-      );
+        String(typeof act === 'object' ? (act.codigo || act.id || act.actividadArca) : act) === String(filtroActividad)      );
       const tieneEnServicio = (cliente.servicios || []).some(s => {
         const acts = s.actividadesArca || s.actividadArca || s.actividades || s.actividad || [];
         const actsArray = Array.isArray(acts) ? acts : [acts];
         return actsArray.some(act => {
           const codigo = typeof act === 'object' ? (act.codigo || act.id || act.actividadArca) : act;
-          return String(codigo) === String(filtroActividad);        });
-      });
+          return String(codigo) === String(filtroActividad);        });      });
       cumpleActividad = tieneDirecta || tieneEnServicio;    }
-    return cumpleTexto && cumpleTipo && cumpleServicio && cumpleActividad;
-  });
+    return cumpleTexto && cumpleTipo && cumpleServicio && cumpleActividad;  });
 
   const limpiarFiltros = () => {
     setFiltroTexto('');
@@ -92,76 +81,55 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
       actividades: cliente.actividades || [
         "472110 — Venta al por menor de productos alimenticios",
         "620100 — Actividades de programación informática"      ]    });
-    setTabActiva('Actividades');
-  };
-
+    setTabActiva('Actividades');  };
   const manejarCambio = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
-  };
-
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });  };
   const manejarSeleccionServicio = (nombre) => {
     const servicioInfo = catalogoServicios.find(s => s.nombre === nombre);
     setNuevoServicio({
       ...nuevoServicio,
       nombre,
       abono: servicioInfo ? servicioInfo.precioBase : '',
-      actividadArca: servicioInfo ? (servicioInfo.actividadesArca[0] || '') : ''});
-  };
-
+      actividadArca: servicioInfo ? (servicioInfo.actividadesArca[0] || '') : ''});  };
   const agregarContacto = () => {
     if (!nuevoContacto.nombre && !nuevoContacto.apellido) return;
     setFormData({ ...formData, contactos: [...formData.contactos, nuevoContacto] });
-    setNuevoContacto({ nombre: '', apellido: '', telefono: '', interno: '', celular: '', mail: '', cargo: 'TITULAR', obs: '' });
-  };
-
+    setNuevoContacto({ nombre: '', apellido: '', telefono: '', interno: '', celular: '', mail: '', cargo: 'TITULAR', obs: '' });  };
   const agregarHistoria = () => {
     if (!nuevaHistoria.descripcion) return;
     setFormData({ ...formData, historia: [...formData.historia, nuevaHistoria] });
-    setNuevaHistoria({ descripcion: '', fecha: '18/03/2026', tipo: 'Historia' });
-  };
-
+    setNuevaHistoria({ descripcion: '', fecha: '18/03/2026', tipo: 'Historia' });  };
   const agregarServicio = () => {
     if (!nuevoServicio.nombre) return;
     setFormData({ ...formData, servicios: [...formData.servicios, nuevoServicio] });
-    setNuevoServicio({ nombre: '', abono: '', estado: 'Activo', fechaInicio: '16/06/2026', actividadArca: '' });
-  };
-
+    setNuevoServicio({ nombre: '', abono: '', estado: 'Activo', fechaInicio: '16/06/2026', actividadArca: '' });  };
   const guardarCambios = (e) => {
     e.preventDefault();
     setClientes(clientes.map(c => c.id === formData.id ? formData : c));
     setClienteEditando(null);
-    setFormData(null);
-  };
-
+    setFormData(null);  };
   const todosFiltradosMarcados =
     clientesFiltrados.length > 0 && clientesFiltrados.every(c => c.enviarBoletin);
-
   const toggleTodosFiltrados = () => {
     const nuevoEstado = !todosFiltradosMarcados;
     const idsVisibles = clientesFiltrados.map(c => c.id);
     setClientes(prev =>
-      prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarBoletin: nuevoEstado } : c)    );
-  };
-
+      prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarBoletin: nuevoEstado } : c)    );  };
   const getBadgeServicioClass = (estado) => {
     if (estado === 'Activo') return 'badge-servicio badge-servicio--activo';
     if (estado === 'Suspendido') return 'badge-servicio badge-servicio--suspendido';
     if (estado === 'Baja') return 'badge-servicio badge-servicio--baja';
-    return 'badge-servicio badge-servicio--default';
-  };
+    return 'badge-servicio badge-servicio--default';  };
 
-  return (
+ return (
     <div className="clientes-wrapper">
-      {!clienteEditando && (
-        <>
+      {!clienteEditando && (        <>
           <div className="clientes-header">
             <h2>Directorio de Clientes</h2>
-            <p>Gestión integral de cuentas, condiciones fiscales y preferencias de comunicación.</p>
           </div>
           <div className="filtros-panel">
             <div className="filtros-panel__titulo">Filtros de Búsqueda Avanzada</div>
-
             <div className="filtros-panel__grid">
               <div>
                 <label className="form-label">Buscar Cliente / CUIT</label>
@@ -170,16 +138,14 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                   placeholder="ej. Lucena Bakery o CUIT..."
                   value={filtroTexto}
                   onChange={(e) => setFiltroTexto(e.target.value)}
-                  className="form-input form-input--white"
-                />
+                  className="form-input form-input--white"                />
               </div>
               <div>
                 <label className="form-label">Tipo de Cliente</label>
                 <select
                   value={filtroTipo}
                   onChange={(e) => setFiltroTipo(e.target.value)}
-                  className="form-input form-input--white"
-                >
+                  className="form-input form-input--white"                >
                   <option value="">Todos los tipos</option>
                   {tiposUnicos.map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
                 </select>
@@ -189,8 +155,7 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                 <select
                   value={filtroServicio}
                   onChange={(e) => setFiltroServicio(e.target.value)}
-                  className="form-input form-input--white"
-                >
+                  className="form-input form-input--white"                >
                   <option value="">Todos los servicios</option>
                   {serviciosUnicos.map(srv => <option key={srv} value={srv}>{srv}</option>)}
                 </select>
@@ -200,8 +165,7 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                 <select
                   value={filtroActividad}
                   onChange={(e) => setFiltroActividad(e.target.value)}
-                  className="form-input form-input--white"
-                >
+                  className="form-input form-input--white"                >
                   <option value="">Todas las actividades</option>
                   {actividadesUnicas.map(codigo => (
                     <option key={codigo} value={codigo}>
@@ -209,29 +173,23 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                     </option>                  ))}
                 </select>
               </div>
-
               {(filtroTexto || filtroTipo || filtroServicio || filtroActividad) && (
                 <button type="button" onClick={limpiarFiltros} className="btn-limpiar">
                   Limpiar Filtros
                 </button>              )}
             </div>
-
             <div className="filtros-panel__footer">
               <span>Mostrando {clientesFiltrados.length} de {clientes.length} clientes encontrados.</span>
-
               {clientesFiltrados.length > 0 && (
                 <button
                   type="button"
                   onClick={toggleTodosFiltrados}
-                  className={`btn-toggle-todos ${todosFiltradosMarcados ? 'btn-toggle-todos--activo' : 'btn-toggle-todos--inactivo'}`}
-                >
+                  className={`btn-toggle-todos ${todosFiltradosMarcados ? 'btn-toggle-todos--activo' : 'btn-toggle-todos--inactivo'}`}                >
                   <input type="checkbox" checked={todosFiltradosMarcados} readOnly />
                   <span>Todos ({clientesFiltrados.length})</span>
-                </button>
-              )}
+                </button>              )}
             </div>
           </div>
-
           <div className="tabla-clientes-panel">
             <div className="tabla-clientes-panel__scroll">
               <table className="tabla-clientes">
@@ -292,7 +250,6 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
             </div>
           </div>
         </>      )}
-
       {clienteEditando && formData && (
         <form onSubmit={guardarCambios} className="ficha-form">
           <div className="ficha-form__header">
@@ -355,12 +312,10 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                   key={tab}
                   type="button"
                   onClick={() => setTabActiva(tab)}
-                  className={`ficha-tab-btn ${tabActiva === tab ? 'ficha-tab-btn--activa' : ''}`}
-                >
+                  className={`ficha-tab-btn ${tabActiva === tab ? 'ficha-tab-btn--activa' : ''}`}                >
                   {tab}
                 </button>              ))}
             </div>
-
             <div className="ficha-tabs__contenido">
               {tabActiva === 'Contactos' && (
                 <div>
@@ -376,19 +331,16 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                           type="text"
                           value={nuevoContacto[item.k]}
                           onChange={(e) => setNuevoContacto({ ...nuevoContacto, [item.k]: e.target.value })}
-                          className="form-input"
-                        />
+                          className="form-input"                        />
                       </div>
                     ))}
                   </div>
-
                   <div className="contactos-grid-bottom">
                     <div>
                       <label className="form-label">CARGO</label>
                       <select
                         value={nuevoContacto.cargo}
-                        onChange={(e) => setNuevoContacto({ ...nuevoContacto, cargo: e.target.value })}
-                        className="form-input form-input--white"
+                        onChange={(e) => setNuevoContacto({ ...nuevoContacto, cargo: e.target.value })}                        className="form-input form-input--white"
                       >
                         <option>TITULAR</option>
                         <option>APODERADO</option>
@@ -401,12 +353,10 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                         type="text"
                         value={nuevoContacto.obs}
                         onChange={(e) => setNuevoContacto({ ...nuevoContacto, obs: e.target.value })}
-                        className="form-input"
-                      />
+                        className="form-input"                      />
                     </div>
                     <button type="button" onClick={agregarContacto} className="btn-agregar">Agregar</button>
                   </div>
-
                   {formData.contactos.length > 0 && (
                     <table className="tabla-contactos">
                       <thead>
@@ -421,13 +371,10 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                             <td>{c.cargo}</td>
                             <td>{c.mail}</td>
                             <td>{c.obs}</td>
-                          </tr>
-                        ))}
+                          </tr>                        ))}
                       </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
+                    </table>                  )}
+                </div>              )}
               {tabActiva === 'Direcciones' && (
                 <div className="direcciones-grid">
                   <div className="direccion-bloque">
@@ -446,9 +393,7 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                       <input type="text" name="dirCorr_cp" value={formData.dirCorr_cp} onChange={manejarCambio} className="form-input" placeholder="CP" />
                     </div>
                   </div>
-                </div>
-              )}
-
+                </div>              )}
               {tabActiva === 'Historia' && (
                 <div>
                   <div className="historia-grid">
@@ -457,24 +402,20 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                       value={nuevaHistoria.descripcion}
                       onChange={(e) => setNuevaHistoria({ ...nuevaHistoria, descripcion: e.target.value })}
                       className="form-input"
-                      placeholder="Descripción..."
-                    />
+                      placeholder="Descripción..."                    />
                     <input
                       type="text"
                       value={nuevaHistoria.fecha}
                       onChange={(e) => setNuevaHistoria({ ...nuevaHistoria, fecha: e.target.value })}
-                      className="form-input"
-                    />
+                      className="form-input"                    />
                     <select
                       value={nuevaHistoria.tipo}
                       onChange={(e) => setNuevaHistoria({ ...nuevaHistoria, tipo: e.target.value })}
-                      className="form-input form-input--white"
-                    >
+                      className="form-input form-input--white"                    >
                       <option>Historia</option><option>Llamada</option><option>Reunión</option>
                     </select>
                     <button type="button" onClick={agregarHistoria} className="btn-agregar">Agregar</button>
                   </div>
-
                   {formData.historia.length > 0 && (
                     <table className="tabla-historia">
                       <tbody>
@@ -483,14 +424,10 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                             <td className="td-fecha">{h.fecha}</td>
                             <td className="td-tipo">{h.tipo}</td>
                             <td>{h.descripcion}</td>
-                          </tr>
-                        ))}
+                          </tr>                        ))}
                       </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
-
+                    </table>                  )}
+                </div>              )}
               {tabActiva === 'Actividades' && (
                 <table className="tabla-actividades">
                   <thead>
@@ -501,21 +438,15 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                       <tr key={i}>
                         <td>{i === 0 ? 'Principal' : 'Secundaria'}</td>
                         <td className="td-actividad">{act}</td>
-                      </tr>
-                    ))}
+                      </tr>                    ))}
                   </tbody>
-                </table>
-              )}
-
+                </table>              )}
               {tabActiva === 'Presupuestos' && (
-                <p style={{ fontSize: '13px', color: '#64748b' }}>Módulo Presupuestos vinculado al ID del cliente.</p>
-              )}
+                <p style={{ fontSize: '13px', color: '#64748b' }}>Módulo Presupuestos vinculado al ID del cliente.</p>              )}
               {tabActiva === 'Establecimientos' && (
-                <p style={{ fontSize: '13px', color: '#64748b' }}>Listado de plantas, locales y números RUCA/RNE asignados.</p>
-              )}
+                <p style={{ fontSize: '13px', color: '#64748b' }}>Listado de plantas, locales y números RUCA/RNE asignados.</p>              )}
               {tabActiva === 'Vencimientos' && (
-                <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: 'bold' }}>Próximo vencimiento de tasa: 30/06/2026</p>
-              )}
+                <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: 'bold' }}>Próximo vencimiento de tasa: 30/06/2026</p>              )}
 
               {tabActiva === 'Servicios' && (
                 <div>
@@ -525,8 +456,7 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                       <select
                         value={nuevoServicio?.nombre || ''}
                         onChange={(e) => manejarSeleccionServicio(e.target.value)}
-                        className="form-input form-input--white"
-                      >
+                        className="form-input form-input--white"                      >
                         <option value="">Seleccione servicio...</option>
                         {(catalogoServicios || []).map(s => (
                           <option key={s.id} value={s.nombre}>{s.nombre}</option>
@@ -540,8 +470,7 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                         placeholder="Monto..."
                         value={nuevoServicio?.abono || ''}
                         onChange={(e) => setNuevoServicio({ ...nuevoServicio, abono: e.target.value })}
-                        className="form-input"
-                      />
+                        className="form-input"                      />
                     </div>
                     <div>
                       <label className="form-label">Estado</label>
@@ -566,7 +495,6 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                     </div>
                     <button type="button" onClick={agregarServicio} className="btn-agregar">Agregar</button>
                   </div>
-
                   <table className="tabla-servicios">
                     <thead>
                       <tr>
@@ -580,16 +508,12 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                           <td>${s.abono}</td>
                           <td>{s.estado}</td>
                           <td>{s.actividadArca || <span className="td-na">N/A</span>}</td>
-                        </tr>
-                      ))}
+                        </tr>                      ))}
                     </tbody>
                   </table>
-                </div>
-              )}
-
+                </div>              )}
             </div>
           </div>
-
           <div className="ficha-form__acciones">
             <button
               type="button"
@@ -601,5 +525,4 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
           </div>
         </form>      )}
     </div>  );};
-
 export default Clientes;

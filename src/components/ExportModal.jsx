@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
 import styles from '../styles/ExportModal.module.css';
 
-/**
- * ExportModal
- * Props:
- * - isOpen: boolean
- * - onClose: () => void
- * - onConfirm: (selectedColumns: string[], format: 'pdf' | 'excel') => void
- * - format: 'pdf' | 'excel'
- * - columns: Array<{ key: string, label: string }>
- */
 function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
   const [selected, setSelected] = useState([]);
   const MAX_COLUMNS = 15; // Límite de seguridad para PDF

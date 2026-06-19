@@ -19,13 +19,13 @@ export const actividadesArca = [
 ];
 
 export const allColumnsByReport = {
-  tareas: [
-    { key: 'idTarea',           label: 'ID Tarea' },
-    { key: 'tarea',             label: 'Tarea' },
+  servicios: [ 
+    { key: 'idServicio',           label: 'ID Servicio' }, 
+    { key: 'servicio',             label: 'Nombre Servicio' }, 
     { key: 'presupuesto',       label: 'Presupuesto' },
     { key: 'tramite',           label: 'Trámite' },
     { key: 'usuarioAsignado',   label: 'Usuario Asignado' },
-    { key: 'estado',            label: 'Estado de Tarea' },
+    { key: 'estado',            label: 'Estado de Servicio' },
     { key: 'fechaInicio',       label: 'Fecha Inicio' },
     { key: 'fechaFin',          label: 'Fecha Fin' },
     { key: 'contactoCliente',   label: 'Contacto Cliente' },
@@ -33,6 +33,7 @@ export const allColumnsByReport = {
     { key: 'directorTecnico',   label: 'Director Técnico' },
     { key: 'establecimiento',   label: 'Establecimiento' },
     { key: 'obsInternas',       label: 'Observaciones Internas' },
+    { key: 'actividadesArca',   label: 'Actividades ARCA' },
   ],
   tramites: [
     { key: 'id',                   label: 'ID' },
@@ -138,35 +139,36 @@ export const defaultQuestionSuggestions = [
   '¿Qué estado operativo domina el tablero?',
   '¿Qué alerta aparece más seguido en el análisis?',
   '¿Qué resumen corto le darías a la dirección?',
-  '¿Qué usuario tiene el mayor número de tareas asignadas?',
-  '¿Cuántas tareas están pendientes de asignación?',
+  '¿Qué usuario tiene el mayor número de servicios asignadas?',
+  '¿Cuántas servicios están pendientes de asignación?',
   '¿Qué organismo tiene más trámites en proceso?',
 ];
 
 export const reportConfigs = {
-  tareas: {
-    label: 'Tareas',
-    description: 'Seguimiento operativo de tareas, responsables y estados.',
-    allColumns: allColumnsByReport.tareas,
+  servicios: {
+    label: 'Servicios',
+    description: 'Seguimiento operativo de servicios, responsables y estados.',
+    allColumns: allColumnsByReport.servicios,
     filters: [
-      { key: 'contactoCliente',   label: 'Clientes',           type: 'select',      options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
+      { key: 'contactoCliente',   label: 'Clientes',           type: 'select',       options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
       { key: 'usuarioAsignado',   label: 'Usuario',            type: 'multiselect', options: ['M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
-      { key: 'contactoOrganismo', label: 'Organismos',         type: 'select',      options: ['Todos', 'SENASA', 'ANMAT', 'INASE', 'INTA'] },
-      { key: 'estados',           label: 'Estados de tareas',  type: 'multiselect', options: ['1. Pendiente de asignacion', '2. Asignada', '3. Tarea no aceptada', '5. En obra', '6. Presentada', '7.Demorada por el cliente', '8. Demorada por el organismo', '9. Observada', '10. Finalizada', '11. Finalizada. no corresponde facturar', '12. Anualidad'] },
+      { key: 'contactoOrganismo', label: 'Organismos',         type: 'select',       options: ['Todos', 'SENASA', 'ANMAT', 'INASE', 'INTA'] },
+      { key: 'estados',           label: 'Estados de servicios', type: 'multiselect', options: ['1. Pendiente de asignacion', '2. Asignada', '3. Servicio no aceptado', '5. En obra', '6. Presentada', '7.Demorada por el cliente', '8. Demorada por el organismo', '9. Observada', '10. Finalizada', '11. Finalizada. no corresponde facturar', '12. Anualidad'] },
     ],
     columns: [
-      { key: 'idTarea',           label: 'Codigo' },
+      { key: 'idServicio',           label: 'Codigo' },
       { key: 'contactoCliente',   label: 'Cliente' },
-      { key: 'usuarioAsignado',   label: 'Usuario Seguimiento Tarea' },
+      { key: 'usuarioAsignado',   label: 'Usuario Seguimiento' },
       { key: 'contactoOrganismo', label: 'Organismo' },
       { key: 'estado',            label: 'Estado' },
       { key: 'fechaInicio',       label: 'Fecha' },
       { key: 'obsInternas',       label: 'Detalle' },
+      { key: 'actividadesArca',   label: 'Act. ARCA' },
     ],
     rows: [
       {
-        idTarea:           'T-1001',
-        tarea:             'Habilitación sanitaria de planta',
+        idServicio:           'T-1001',
+        servicio:             'Habilitación sanitaria de planta',
         presupuesto:       'PRES-2024-001',
         tramite:           'Alta de establecimiento',
         usuarioAsignado:   'M. Rojas',
@@ -180,8 +182,8 @@ export const reportConfigs = {
         obsInternas:       'Carga de documentacion sanitaria',
       },
       {
-        idTarea:           'T-1002',
-        tarea:             'Revisión de expediente técnico',
+        idServicio:           'T-1002',
+        servicio:             'Revisión de expediente técnico',
         presupuesto:       'PRES-2024-002',
         tramite:           'Habilitación documental',
         usuarioAsignado:   'G. Perez',
@@ -195,8 +197,8 @@ export const reportConfigs = {
         obsInternas:       'Revision de expediente y observaciones',
       },
       {
-        idTarea:           'T-1003',
-        tarea:             'Cierre técnico de trámite',
+        idServicio:           'T-1003',
+        servicio:             'Cierre técnico de trámite',
         presupuesto:       'PRES-2024-003',
         tramite:           'Solicitud de informe técnico',
         usuarioAsignado:   'L. Gomez',
@@ -210,8 +212,8 @@ export const reportConfigs = {
         obsInternas:       'Cierre de tramite tecnico',
       },
       {
-        idTarea:           'T-1004',
-        tarea:             'Respuesta a observación organismo',
+        idServicio:           'T-1004',
+        servicio:             'Respuesta a observación organismo',
         presupuesto:       'PRES-2024-004',
         tramite:           'Renovación de registro',
         usuarioAsignado:   'C. Ruiz',
@@ -225,8 +227,8 @@ export const reportConfigs = {
         obsInternas:       'Respuesta a observacion del organismo',
       },
       {
-        idTarea:           'T-1005',
-        tarea:             'Completar documentación de respaldo',
+        idServicio:           'T-1005',
+        servicio:             'Completar documentación de respaldo',
         presupuesto:       'PRES-2024-005',
         tramite:           'Alta de producto',
         usuarioAsignado:   'M. Rojas',
@@ -240,8 +242,8 @@ export const reportConfigs = {
         obsInternas:       'Falta de documentacion de respaldo',
       },
       {
-        idTarea:           'T-1006',
-        tarea:             'Auditoría interna de procesos',
+        idServicio:           'T-1006',
+        servicio:             'Auditoría interna de procesos',
         presupuesto:       'PRES-2024-006',
         tramite:           'Control de calidad',
         usuarioAsignado:   'L. Gomez',
@@ -255,8 +257,8 @@ export const reportConfigs = {
         obsInternas:       'Auditoria programada para el mes en curso',
       },
       {
-        idTarea:           'T-1007',
-        tarea:             'Presentación ante organismo',
+        idServicio:           'T-1007',
+        servicio:             'Presentación ante organismo',
         presupuesto:       'PRES-2024-007',
         tramite:           'Inscripción de producto',
         usuarioAsignado:   'G. Perez',
@@ -270,8 +272,8 @@ export const reportConfigs = {
         obsInternas:       'Presentacion realizada con documentacion completa',
       },
       {
-        idTarea:           'T-1008',
-        tarea:             'Seguimiento de observaciones',
+        idServicio:           'T-1008',
+        servicio:             'Seguimiento de observaciones',
         presupuesto:       'PRES-2024-008',
         tramite:           'Renovación de habilitación',
         usuarioAsignado:   'C. Ruiz',
@@ -773,10 +775,6 @@ rows: [
   }
 };
 
-// ─────────────────────────────────────────────────────────────────────────
-// 2. SEED DATA (SE USA SOLO SI EL LOCALSTORAGE ESTÁ VACÍO)
-// ─────────────────────────────────────────────────────────────────────────
-
 export const clientesData = [
   { 
     id: 1, 
@@ -801,7 +799,25 @@ export const clientesData = [
       { descripcion: 'Alta de cliente en el sistema y configuración de abonos.', fecha: '12/01/2026', tipo: 'Historia' }
     ],
     servicios: [
-      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '01/02/2026', actividadesArca: ['016119', '749009'] }
+      { 
+        idServicio: 'T-001',
+        servicio: 'Gestión de Habilitaciones e Inscripciones',
+        descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
+        categoria: 'Regulaciones',
+        modalidad: 'Por Proyecto',
+        presupuesto: 450000,
+        tramite: 'Habilitación',
+        usuarioAsignado: 'M. Rojas',
+        estado: '2. Asignada',
+        fechaInicio: '01/02/2026',
+        fechaFin: '',
+        contactoCliente: 'AgroRosario S.A.',
+        contactoOrganismo: 'SENASA',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 34 Km 5',
+        obsInternas: '',
+        actividadesArca: ['016119', '749009']
+      }
     ]
   },
   { 
@@ -827,7 +843,25 @@ export const clientesData = [
       { descripcion: 'Se reclamó pago de cuotas atrasadas del servicio suspendido.', fecha: '05/06/2026', tipo: 'Llamada' }
     ],
     servicios: [
-      { nombre: 'Diseño y Optimización de Layout Industrial', abono: '520000', estado: 'Activo', fechaInicio: '15/05/2025', actividadesArca: ['711003'] }
+      { 
+        idServicio: 'T-002',
+        servicio: 'Diseño y Optimización de Layout Industrial',
+        descripcion: 'Relevamiento y rediseño de procesos productivos, flujos de materiales y distribución de planta.',
+        categoria: 'Ingeniería',
+        modalidad: 'Por Proyecto',
+        presupuesto: 520000,
+        tramite: 'Layout',
+        usuarioAsignado: 'G. Perez',
+        estado: '10. Finalizada',
+        fechaInicio: '15/05/2025',
+        fechaFin: '15/06/2025',
+        contactoCliente: 'Metalúrgica del Núcleo S.R.L.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 21 Km 7',
+        obsInternas: 'Servicio suspendido por deuda',
+        actividadesArca: ['711003']
+      }
     ]
   },
   {
@@ -853,8 +887,44 @@ export const clientesData = [
       { descripcion: 'Ajuste de tarifas por volumen de personal liquidado.', fecha: '20/04/2026', tipo: 'Reunión' }
     ],
     servicios: [
-      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '01/01/2025', actividadesArca: ['016119', '749009'] },
-      { nombre: 'Implementación de Sistemas HACCP y BPM', abono: '380000', estado: 'Activo', fechaInicio: '15/03/2025', actividadesArca: ['749009', '711003'] }
+      { 
+        idServicio: 'T-003',
+        servicio: 'Gestión de Habilitaciones e Inscripciones',
+        descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
+        categoria: 'Regulaciones',
+        modalidad: 'Por Proyecto',
+        presupuesto: 450000,
+        tramite: 'Habilitación',
+        usuarioAsignado: 'M. Rojas',
+        estado: '2. Asignada',
+        fechaInicio: '01/01/2025',
+        fechaFin: '',
+        contactoCliente: 'Lácteos del Sur S.A.',
+        contactoOrganismo: 'SENASA',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 9 Km 302',
+        obsInternas: '',
+        actividadesArca: ['016119', '749009']
+      },
+      { 
+        idServicio: 'T-004',
+        servicio: 'Implementación de Sistemas HACCP y BPM',
+        descripcion: 'Diseño, documentación e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
+        categoria: 'Calidad',
+        modalidad: 'Por Proyecto',
+        presupuesto: 380000,
+        tramite: 'Certificación',
+        usuarioAsignado: 'L. Gomez',
+        estado: '5. En obra',
+        fechaInicio: '15/03/2025',
+        fechaFin: '',
+        contactoCliente: 'Lácteos del Sur S.A.',
+        contactoOrganismo: 'ANMAT',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 9 Km 302',
+        obsInternas: '',
+        actividadesArca: ['749009', '711003']
+      }
     ]
   },
   {
@@ -874,9 +944,27 @@ export const clientesData = [
     tipoCliente: "POTENCIAL",
     enviarBoletin: false,
     contactos: [],
-    historia: [], // 👈 BUG FIXED: history cambiado a historia
+    historia: [],
     servicios: [
-      { nombre: 'Validación de Procesos de Congelado y Conservación', abono: '460000', estado: 'Suspendido', fechaInicio: '01/03/2025', actividadesArca: ['711003', '101011'] }
+      { 
+        idServicio: 'T-005',
+        servicio: 'Validación de Procesos de Congelado y Conservación',
+        descripcion: 'Análisis y verificación de parámetros térmicos para garantizar la inocuidad y calidad del producto.',
+        categoria: 'Ingeniería',
+        modalidad: 'Por Proyecto',
+        presupuesto: 460000,
+        tramite: 'Validación',
+        usuarioAsignado: 'C. Ruiz',
+        estado: '8. Demorada por el organismo',
+        fechaInicio: '01/03/2025',
+        fechaFin: '',
+        contactoCliente: 'Frigorífico La Esperanza S.R.L.',
+        contactoOrganismo: 'SENASA',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 33 Km 742',
+        obsInternas: 'Pendiente documentación',
+        actividadesArca: ['711003', '101011']
+      }
     ]
   },
   {
@@ -900,7 +988,25 @@ export const clientesData = [
     ],
     historia: [],
     servicios: [
-      { nombre: 'Asesoramiento Integral en Gestión Ambiental', abono: '220000', estado: 'Activo', fechaInicio: '15/11/2025', actividadesArca: ['749009'] }
+      { 
+        idServicio: 'T-006',
+        servicio: 'Asesoramiento Integral en Gestión Ambiental',
+        descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
+        categoria: 'Regulaciones',
+        modalidad: 'Abono Mensual',
+        presupuesto: 220000,
+        tramite: 'Gestión Ambiental',
+        usuarioAsignado: 'G. Perez',
+        estado: '2. Asignada',
+        fechaInicio: '15/11/2025',
+        fechaFin: '',
+        contactoCliente: 'Agroinsumos Pampeanos S.A.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta A012 Km 11',
+        obsInternas: '',
+        actividadesArca: ['749009']
+      }
     ]
   },
   {
@@ -922,7 +1028,25 @@ export const clientesData = [
     contactos: [],
     historia: [],
     servicios: [
-      { nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío', abono: '75000', estado: 'Suspendido', fechaInicio: '01/08/2025', actividadesArca: ['101011', '711003'] }
+      { 
+        idServicio: 'T-007',
+        servicio: 'Auditoría de Ingeniería Térmica y Sistemas de Frío',
+        descripcion: 'Evaluación técnica de eficiencia energética en cámaras frigoríficas y túneles de congelado.',
+        categoria: 'Ingeniería',
+        modalidad: 'Por Hora',
+        presupuesto: 25000,
+        tramite: 'Auditoría',
+        usuarioAsignado: 'M. Rojas',
+        estado: '10. Finalizada',
+        fechaInicio: '01/08/2025',
+        fechaFin: '15/08/2025',
+        contactoCliente: 'Servicios Industriales Delta S.R.L.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Parque Industrial Oeste',
+        obsInternas: '',
+        actividadesArca: ['101011', '711003']
+      }
     ]
   },
   {
@@ -946,7 +1070,25 @@ export const clientesData = [
     ],
     historia: [],
     servicios: [
-      { nombre: 'Capacitación en Manipulación Segura de Alimentos', abono: '180000', estado: 'Activo', fechaInicio: '20/10/2025', actividadesArca: ['855900', '749009'] }
+      { 
+        idServicio: 'T-008',
+        servicio: 'Capacitación en Manipulación Segura de Alimentos',
+        descripcion: 'Formación teórico-práctica para operarios y mandos medios sobre normativas y buenas prácticas.',
+        categoria: 'Capacitación',
+        modalidad: 'Por Hora',
+        presupuesto: 180000,
+        tramite: 'Capacitación',
+        usuarioAsignado: 'L. Gomez',
+        estado: '2. Asignada',
+        fechaInicio: '20/10/2025',
+        fechaFin: '',
+        contactoCliente: 'Alimentos Premium S.A.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 11 Km 345',
+        obsInternas: '',
+        actividadesArca: ['855900', '749009']
+      }
     ]
   },
   {
@@ -967,7 +1109,7 @@ export const clientesData = [
     enviarBoletin: false,
     contactos: [],
     historia: [],
-    servicios: [] // Sigue vacío de forma intencional para tests visuales de clientes sin servicios
+    servicios: [] 
   },
   {
     id: 9,
@@ -992,7 +1134,25 @@ export const clientesData = [
       { descripcion: 'Reunión presencial por cierre de auditoría anual.', fecha: '14/05/2026', tipo: 'Reunión' }
     ],
     servicios: [
-      { nombre: 'Auditorías Internas para Certificación ISO 22000', abono: '210000', estado: 'Activo', fechaInicio: '01/01/2024', actividadesArca: ['749009'] }
+      { 
+        idServicio: 'T-009',
+        servicio: 'Auditorías Internas para Certificación ISO 22000',
+        descripcion: 'Evaluación de cumplimiento normativo y preparación para auditorías de certificación en seguridad alimentaria.',
+        categoria: 'Calidad',
+        modalidad: 'Por Hora',
+        presupuesto: 210000,
+        tramite: 'Auditoría',
+        usuarioAsignado: 'M. Rojas',
+        estado: '2. Asignada',
+        fechaInicio: '01/01/2024',
+        fechaFin: '',
+        contactoCliente: 'Aceitera Regional S.A.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Puerto General San Martín',
+        obsInternas: '',
+        actividadesArca: ['749009']
+      }
     ]
   },
   {
@@ -1014,7 +1174,25 @@ export const clientesData = [
     contactos: [],
     historia: [],
     servicios: [
-      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '120000', estado: 'Activo', fechaInicio: '12/09/2025', actividadesArca: ['016119', '749009'] }
+      { 
+        idServicio: 'T-010',
+        servicio: 'Gestión de Habilitaciones e Inscripciones',
+        descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
+        categoria: 'Regulaciones',
+        modalidad: 'Por Proyecto',
+        presupuesto: 120000,
+        tramite: 'Habilitación',
+        usuarioAsignado: 'G. Perez',
+        estado: '2. Asignada',
+        fechaInicio: '12/09/2025',
+        fechaFin: '',
+        contactoCliente: 'Ganadera del Litoral S.A.',
+        contactoOrganismo: 'SENASA',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 18 Km 22',
+        obsInternas: '',
+        actividadesArca: ['016119', '749009']
+      }
     ]
   },
   {
@@ -1036,7 +1214,25 @@ export const clientesData = [
     contactos: [],
     historia: [],
     servicios: [
-      { nombre: 'Diseño y Optimización de Layout Industrial', abono: '520000', estado: 'Activo', fechaInicio: '01/11/2025', actividadesArca: ['711003'] }
+      { 
+        idServicio: 'T-011',
+        servicio: 'Diseño y Optimización de Layout Industrial',
+        descripcion: 'Relevamiento y rediseño de procesos productivos, flujos de materiales y distribución de planta.',
+        categoria: 'Ingeniería',
+        modalidad: 'Por Proyecto',
+        presupuesto: 520000,
+        tramite: 'Layout',
+        usuarioAsignado: 'L. Gomez',
+        estado: '2. Asignada',
+        fechaInicio: '01/11/2025',
+        fechaFin: '',
+        contactoCliente: 'Molinos del Paraná S.R.L.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Zona Industrial Norte',
+        obsInternas: '',
+        actividadesArca: ['711003']
+      }
     ]
   },
   {
@@ -1060,7 +1256,25 @@ export const clientesData = [
     ],
     historia: [],
     servicios: [
-      { nombre: 'Asesoramiento Integral en Gestión Ambiental', abono: '220000', estado: 'Activo', fechaInicio: '01/01/2026', actividadesArca: ['749009'] }
+      { 
+        idServicio: 'T-012',
+        servicio: 'Asesoramiento Integral en Gestión Ambiental',
+        descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
+        categoria: 'Regulaciones',
+        modalidad: 'Abono Mensual',
+        presupuesto: 220000,
+        tramite: 'Gestión Ambiental',
+        usuarioAsignado: 'G. Perez',
+        estado: '2. Asignada',
+        fechaInicio: '01/01/2026',
+        fechaFin: '',
+        contactoCliente: 'Campo Fértil Agropecuaria S.A.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 8 Km 365',
+        obsInternas: '',
+        actividadesArca: ['749009']
+      }
     ]
   },
   {
@@ -1082,7 +1296,25 @@ export const clientesData = [
     contactos: [],
     historia: [],
     servicios: [
-      { nombre: 'Implementación de Sistemas HACCP y BPM', abono: '380000', estado: 'Suspendido', fechaInicio: '15/06/2025', actividadesArca: ['749009', '711003'] }
+      { 
+        idServicio: 'T-013',
+        servicio: 'Implementación de Sistemas HACCP y BPM',
+        descripcion: 'Diseño, documentación e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
+        categoria: 'Calidad',
+        modalidad: 'Por Proyecto',
+        presupuesto: 380000,
+        tramite: 'Certificación',
+        usuarioAsignado: 'L. Gomez',
+        estado: '8. Demorada por el organismo',
+        fechaInicio: '15/06/2025',
+        fechaFin: '',
+        contactoCliente: 'Proteínas Argentinas S.R.L.',
+        contactoOrganismo: 'ANMAT',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta AO12 Km 15',
+        obsInternas: '',
+        actividadesArca: ['749009', '711003']
+      }
     ]
   },
   {
@@ -1108,7 +1340,25 @@ export const clientesData = [
       { descripcion: 'Llamada telefónica para coordinar auditoría externa de aduanas.', fecha: '11/06/2026', tipo: 'Llamada' }
     ],
     servicios: [
-      { nombre: 'Gestión de Habilitaciones e Inscripciones', abono: '450000', estado: 'Activo', fechaInicio: '01/01/2024', actividadesArca: ['016119', '749009'] }
+      { 
+        idServicio: 'T-014',
+        servicio: 'Gestión de Habilitaciones e Inscripciones',
+        descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
+        categoria: 'Regulaciones',
+        modalidad: 'Por Proyecto',
+        presupuesto: 450000,
+        tramite: 'Habilitación',
+        usuarioAsignado: 'M. Rojas',
+        estado: '2. Asignada',
+        fechaInicio: '01/01/2024',
+        fechaFin: '',
+        contactoCliente: 'Exportadora Santa Fe S.A.',
+        contactoOrganismo: 'SENASA',
+        directorTecnico: 'N/A',
+        establecimiento: 'Terminal Portuaria Sur',
+        obsInternas: '',
+        actividadesArca: ['016119', '749009']
+      }
     ]
   },
   {
@@ -1130,7 +1380,25 @@ export const clientesData = [
     contactos: [],
     historia: [],
     servicios: [
-      { nombre: 'Validación de Procesos de Congelado y Conservación', abono: '460000', estado: 'Activo', fechaInicio: '10/02/2026', actividadesArca: ['711003', '101011'] }
+      { 
+        idServicio: 'T-015',
+        servicio: 'Validación de Procesos de Congelado y Conservación',
+        descripcion: 'Análisis y verificación de parámetros térmicos para garantizar la inocuidad y calidad del producto.',
+        categoria: 'Ingeniería',
+        modalidad: 'Por Proyecto',
+        presupuesto: 460000,
+        tramite: 'Validación',
+        usuarioAsignado: 'C. Ruiz',
+        estado: '2. Asignada',
+        fechaInicio: '10/02/2026',
+        fechaFin: '',
+        contactoCliente: 'Tecnología Alimentaria Integral S.R.L.',
+        contactoOrganismo: 'SENASA',
+        directorTecnico: 'N/A',
+        establecimiento: 'Parque Industrial Alvear',
+        obsInternas: '',
+        actividadesArca: ['711003', '101011']
+      }
     ]
   },
   {
@@ -1152,7 +1420,25 @@ export const clientesData = [
     contactos: [],
     historia: [],
     servicios: [
-      { nombre: 'Capacitación en Manipulación Segura de Alimentos', abono: '180000', estado: 'Activo', fechaInicio: '01/03/2026', actividadesArca: ['855900', '749009'] }
+      { 
+        idServicio: 'T-016',
+        servicio: 'Capacitación en Manipulación Segura de Alimentos',
+        descripcion: 'Formación teórico-práctica para operarios y mandos medios sobre normativas y buenas prácticas.',
+        categoria: 'Capacitación',
+        modalidad: 'Por Hora',
+        presupuesto: 180000,
+        tramite: 'Capacitación',
+        usuarioAsignado: 'L. Gomez',
+        estado: '2. Asignada',
+        fechaInicio: '01/03/2026',
+        fechaFin: '',
+        contactoCliente: 'NutriFeed Argentina S.A.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Zona Rural Norte',
+        obsInternas: '',
+        actividadesArca: ['855900', '749009']
+      }
     ]
   },
   {
@@ -1172,11 +1458,29 @@ export const clientesData = [
     tipoCliente: "POTENCIAL",
     enviarBoletin: false,
     contactos: [
-      { nombre: 'Juan Manuel', apellido: 'Rosas', telefono: '0341-4354040', interno: '', celular: '3416001122', mail: 'jmrosas@logagro.com', cargo: 'TITULAR', obs: '' } // 👈 BUG FIXED: cellular cambiado a celular
+      { nombre: 'Juan Manuel', apellido: 'Rosas', telefono: '0341-4354040', interno: '', celular: '3416001122', mail: 'jmrosas@logagro.com', cargo: 'TITULAR', obs: '' }
     ],
     historia: [],
     servicios: [
-      { nombre: 'Asesoramiento Integral en Gestión Ambiental', abono: '220000', estado: 'Activo', fechaInicio: '01/01/2025', actividadesArca: ['749009'] }
+      { 
+        idServicio: 'T-017',
+        servicio: 'Asesoramiento Integral en Gestión Ambiental',
+        descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
+        categoria: 'Regulaciones',
+        modalidad: 'Abono Mensual',
+        presupuesto: 220000,
+        tramite: 'Gestión Ambiental',
+        usuarioAsignado: 'G. Perez',
+        estado: '2. Asignada',
+        fechaInicio: '01/01/2025',
+        fechaFin: '',
+        contactoCliente: 'Logística Agroexportadora S.R.L.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Puerto Norte',
+        obsInternas: '',
+        actividadesArca: ['749009']
+      }
     ]
   }
 ];
@@ -1184,74 +1488,162 @@ export const clientesData = [
 export const serviciosData = [
   {
     id: 1,
-    nombre: 'Gestión de Habilitaciones e Inscripciones',
+    idServicio: 'T-CAT-01',
+    servicio: 'Gestión de Habilitaciones e Inscripciones',
     descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
     categoria: 'Regulaciones',
     modalidad: 'Por Proyecto',
-    precioBase: 450000,
+    presupuesto: 450000,
+    tramite: 'Habilitación',
+    usuarioAsignado: '',
+    estado: '1. Pendiente de asignacion',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: 'SENASA',
+    directorTecnico: '',
+    establecimiento: '',
+    obsInternas: '',
     actividadesArca: ['016119', '749009']
   },
   {
     id: 2,
-    nombre: 'Auditoría de Ingeniería Térmica y Sistemas de Frío',
+    idServicio: 'T-CAT-02',
+    servicio: 'Auditoría de Ingeniería Térmica y Sistemas de Frío',
     descripcion: 'Evaluación técnica de eficiencia energética en cámaras frigoríficas y túneles de congelado.',
     categoria: 'Ingeniería',
     modalidad: 'Por Hora',
-    precioBase: 25000,
+    presupuesto: 25000,
+    tramite: 'Auditoría',
+    usuarioAsignado: '',
+    estado: '1. Pendiente de asignacion',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: 'N/A',
+    directorTecnico: '',
+    establecimiento: '',
+    obsInternas: '',
     actividadesArca: ['101011', '711003']
   },
   {
-  id: 3,
-  nombre: 'Implementación de Sistemas HACCP y BPM',
-  descripcion: 'Diseño, documentación e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
-  categoria: 'Calidad',
-  modalidad: 'Por Proyecto',
-  precioBase: 380000,
-  actividadesArca: ['749009', '711003']
-},
-{
-  id: 4,
-  nombre: 'Diseño y Optimización de Layout Industrial',
-  descripcion: 'Relevamiento y rediseño de procesos productivos, flujos de materiales y distribución de planta.',
-  categoria: 'Ingeniería',
-  modalidad: 'Por Proyecto',
-  precioBase: 520000,
-  actividadesArca: ['711003']
-},
-{
-  id: 5,
-  nombre: 'Capacitación en Manipulación Segura de Alimentos',
-  descripcion: 'Formación teórico-práctica para operarios y mandos medios sobre normativas y buenas prácticas.',
-  categoria: 'Capacitación',
-  modalidad: 'Por Hora',
-  precioBase: 180000,
-  actividadesArca: ['855900', '749009']
-},
-{
-  id: 6,
-  nombre: 'Validación de Procesos de Congelado y Conservación',
-  descripcion: 'Análisis y verificación de parámetros térmicos para garantizar la inocuidad y calidad del producto.',
-  categoria: 'Ingeniería',
-  modalidad: 'Por Proyecto',
-  precioBase: 460000,
-  actividadesArca: ['711003', '101011']
-},
-{
-  id: 7,
-  nombre: 'Asesoramiento Integral en Gestión Ambiental',
-  descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
-  categoria: 'Regulaciones',
-  modalidad: 'Abono Mensual',
-  precioBase: 220000,
-  actividadesArca: ['749009']
-},
-{
-  id: 8,
-  nombre: 'Auditorías Internas para Certificación ISO 22000',
-  descripcion: 'Evaluación de cumplimiento normativo y preparación para auditorías de certificación en seguridad alimentaria.',
-  categoria: 'Calidad',
-  modalidad: 'Por Hora',
-  precioBase: 210000,
-  actividadesArca: ['749009']
-}
+    id: 3,
+    idServicio: 'T-CAT-03',
+    servicio: 'Implementación de Sistemas HACCP y BPM',
+    descripcion: 'Diseño, documentación e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
+    categoria: 'Calidad',
+    modalidad: 'Por Proyecto',
+    presupuesto: 380000,
+    tramite: 'Certificación',
+    usuarioAsignado: '',
+    estado: '1. Pendiente de asignacion',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: 'ANMAT',
+    directorTecnico: '',
+    establecimiento: '',
+    obsInternas: '',
+    actividadesArca: ['749009', '711003']
+  },
+  {
+    id: 4,
+    idServicio: 'T-CAT-04',
+    servicio: 'Diseño y Optimización de Layout Industrial',
+    descripcion: 'Relevamiento y rediseño de procesos productivos, flujos de materiales y distribución de planta.',
+    categoria: 'Ingeniería',
+    modalidad: 'Por Proyecto',
+    presupuesto: 520000,
+    tramite: 'Layout',
+    usuarioAsignado: '',
+    estado: '1. Pendiente de asignacion',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: 'N/A',
+    directorTecnico: '',
+    establecimiento: '',
+    obsInternas: '',
+    actividadesArca: ['711003']
+  },
+  {
+    id: 5,
+    idServicio: 'T-CAT-05',
+    servicio: 'Capacitación en Manipulación Segura de Alimentos',
+    descripcion: 'Formación teórico-práctica para operarios y mandos medios sobre normativas y buenas prácticas.',
+    categoria: 'Capacitación',
+    modalidad: 'Por Hora',
+    presupuesto: 180000,
+    tramite: 'Capacitación',
+    usuarioAsignado: '',
+    estado: '1. Pendiente de asignacion',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: 'N/A',
+    directorTecnico: '',
+    establecimiento: '',
+    obsInternas: '',
+    actividadesArca: ['855900', '749009']
+  },
+  {
+    id: 6,
+    idServicio: 'T-CAT-06',
+    servicio: 'Validación de Procesos de Congelado y Conservación',
+    descripcion: 'Análisis y verificación de parámetros térmicos para garantizar la inocuidad y calidad del producto.',
+    categoria: 'Ingeniería',
+    modalidad: 'Por Proyecto',
+    presupuesto: 460000,
+    tramite: 'Validación',
+    usuarioAsignado: '',
+    estado: '1. Pendiente de asignacion',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: 'SENASA',
+    directorTecnico: '',
+    establecimiento: '',
+    obsInternas: '',
+    actividadesArca: ['711003', '101011']
+  },
+  {
+    id: 7,
+    idServicio: 'T-CAT-07',
+    servicio: 'Asesoramiento Integral en Gestión Ambiental',
+    descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
+    categoria: 'Regulaciones',
+    modalidad: 'Abono Mensual',
+    presupuesto: 220000,
+    tramite: 'Gestión Ambiental',
+    usuarioAsignado: '',
+    estado: '1. Pendiente de asignacion',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: 'N/A',
+    directorTecnico: '',
+    establecimiento: '',
+    obsInternas: '',
+    actividadesArca: ['749009']
+  },
+  {
+    id: 8,
+    idServicio: 'T-CAT-08',
+    servicio: 'Auditorías Internas para Certificación ISO 22000',
+    descripcion: 'Evaluación de cumplimiento normativo y preparación para auditorías de certificación en seguridad alimentaria.',
+    categoria: 'Calidad',
+    modalidad: 'Por Hora',
+    presupuesto: 210000,
+    tramite: 'Auditoría',
+    usuarioAsignado: '',
+    estado: '1. Pendiente de asignacion',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: 'N/A',
+    directorTecnico: '',
+    establecimiento: '',
+    obsInternas: '',
+    actividadesArca: ['749009']
+  }
 ];

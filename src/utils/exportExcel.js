@@ -57,7 +57,7 @@ const ALT_ROW_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9
 // ── Ordenamiento por fecha según reporte ─────────────────────────────────────
 
 const DATE_COLUMN_BY_REPORT = {
-  tareas:       'fechaInicio',
+  servicios:       'fechaInicio',
   tramites:     'fechaVtoRegistro',
   vencimientos: 'vencimiento',
 };
@@ -178,7 +178,6 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
 
       if (isAlt) cell.fill = ALT_ROW_FILL;
 
-      // Estilo Estado de tarea
       if (colKey === 'estado' && STATE_STYLES[cellValue]) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: STATE_STYLES[cellValue].bg } };
         cell.font = { size: 10, color: { argb: STATE_STYLES[cellValue].text }, bold: false };
