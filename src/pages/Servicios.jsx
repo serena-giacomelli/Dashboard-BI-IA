@@ -36,14 +36,16 @@ const Servicios = () => {
 
   const eliminarServicio = (id) => {
     if (window.confirm('¿Seguro querés eliminar este servicio del portfolio comercial?')) {
-      setServicios(servicios.filter(s => s.id !== id));    }
+      setServicios(servicios.filter(s => s.id !== id));
+    }
   };
 
   const manejarCambioInput = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'precioBase' ? parseFloat(value) || 0 : value    }));
+      [name]: name === 'precioBase' ? parseFloat(value) || 0 : value
+    }));
   };
 
   const manejarSeleccionArca = (e) => {
@@ -54,7 +56,8 @@ const Servicios = () => {
       if (prev.actividadesArca.includes(codigoSeleccionado)) return prev; 
       return {
         ...prev,
-        actividadesArca: [...prev.actividadesArca, codigoSeleccionado]      };
+        actividadesArca: [...prev.actividadesArca, codigoSeleccionado]
+      };
     });
 
     setBusquedaArca(''); 
@@ -64,7 +67,8 @@ const Servicios = () => {
   const removerActividadArca = (codigo) => {
     setFormData(prev => ({
       ...prev,
-      actividadesArca: prev.actividadesArca.filter(c => c !== codigo)    }));
+      actividadesArca: prev.actividadesArca.filter(c => c !== codigo)
+    }));
   };
 
   const guardarServicio = (e) => {
@@ -115,7 +119,7 @@ const Servicios = () => {
                     </td>
                     <td>
                       <div className="chips-container">
-                        {servicio.actividadesArca.map(cod => (
+                        {(servicio.actividadesArca || []).map(cod => (
                           <span key={cod} className="chip-codigo">
                             {cod}
                           </span>
@@ -134,7 +138,7 @@ const Servicios = () => {
                       {servicio.modalidad}
                     </td>
                     <td className="td-precio">
-                      ${servicio.precioBase.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      ${(servicio.precioBase || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="td-acciones">
                       <button onClick={() => iniciarEditar(servicio)} className="btn-tabla btn-tabla-editar">

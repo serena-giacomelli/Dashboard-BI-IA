@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { actividadesArca } from '../data/mockDB.js';
 import '../styles/Clientes.css';
 
-const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
+const Clientes = ({ clientes, setClientes, serviciosData }) => {
   const getNombreActividad = (codigo) => {
     const actividad = actividadesArca.find(a => a.codigo === codigo);
     return actividad ? actividad.nombre : codigo;  };
@@ -86,7 +86,7 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
     const { name, value, type, checked } = e.target;
     setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });  };
   const manejarSeleccionServicio = (nombre) => {
-    const servicioInfo = catalogoServicios.find(s => s.nombre === nombre);
+    const servicioInfo = serviciosData.find(s => s.nombre === nombre);
     setNuevoServicio({
       ...nuevoServicio,
       nombre,
@@ -458,7 +458,7 @@ const Clientes = ({ clientes, setClientes, catalogoServicios }) => {
                         onChange={(e) => manejarSeleccionServicio(e.target.value)}
                         className="form-input form-input--white"                      >
                         <option value="">Seleccione servicio...</option>
-                        {(catalogoServicios || []).map(s => (
+                        {(serviciosData || []).map(s => (
                           <option key={s.id} value={s.nombre}>{s.nombre}</option>
                         ))}
                       </select>

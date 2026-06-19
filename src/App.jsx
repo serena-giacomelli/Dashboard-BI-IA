@@ -34,7 +34,7 @@ function App() {
             
             <Route 
               path="/clientes" 
-              element={<Clientes clientes={clientes} setClientes={setClientes} catalogoServicios={servicios} />} 
+              element={<Clientes clientes={clientes} setClientes={setClientes} serviciosData={servicios} />} 
             />
             <Route 
               path="/servicios" 
