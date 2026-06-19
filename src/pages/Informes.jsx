@@ -8,6 +8,7 @@ import ExportModal from '../components/ExportModal.jsx';
 import styles from '../styles/Reports.module.css';
 import { COMPANY_CONFIG } from '../styles/reportTheme';
 import { LOGO_CIFAS_BASE64 } from '../utils/assets.js';
+import { PDF_THEME } from '../styles/pdfTheme.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -167,7 +168,6 @@ function Informes() {
 
   const handleExportPdf = (selectedColumnKeys) => {
     if (selectedColumnKeys.length > 15) {
-       // Backup de seguridad
        console.warn("Demasiadas columnas seleccionadas para PDF");
     }
     
@@ -176,33 +176,42 @@ function Informes() {
     const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 
     const addHeader = () => {
-      // CAMBIO AQUÍ: Se usa LOGO_CIFAS_BASE64 directamente en lugar de COMPANY_CONFIG.logo
       if (LOGO_CIFAS_BASE64) {
+        const { x, y, width, height } = PDF_THEME.header.logo;
         doc.addImage(LOGO_CIFAS_BASE64, 'PNG', 14, 10, 30, 15);
       }
       doc.setFont(COMPANY_CONFIG.font, 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(22, 50, 79); // Azul corporativo
-      doc.text(COMPANY_CONFIG.name, 48, 18);
+      doc.setFontSize(PDF_THEME.header.companyName.fontSize);
+      doc.setTextColor(PDF_THEME.colors.primary);
+      doc.text(COMPANY_CONFIG.name, PDF_THEME.header.companyName.x, PDF_THEME.header.companyName.y);
       doc.setFont(COMPANY_CONFIG.font, 'normal');
-      doc.setFontSize(14);
-      doc.text(`Informe: ${reportConfig.label}`, 48, 24);
-      doc.setDrawColor(200, 200, 200);
-      doc.line(14, 28, 280, 28);
+      doc.setFontSize(PDF_THEME.header.reportTitle.fontSize);
+      doc.text(
+        `Informe: ${reportConfig.label}`,
+        PDF_THEME.header.reportTitle.x,
+        PDF_THEME.header.reportTitle.y,
+      );      doc.setDrawColor(PDF_THEME.colors.divider);
+      doc.setDrawColor(...PDF_THEME.colors.divider);
+            doc.line(
+              PDF_THEME.header.dividerX1,
+              PDF_THEME.header.dividerY,
+              PDF_THEME.header.dividerX2,
+              PDF_THEME.header.dividerY,
+            );
     };
       addHeader();
 
    //metadata y filtros
-    let cursorY = 35;
+    let cursorY = PDF_THEME.body.startY;
     doc.setFont(COMPANY_CONFIG.font, 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(PDF_THEME.body.metadataFontSize);
+    doc.setTextColor(...PDF_THEME.colors.textSecondary);
     doc.text(`Generado el: ${now} | Registros: ${filteredRows.length}`, 14, cursorY);
-    cursorY += 7;
+    cursorY += PDF_THEME.body.metadataLineHeight;
 
     filterSummary.forEach((item) => {
       doc.text(`${item.label}: ${item.value}`, 14, cursorY);
-      cursorY += 5;
+      cursorY += PDF_THEME.body.filterLineHeight;
     });
 
     // ── Tabla de datos ──
@@ -215,211 +224,209 @@ function Informes() {
       })
     );
 
+    
     if (filteredRows.length) {
       autoTable(doc, {
-        startY: cursorY + 5,
+        startY: cursorY + PDF_THEME.body.tableOffset,
         head: [exportColumns.map((col) => col.label)],
         body: pdfRows,
-        styles: { font: COMPANY_CONFIG.font, fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [22, 50, 79], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [245, 248, 255] },
-        margin: { left: 14, right: 14 },
-        horizontalPageBreak: true, // Solución para tablas anchas
-
+        styles: {
+          font: COMPANY_CONFIG.font,
+          fontSize: PDF_THEME.table.fontSize,
+          cellPadding: PDF_THEME.table.cellPadding,
+        },
+        headStyles: {
+          fillColor: PDF_THEME.colors.primary,
+          textColor: PDF_THEME.colors.white,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: PDF_THEME.colors.rowAlternate,
+        },
+        margin: PDF_THEME.table.margin,
+        horizontalPageBreak: true,
       });
     } else {
-      doc.setFontSize(9);
-      doc.setTextColor(150);
-      doc.text('No hay registros para exportar con los filtros seleccionados.', 14, cursorY + 10);
-    }
+          doc.setFontSize(PDF_THEME.body.metadataFontSize);
+          doc.setTextColor(...PDF_THEME.colors.textSecondary);
+          doc.text(
+            'No hay registros para exportar con los filtros seleccionados.',
+            14,
+            cursorY + PDF_THEME.body.tableOffset + 5,
+          );
+        }
 
     doc.save(`informe_${reportId}_${formatFileDate()}.pdf`);
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-
   return (
-    <section className={styles.page}>
-      <header className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <h1>Generacion de informes operativos</h1>
-        </div>
-      </header>
-
-      <div className={styles.layout}>
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <div>
-              <p className={styles.panelKicker}>Tipo de informe</p>
-              <h2 className={styles.panelTitle}>{reportConfig.label}</h2>
-              <p className={styles.panelDescription}>{reportConfig.description}</p>
-            </div>
+      <section className={styles.page}>
+        <header className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <h1>Generacion de informes operativos</h1>
           </div>
-
-          <label className={styles.field}>
-            <span>Elegir informe</span>
-            <select
-              className={styles.select}
-              value={reportId}
-              onChange={(event) => setReportId(event.target.value)}
-            >
-              {reportEntries.map((entry) => (
-                <option key={entry.value} value={entry.value}>
-                  {entry.label}
-                
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div className={styles.formGrid}>
-            {reportConfig.filters.map((filter) => {
-              if (filter.type === 'date') {
+        </header>
+          <div className={styles.layout}>
+          <section className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.panelKicker}>Tipo de informe</p>
+                <h2 className={styles.panelTitle}>{reportConfig.label}</h2>
+                <p className={styles.panelDescription}>{reportConfig.description}</p>
+              </div>
+            </div>
+              <label className={styles.field}>
+              <span>Elegir informe</span>
+              <select
+                className={styles.select}
+                value={reportId}
+                onChange={(event) => setReportId(event.target.value)}
+              >
+                {reportEntries.map((entry) => (
+                  <option key={entry.value} value={entry.value}>
+                    {entry.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className={styles.formGrid}>
+              {reportConfig.filters.map((filter) => {
+                if (filter.type === 'date') {
+                  return (
+                    <label key={filter.key} className={styles.field}>
+                      <span>{filter.label}</span>
+                      <input
+                        className={styles.input}
+                        type="date"
+                        value={filters[filter.key]}
+                        onChange={(event) => handleFilterChange(filter.key, event.target.value)}
+                      />
+                    </label>
+                  );                }
+                if (filter.type === 'multiselect') {
+                  return (
+                    <fieldset key={filter.key} className={styles.fieldset}>
+                      <legend>{filter.label}</legend>
+                      <div className={styles.checkboxGroup}>
+                        {filter.options.map((option) => (
+                          <label key={option} className={styles.checkboxItem}>
+                            <input
+                              className={styles.checkboxInput}
+                              type="checkbox"
+                              checked={(filters[filter.key] ?? []).includes(option)}
+                              onChange={() => toggleCheckboxValue(filter.key, option)}
+                            />
+                            <span>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <small className={styles.helper}>Podés marcar más de una opción.</small>
+                    </fieldset>
+                  );                }
                 return (
                   <label key={filter.key} className={styles.field}>
                     <span>{filter.label}</span>
-                    <input
-                      className={styles.input}
-                      type="date"
+                    <select
+                      className={styles.select}
                       value={filters[filter.key]}
                       onChange={(event) => handleFilterChange(filter.key, event.target.value)}
-                    />
+                    >
+                      {filter.options.map((option) => (
+                        <option key={option} value={option === 'Todos' || option === 'Todas' ? '' : option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 );
-              }
-
-              if (filter.type === 'multiselect') {
-                return (
-                  <fieldset key={filter.key} className={styles.fieldset}>
-                    <legend>{filter.label}</legend>
-                    <div className={styles.checkboxGroup}>
-                      {filter.options.map((option) => (
-                        <label key={option} className={styles.checkboxItem}>
-                          <input
-                            className={styles.checkboxInput}
-                            type="checkbox"
-                            checked={(filters[filter.key] ?? []).includes(option)}
-                            onChange={() => toggleCheckboxValue(filter.key, option)}
-                          />
-                          <span>{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <small className={styles.helper}>Podés marcar más de una opción.</small>
-                  </fieldset>
-                );
-              }
-
-              return (
-                <label key={filter.key} className={styles.field}>
-                  <span>{filter.label}</span>
-                  <select
-                    className={styles.select}
-                    value={filters[filter.key]}
-                    onChange={(event) => handleFilterChange(filter.key, event.target.value)}
-                  >
-                    {filter.options.map((option) => (
-                      <option key={option} value={option === 'Todos' || option === 'Todas' ? '' : option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              );
-            })}
-          </div>
-
-          <div className={styles.footerActions}>
-            <button
-              className={`${styles.button} ${styles.secondaryButton}`}
-              type="button"
-              onClick={() => navigate('/dashboard')}
-            >
-              Volver
-            </button>
-            <button
-              className={`${styles.button} ${styles.secondaryButton}`}
-              type="button"
-              onClick={() => openExportModal('pdf')}
-            >
-              PDF
-            </button>
-            <button
-              className={`${styles.button} ${styles.primaryButton}`}
-              type="button"
-              onClick={() => openExportModal('excel')}
-            >
-              Excel
-            </button>
-            
-          </div>
-        </section>
-
-        {/* Panel derecho: vista previa */}
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <div>
-              <p className={styles.panelKicker}>Vista previa</p>
-              <h2 className={styles.panelTitle}>Resultados filtrados</h2>
-              <p className={styles.panelDescription}>
-                El informe actual devuelve {filteredRows.length} registro{filteredRows.length === 1 ? '' : 's'}.
-              </p>
+              })}
             </div>
-          </div>
-
-          <div className={styles.chips}>
-            {filterSummary.map((item) => (
-              <span className={styles.chip} key={item.label}>
-                <strong>{item.label}:</strong> {item.value}
-              </span>
-            ))}
-          </div>
-
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  {reportConfig.columns.map((column) => (
-                    <th key={column.key}>{column.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.length ? (
-                  filteredRows.map((row) => (
-                    <tr key={row.id}>
-                      {reportConfig.columns.map((column) => (
-                        <td key={column.key}>
-                          {column.key === 'fecha' || column.key === 'vencimiento' || column.key === 'fechaInicio'
-                            ? formatDate(row[column.key])
-                            : row[column.key] ?? '-'}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
+            <div className={styles.footerActions}>
+              <button
+                className={`${styles.button} ${styles.secondaryButton}`}
+                type="button"
+                onClick={() => navigate('/dashboard')}
+              >
+                Volver
+              </button>
+              <button
+                className={`${styles.button} ${styles.secondaryButton}`}
+                type="button"
+                onClick={() => openExportModal('pdf')}
+              >
+                PDF
+              </button>
+              <button
+                className={`${styles.button} ${styles.primaryButton}`}
+                type="button"
+                onClick={() => openExportModal('excel')}
+              >
+                Excel
+              </button>
+            </div>
+          </section>
+            <section className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.panelKicker}>Vista previa</p>
+                <h2 className={styles.panelTitle}>Resultados filtrados</h2>
+                <p className={styles.panelDescription}>
+                  El informe actual devuelve {filteredRows.length} registro{filteredRows.length === 1 ? '' : 's'}.
+                </p>
+              </div>
+            </div>
+            <div className={styles.chips}>
+              {filterSummary.map((item) => (
+                <span className={styles.chip} key={item.label}>
+                  <strong>{item.label}:</strong> {item.value}
+                </span>
+              ))}
+            </div>
+  
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
                   <tr>
-                    <td className={styles.emptyState} colSpan={reportConfig.columns.length}>
-                      No hay registros para los filtros seleccionados.
-                    </td>
+                    {reportConfig.columns.map((column) => (
+                      <th key={column.key}>{column.label}</th>
+                    ))}
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
-      {/* Modal de selección de columnas */}
-      <ExportModal
-        isOpen={exportFormat !== null}
-        onClose={closeExportModal}
-        onConfirm={handleExportConfirm}
-        format={exportFormat ?? 'excel'}
-        columns={allColumns}
-      />
-    </section>
-  );
-}
-
-export default Informes;
+                </thead>
+                <tbody>
+                  {filteredRows.length ? (
+                    filteredRows.map((row) => (
+                      <tr key={row.id}>
+                        {reportConfig.columns.map((column) => (
+                          <td key={column.key}>
+                            {column.key === 'fecha' || column.key === 'vencimiento' || column.key === 'fechaInicio'
+                              ? formatDate(row[column.key])
+                              : row[column.key] ?? '-'}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td className={styles.emptyState} colSpan={reportConfig.columns.length}>
+                        No hay registros para los filtros seleccionados.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+          <ExportModal
+          isOpen={exportFormat !== null}
+          onClose={closeExportModal}
+          onConfirm={handleExportConfirm}
+          format={exportFormat ?? 'excel'}
+          columns={allColumns}
+        />
+      </section>
+    );
+  }
+  
+  export default Informes;
+  
