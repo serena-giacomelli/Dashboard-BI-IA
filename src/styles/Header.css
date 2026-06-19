@@ -1,0 +1,215 @@
+/* =============================================
+   Header.css — Diseño chato integrado al borde
+   ============================================= */
+
+.topbar-container {
+  display: flex;
+  justify-content: flex-end; /* Alinea los elementos al extremo derecho */
+  align-items: center;
+  height: 50px; /* Más compacto y elegante */
+  padding: 0 24px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0; /* Línea divisoria sutil */
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: none; /* 🚫 Chau efecto flotante/rectángulo separado */
+}
+
+.topbar-der {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* --- Campanita --- */
+.notificaciones-wrapper {
+  position: relative;
+}
+
+.btn-campana {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  font-size: 18px;
+}
+
+.btn-campana:hover {
+  background-color: #f1f5f9;
+}
+
+.badge-no-leido {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #ef4444;
+  color: white;
+  font-size: 9px;
+  font-weight: bold;
+  height: 15px;
+  min-width: 15px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  padding: 0 3px;
+}
+
+/* --- Desplegable Alertas --- */
+.panel-desplegable {
+  position: absolute;
+  top: 130%;
+  right: -10px; /* Ajustado para que caiga prolijo */
+  width: 320px;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); /* Sombra suave solo al desplegar */
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.btn-marcar-leido {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-marcar-leido:hover {
+  text-decoration: underline;
+}
+
+/* --- Lista de Alertas --- */
+.lista-notificaciones {
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-notificacion {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  gap: 12px;
+  transition: background-color 0.15s;
+}
+
+.item-notificacion:hover {
+  background-color: #f8fafc;
+}
+
+.item-notificacion.no-leido {
+  background-color: #eff6ff;
+}
+
+.icono-noti {
+  font-size: 15px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 1px;
+}
+
+.icono-vencimiento { color: #f59e0b; }
+.icono-alerta { color: #ef4444; }
+.icono-info { color: #3b82f6; }
+
+.noti-contenido {
+  flex: 1;
+}
+
+.noti-titulo {
+  margin: 0 0 2px 0;
+  font-size: 12px;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.noti-mensaje {
+  margin: 0 0 4px 0;
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.noti-fecha {
+  display: block;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.panel-vacio {
+  padding: 20px 16px;
+  text-align: center;
+  color: #64748b;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* --- Perfil de Usuario --- */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 16px;
+  border-left: 1px solid #e2e8f0;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #2563eb;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.user-role {
+  font-size: 10px;
+  color: #64748b;
+  margin: 0;
+}
