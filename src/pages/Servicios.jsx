@@ -10,6 +10,7 @@ const Servicios = () => {
   const [busquedaArca, setBusquedaArca] = useState(''); 
   const [formData, setFormData] = useState({
     servicio: '',
+    precioBase: 0,
     categoria: 'Regulaciones',
     modalidad: 'Por Proyecto',
     actividadesArca: [],
@@ -41,7 +42,7 @@ const Servicios = () => {
     setEditandoId('nuevo');
     setBusquedaArca('');
     setFormData({ 
-      servicio: '', categoria: 'Regulaciones', modalidad: 'Por Proyecto', actividadesArca: [],
+      servicio: '', precioBase: 0, categoria: 'Regulaciones', modalidad: 'Por Proyecto', actividadesArca: [],
       usuarioAsignado: 'Valeria F.', estadoTarea: '4. En Curso', fechaInicio: '', fechaFin: '',
       contactoCliente: '', contactoOrganismo: '', directorTecnico: '', nroExpediente: '', nombreExpediente: '',
       fechaNotificacionRequeridos: '', fechaVtoRegistro: '', nroExpedienteSecundario: '', nombreExpedienteSecundario: '',
@@ -59,6 +60,14 @@ const Servicios = () => {
     if (window.confirm('¿Seguro querés eliminar este servicio del portfolio comercial?')) {
       setServicios(servicios.filter(s => s.id !== id));
     }
+  };
+
+  const manejarCambioInput = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'precioBase' ? parseFloat(value) || 0 : value
+    }));
   };
 
   const manejarSeleccionArca = (e) => {
@@ -94,6 +103,7 @@ const Servicios = () => {
     <div className="servicios-wrapper">
       <div className="servicios-header">
         <div>
+          {!editandoId && <span className="servicios-eyebrow">Módulo Comercial</span>}
           <h2>
             {editandoId ? (editandoId === 'nuevo' ? 'Añadir Nuevo Servicio' : 'Modificar Servicio') : 'Portfolio de Servicios CIFAS'}
           </h2>
@@ -116,6 +126,7 @@ const Servicios = () => {
                   <th>Descripción</th>
                   <th className="th-categoria">Categoría</th>
                   <th className="th-modalidad">Modalidad</th>
+                  <th className="th-precio">Precio Base</th>
                   <th className="th-acciones">Acciones</th>
                 </tr>
               </thead>
@@ -144,6 +155,9 @@ const Servicios = () => {
                     </td>
                     <td className="td-modalidad">
                       {servicio.modalidad}
+                    </td>
+                    <td className="td-precio">
+                      ${(servicio.precioBase || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="td-acciones">
                       <button onClick={() => iniciarEditar(servicio)} className="btn-tabla btn-tabla-editar">
@@ -207,6 +221,7 @@ const Servicios = () => {
             <div className="grid-lineal-3">
               <div className="form-grupo">
                 <label className="label-lineal">HONORARIOS BASE ($)</label>
+                <input type="number" name="precioBase" value={formData.precioBase} onChange={manejarCambioInput} min="0" required className="input-lineal" />
               </div>
               <div className="form-grupo">
                 <label className="label-lineal">CATEGORÍA</label>
