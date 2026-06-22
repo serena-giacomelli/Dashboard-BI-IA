@@ -480,17 +480,22 @@
   background-color: #fff;}
 
 .btn-agregar {
-  padding: 10px 0;
-  background-color: #22c55e;
+  padding: 8px 16px;
+  background-color: #64748b;
   color: #fff;
   border: none;
   border-radius: 6px;
-  font-weight: bold;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;}
+  width: max-content;
+  justify-self: end;
+  transition: background-color 0.2s;
+}
 
 .btn-agregar:hover {
-  background-color: #16a34a;}
+  background-color: #475569;
+}
 
 .ficha-form__acciones {
   display: flex;

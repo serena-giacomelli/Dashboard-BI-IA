@@ -9,12 +9,27 @@ const Servicios = () => {
   const [editandoId, setEditandoId] = useState(null); 
   const [busquedaArca, setBusquedaArca] = useState(''); 
   const [formData, setFormData] = useState({
-    nombre: '',
-    descripcion: '',
+    servicio: '',
     categoria: 'Regulaciones',
     modalidad: 'Por Proyecto',
-    precioBase: 0,
-    actividadesArca: []
+    actividadesArca: [],
+    usuarioAsignado: 'Valeria F.',
+    estadoTarea: '4. En Curso',
+    fechaInicio: '',
+    fechaFin: '',
+    contactoCliente: '',
+    contactoOrganismo: '',
+    directorTecnico: '',
+    nroExpediente: '',
+    nombreExpediente: '',
+    fechaNotificacionRequeridos: '',
+    fechaVtoRegistro: '',
+    nroExpedienteSecundario: '',
+    nombreExpedienteSecundario: '',
+    marca: '',
+    nroRegistro: '',
+    establecimiento: '',
+    descripcion: ''
   });
 
   const actividadesFiltradas = actividadesDisponibles.filter(act => 
@@ -25,7 +40,13 @@ const Servicios = () => {
   const iniciarNuevo = () => {
     setEditandoId('nuevo');
     setBusquedaArca('');
-    setFormData({ nombre: '', descripcion: '', categoria: 'Regulaciones', modalidad: 'Por Proyecto', precioBase: 0, actividadesArca: [] });
+    setFormData({ 
+      servicio: '', categoria: 'Regulaciones', modalidad: 'Por Proyecto', actividadesArca: [],
+      usuarioAsignado: 'Valeria F.', estadoTarea: '4. En Curso', fechaInicio: '', fechaFin: '',
+      contactoCliente: '', contactoOrganismo: '', directorTecnico: '', nroExpediente: '', nombreExpediente: '',
+      fechaNotificacionRequeridos: '', fechaVtoRegistro: '', nroExpedienteSecundario: '', nombreExpedienteSecundario: '',
+      marca: '', nroRegistro: '', establecimiento: '', descripcion: ''
+    });
   };
 
   const iniciarEditar = (servicio) => {
@@ -40,26 +61,14 @@ const Servicios = () => {
     }
   };
 
-  const manejarCambioInput = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'precioBase' ? parseFloat(value) || 0 : value
-    }));
-  };
-
   const manejarSeleccionArca = (e) => {
     const codigoSeleccionado = e.target.value;
     if (!codigoSeleccionado) return;
 
     setFormData(prev => {
       if (prev.actividadesArca.includes(codigoSeleccionado)) return prev; 
-      return {
-        ...prev,
-        actividadesArca: [...prev.actividadesArca, codigoSeleccionado]
-      };
+      return { ...prev, actividadesArca: [...prev.actividadesArca, codigoSeleccionado] };
     });
-
     setBusquedaArca(''); 
     e.target.value = ''; 
   };
@@ -83,7 +92,7 @@ const Servicios = () => {
 
   return (
     <div className="servicios-wrapper">
-        <div className="servicios-header">
+      <div className="servicios-header">
         <div>
           <h2>
             {editandoId ? (editandoId === 'nuevo' ? 'Añadir Nuevo Servicio' : 'Modificar Servicio') : 'Portfolio de Servicios CIFAS'}
@@ -107,7 +116,6 @@ const Servicios = () => {
                   <th>Descripción</th>
                   <th className="th-categoria">Categoría</th>
                   <th className="th-modalidad">Modalidad</th>
-                  <th className="th-precio">Precio Base</th>
                   <th className="th-acciones">Acciones</th>
                 </tr>
               </thead>
@@ -137,9 +145,6 @@ const Servicios = () => {
                     <td className="td-modalidad">
                       {servicio.modalidad}
                     </td>
-                    <td className="td-precio">
-                      ${(servicio.precioBase || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                    </td>
                     <td className="td-acciones">
                       <button onClick={() => iniciarEditar(servicio)} className="btn-tabla btn-tabla-editar">
                         Editar
@@ -155,63 +160,113 @@ const Servicios = () => {
           </div>
         </div>
       )}
+
       {editandoId && (
-        <form onSubmit={guardarServicio} className="form-panel">
-          
-          <div className="form-grid-2-1">
-            <div className="form-grupo">
-              <label className="form-label">Nombre del Servicio</label>
-              <input type="text" name="nombre" value={formData.nombre} onChange={manejarCambioInput} required className="form-input" />
-            </div>
-            <div className="form-grupo">
-              <label className="form-label">Honorarios Base ($)</label>
-              <input type="number" name="precioBase" value={formData.precioBase} onChange={manejarCambioInput} min="0" required className="form-input" />
+        <form onSubmit={guardarServicio} className="form-panel-horizontal">
+          <div className="form-header-interno">
+            DATOS DEL SERVICIO
+          </div>
+
+          {/* SECCIÓN: INFORMACIÓN PRINCIPAL */}
+          <div className="form-seccion-lineal">
+            <h3 className="seccion-titulo-lineal">INFORMACIÓN PRINCIPAL</h3>
+            <div className="grid-lineal-5">
+              <div className="form-grupo">
+                <label className="label-lineal">SERVICIO</label>
+                <input type="text" name="servicio" value={formData.servicio} onChange={manejarCambioInput} required className="input-lineal" />
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">USUARIO ASIGNADO</label>
+                <select name="usuarioAsignado" value={formData.usuarioAsignado} onChange={manejarCambioInput} className="input-lineal">
+                  <option value="Valeria F.">Valeria F.</option>
+                </select>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">ESTADO DE TAREA</label>
+                <select name="estadoTarea" value={formData.estadoTarea} onChange={manejarCambioInput} className="input-lineal">
+                  <option value="4. En Curso">4. En Curso</option>
+                </select>
+                <span className="helper-lineal">Estado "FACTURACIÓN PARCIAL" eliminado. 12 estados activos.</span>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">FECHA INICIO <span className="badge-inline-auto">AUTO</span></label>
+                <input type="date" name="fechaInicio" value={formData.fechaInicio} onChange={manejarCambioInput} className="input-lineal" />
+                <span className="helper-lineal">Registro automático al pasar a "En Curso". No editable.</span>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">FECHA FIN <span className="badge-inline-coordinadora">SOLO COORDINADORA</span></label>
+                <input type="date" name="fechaFin" value={formData.fechaFin} onChange={manejarCambioInput} className="input-lineal" />
+                <span className="helper-lineal">= Fecha Inicio + 15 días corridos por defecto.</span>
+              </div>
             </div>
           </div>
 
-          <div className="form-grupo">
-            <label className="form-label">Descripción Operativa</label>
-            <textarea name="descripcion" value={formData.descripcion} onChange={manejarCambioInput} required rows="3" className="form-input form-textarea" />
+          {/* SECCIÓN: DATOS COMERCIALES */}
+          <div className="form-seccion-lineal">
+            <h3 className="seccion-titulo-lineal">DATOS COMERCIALES</h3>
+            <div className="grid-lineal-3">
+              <div className="form-grupo">
+                <label className="label-lineal">HONORARIOS BASE ($)</label>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">CATEGORÍA</label>
+                <select name="categoria" value={formData.categoria} onChange={manejarCambioInput} className="input-lineal">
+                  <option value="Regulaciones">Regulaciones / Habilitaciones</option>
+                  <option value="Ingeniería">Ingeniería & Termomecánica</option>
+                  <option value="Calidad">Calidad & Inocuidad</option>
+                  <option value="Estrategia">Gestión Estratégica</option>
+                </select>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">MODALIDAD</label>
+                <select name="modalidad" value={formData.modalidad} onChange={manejarCambioInput} className="input-lineal">
+                  <option value="Por Proyecto">Por Hito / Proyecto Cerrado</option>
+                  <option value="Por Hora">Por Hora de Consultoría</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="form-grid-1-1">
-            <div className="form-grupo">
-              <label className="form-label">Categoría</label>
-              <select name="categoria" value={formData.categoria} onChange={manejarCambioInput} className="form-input">
-                <option value="Regulaciones">Regulaciones / Habilitaciones</option>
-                <option value="Ingeniería">Ingeniería & Termomecánica</option>
-                <option value="Calidad">Calidad & Inocuidad</option>
-                <option value="Estrategia">Gestión Estratégica</option>
-              </select>
-            </div>
-            <div className="form-grupo">
-              <label className="form-label">Modalidad</label>
-              <select name="modalidad" value={formData.modalidad} onChange={manejarCambioInput} className="form-input">
-                <option value="Por Proyecto">Por Hito / Proyecto Cerrado</option>
-                <option value="Por Hora">Por Hora de Consultoría</option>
-                <option value="Abono Mensual">Abono Fijo Mensual</option>
-              </select>
+          {/* SECCIÓN: CONTACTOS Y DIRECTOR TÉCNICO */}
+          <div className="form-seccion-lineal">
+            <h3 className="seccion-titulo-lineal">CONTACTOS Y DIRECTOR TÉCNICO</h3>
+            <div className="grid-lineal-contactos">
+              <div className="form-grupo">
+                <label className="label-lineal">CONTACTO CLIENTE</label>
+                <select name="contactoCliente" value={formData.contactoCliente} onChange={manejarCambioInput} className="input-lineal">
+                  <option value="">— Sin contacto —</option>
+                </select>
+                <span className="helper-lineal">Trae contactos desde el módulo Cliente.</span>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">CONTACTO ORGANISMO</label>
+                <select name="contactoOrganismo" value={formData.contactoOrganismo} onChange={manejarCambioInput} className="input-lineal">
+                  <option value="">— Sin contacto —</option>
+                </select>
+              </div>
+              <div className="form-grupo flex-row-align">
+                <div style={{ flex: 1 }}>
+                  <label className="label-lineal">DIRECTOR TÉCNICO</label>
+                  <input type="text" name="directorTecnico" placeholder="Buscar por nombre..." value={formData.directorTecnico} onChange={manejarCambioInput} className="input-lineal" />
+                  <span className="helper-lineal">Autocompletado desde tabla secundaria.</span>
+                </div>
+                <button type="button" className="btn-lineal-redireccion">Ver Director Técnico →</button>
+              </div>
             </div>
           </div>
-          <div className="arca-vincular-seccion">
-            <label className="form-label form-label-arca">
-              Vincular Actividades Oficiales ARCA (CLAE)
-            </label>
-            
-            <div className="arca-busqueda-row">
+
+          {/* SECCIÓN: VINCULAR ACTIVIDADES OFICIALES ARCA */}
+          <div className="form-seccion-lineal">
+            <h3 className="seccion-titulo-lineal">VINCULAR ACTIVIDADES OFICIALES ARCA (CLAE)</h3>
+            <div className="grid-lineal-2">
               <input 
                 type="text" 
                 placeholder="Filtrar por código o nombre..." 
                 value={busquedaArca}
                 onChange={(e) => setBusquedaArca(e.target.value)}
-                className="form-input form-input--white arca-input-filtro"
+                className="input-lineal bg-white"
               />
-              
-              <select 
-                onChange={manejarSeleccionArca} 
-                defaultValue="" 
-                className="form-input form-input--white arca-select-filtro"
-              >
+              <select onChange={manejarSeleccionArca} defaultValue="" className="input-lineal bg-white">
                 <option value="" disabled>
                   {actividadesFiltradas.length === 0 ? 'No hay coincidencias' : `-- Seleccionar (${actividadesFiltradas.length} encontradas) --`}
                 </option>
@@ -222,46 +277,109 @@ const Servicios = () => {
                 ))}
               </select>
             </div>
-            <label className="form-label form-label-sub">
-              Actividades seleccionadas para este servicio:
-            </label>
-            <div className="chips-seleccionados-lista">
+
+            <label className="label-lineal subtle-mt">ACTIVIDADES SELECCIONADAS PARA ESTE SERVICIO:</label>
+            <div className="chips-lineal-wrapper">
               {formData.actividadesArca.length > 0 ? (
                 formData.actividadesArca.map(codigo => {
                   const infoAct = actividadesDisponibles.find(a => a.codigo === codigo);
                   return (
-                    <div key={codigo} className="chip-seleccionado-item">
-                      <span className="chip-seleccionado__codigo">{codigo}</span>
-                      <span className="chip-seleccionado__desc">
-                        {infoAct ? infoAct.descripcion : ''}
-                      </span>
-                      <button 
-                        type="button" 
-                        onClick={() => removerActividadArca(codigo)}
-                        className="chip-seleccionado__btn-remover"
-                      >
-                        ×
-                      </button>
+                    <div key={codigo} className="chip-lineal-item">
+                      <span className="chip-lineal-code">{codigo}</span>
+                      <span className="chip-lineal-text">{infoAct ? infoAct.descripcion : ''}</span>
+                      <button type="button" onClick={() => removerActividadArca(codigo)} className="chip-lineal-remove">×</button>
                     </div>
                   );
                 })
               ) : (
-                <span className="chips-vacio">Ninguna actividad vinculada. Usá el buscador de arriba.</span>
+                <span className="helper-lineal italic">Ninguna actividad vinculada. Usá el buscador de arriba.</span>
               )}
             </div>
           </div>
-          <div className="form-acciones">
-            <button type="button" onClick={() => setEditandoId(null)} className="btn-base btn-cancelar">
-              Cancelar
-            </button>
-            <button type="submit" className="btn-base btn-guardar">
-              {editandoId === 'nuevo' ? 'Agregar al Catálogo' : 'Guardar Cambios'}
-            </button>
+
+          {/* SECCIÓN: EXPEDIENTE PRINCIPAL */}
+          <div className="form-seccion-lineal">
+            <h3 className="seccion-titulo-lineal">EXPEDIENTE PRINCIPAL</h3>
+            <div className="grid-lineal-4">
+              <div className="form-grupo">
+                <label className="label-lineal">N° EXPEDIENTE</label>
+                <input type="text" name="nroExpediente" placeholder="EXP-2025-001" value={formData.nroExpediente} onChange={manejarCambioInput} className="input-lineal" />
+                <span className="helper-lineal">Acepta letras y números.</span>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">NOMBRE EXPEDIENTE</label>
+                <input type="text" name="nombreExpediente" placeholder="Nombre descriptivo" value={formData.nombreExpediente} onChange={manejarCambioInput} className="input-lineal" />
+                <span className="helper-lineal">Alfanumérico - carga manual.</span>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">FECHA NOTIFICACIÓN REQUERIDOS</label>
+                <input type="date" name="fechaNotificacionRequeridos" value={formData.fechaNotificacionRequeridos} onChange={manejarCambioInput} className="input-lineal" />
+                <span className="helper-lineal">Notifica al usuario asignado 15 días antes.</span>
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">FECHA VTO REGISTRO</label>
+                <input type="date" name="fechaVtoRegistro" value={formData.fechaVtoRegistro} onChange={manejarCambioInput} className="input-lineal" />
+                <span className="helper-lineal">Notifica a cifas@cifas.com.ar 15 días antes.</span>
+              </div>
+            </div>
           </div>
 
+          {/* SECCIÓN: EXPEDIENTE SECUNDARIO */}
+          <div className="form-seccion-lineal">
+            <h3 className="seccion-titulo-lineal">EXPEDIENTE SECUNDARIO</h3>
+            <div className="grid-lineal-4">
+              <div className="form-grupo">
+                <label className="label-lineal">N° EXPEDIENTE SECUNDARIO</label>
+                <input type="text" name="nroExpedienteSecundario" placeholder="Opcional" value={formData.nroExpedienteSecundario} onChange={manejarCambioInput} className="input-lineal" />
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">NOMBRE EXPEDIENTE SECUNDARIO</label>
+                <input type="text" name="nombreExpedienteSecundario" placeholder="Opcional" value={formData.nombreExpedienteSecundario} onChange={manejarCambioInput} className="input-lineal" />
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">MARCA</label>
+                <input type="text" name="marca" placeholder="Texto libre" value={formData.marca} onChange={manejarCambioInput} className="input-lineal" />
+              </div>
+              <div className="form-grupo">
+                <label className="label-lineal">N° DE REGISTRO</label>
+                <input type="text" name="nroRegistro" placeholder="Alfanumérico" value={formData.nroRegistro} onChange={manejarCambioInput} className="input-lineal" />
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN: ESTABLECIMIENTO */}
+          <div className="form-seccion-lineal">
+            <h3 className="seccion-titulo-lineal">ESTABLECIMIENTO</h3>
+            <div className="grid-lineal-establecimiento">
+              <div className="form-grupo flex-row-align">
+                <div style={{ flex: 1 }}>
+                  <label className="label-lineal">ESTABLECIMIENTO</label>
+                  <select name="establecimiento" value={formData.establecimiento} onChange={manejarCambioInput} className="input-lineal">
+                    <option value="">— Seleccionar —</option>
+                  </select>
+                </div>
+                <button type="button" className="btn-lineal-redireccion">Ver Establecimiento →</button>
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN: DESCRIPCIÓN */}
+          <div className="form-seccion-lineal no-border">
+            <h3 className="seccion-titulo-lineal">DESCRIPCIÓN</h3>
+            <div className="form-grupo">
+              <label className="label-lineal">DESCRIPCIÓN DEL SERVICIO</label>
+              <textarea name="descripcion" value={formData.descripcion} onChange={manejarCambioInput} placeholder="Descripción interna..." required rows="3" className="input-lineal textarea-lineal" />
+              <span className="helper-lineal">Uso interno. No se incluye en los reportes de cara al cliente.</span>
+            </div>
+          </div>
+
+          {/* BOTONES ACCIONES */}
+          <div className="form-acciones-lineal">
+            <button type="button" onClick={() => setEditandoId(null)} className="btn-lineal-cancelar">Cancelar</button>
+            <button type="submit" className="btn-lineal-guardar">Guardar Cambios</button>
+          </div>
         </form>
       )}
-
     </div>
   );
 };
