@@ -7,7 +7,7 @@ import { exportToExcel } from '../utils/exportExcel.js';
 import ExportModal from '../components/ExportModal.jsx';
 import { COMPANY_CONFIG } from '../styles/reportTheme';
 import { LOGO_CIFAS_BASE64 } from '../utils/assets.js';
-import { PDF_THEME } from '../styles/pdfTheme.js';
+import { PDF_THEME } from '../styles/PdfTheme.js';
 
 import '../styles/Global.css'; // Cargamos el core de diseño unificado
 

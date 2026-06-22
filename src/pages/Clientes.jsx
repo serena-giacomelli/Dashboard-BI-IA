@@ -20,7 +20,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
 
   const tiposUnicos = Array.from(new Set(clientes.map(c => c.tipoCliente).filter(Boolean)));
   const serviciosUnicos = Array.from(new Set(
-    clientes.flatMap(c => c.servicios || []).map(s => s.nombre).filter(Boolean)  ));
+    clientes.flatMap(c => c.servicios || []).map(s => s.servicio).filter(Boolean)  ));
 
   const actividadesUnicas = Array.from(new Set(
     clientes.flatMap(cliente => {
@@ -36,7 +36,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
       cliente.cuit.includes(filtroTexto);
     const cumpleTipo = !filtroTipo || cliente.tipoCliente === filtroTipo;
     const cumpleServicio = !filtroServicio ||
-      (cliente.servicios && cliente.servicios.some(s => s.nombre === filtroServicio));
+      (cliente.servicios && cliente.servicios.some(s => s.servicio === filtroServicio));
     let cumpleActividad = !filtroActividad;
     if (filtroActividad) {
       const tieneDirecta = (cliente.actividades || []).some(act =>
@@ -85,11 +85,11 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
   const manejarCambio = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });  };
-  const manejarSeleccionServicio = (nombre) => {
-    const servicioInfo = serviciosData.find(s => s.nombre === nombre);
+  const manejarSeleccionServicio = (servicio) => {
+    const servicioInfo = serviciosData.find(s => s.servicio === servicio);
     setNuevoServicio({
       ...nuevoServicio,
-      nombre,
+      servicio,
       abono: servicioInfo ? servicioInfo.precioBase : '',
       actividadArca: servicioInfo ? (servicioInfo.actividadesArca[0] || '') : ''});  };
   const agregarContacto = () => {
@@ -101,9 +101,9 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     setFormData({ ...formData, historia: [...formData.historia, nuevaHistoria] });
     setNuevaHistoria({ descripcion: '', fecha: '18/03/2026', tipo: 'Historia' });  };
   const agregarServicio = () => {
-    if (!nuevoServicio.nombre) return;
+    if (!nuevoServicio.servicio) return;
     setFormData({ ...formData, servicios: [...formData.servicios, nuevoServicio] });
-    setNuevoServicio({ nombre: '', abono: '', estado: 'Activo', fechaInicio: '16/06/2026', actividadArca: '' });  };
+    setNuevoServicio({ servicio: '', abono: '', estado: 'Activo', fechaInicio: '16/06/2026', actividadArca: '' });  };
   const guardarCambios = (e) => {
     e.preventDefault();
     setClientes(clientes.map(c => c.id === formData.id ? formData : c));
@@ -219,7 +219,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                                 title={srv.actividadArca ? `Actividad ARCA: ${srv.actividadArca}` : ''}
                                 className={getBadgeServicioClass(srv.estado)}
                               >
-                                {srv.nombre}
+                                {srv.servicio}
                               </span>                            ))}
                           </div>
                         ) : (
@@ -454,12 +454,12 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                     <div>
                       <label className="form-label">Nombre del Servicio</label>
                       <select
-                        value={nuevoServicio?.nombre || ''}
+                        value={nuevoServicio?.servicio || ''}
                         onChange={(e) => manejarSeleccionServicio(e.target.value)}
                         className="form-input form-input--white"                      >
                         <option value="">Seleccione servicio...</option>
                         {(serviciosData || []).map(s => (
-                          <option key={s.id} value={s.nombre}>{s.nombre}</option>
+                          <option key={s.id} value={s.servicio}>{s.servicio}</option>
                         ))}
                       </select>
                     </div>
@@ -504,7 +504,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                     <tbody>
                       {(formData?.servicios || []).map((s, i) => (
                         <tr key={i}>
-                          <td>{s.nombre}</td>
+                          <td>{s.servicio}</td>
                           <td>${s.abono}</td>
                           <td>{s.estado}</td>
                           <td>{s.actividadArca || <span className="td-na">N/A</span>}</td>
