@@ -15,7 +15,7 @@ const Servicios = () => {
     modalidad: 'Por Proyecto',
     actividadesArca: [],
     usuarioAsignado: 'Valeria F.',
-    estadoTarea: '4. En Curso',
+    estadoServicio: '1. Pendiente de asignacion', 
     fechaInicio: '',
     fechaFin: '',
     contactoCliente: '',
@@ -43,7 +43,7 @@ const Servicios = () => {
     setBusquedaArca('');
     setFormData({ 
       servicio: '', precioBase: 0, categoria: 'Regulaciones', modalidad: 'Por Proyecto', actividadesArca: [],
-      usuarioAsignado: 'Valeria F.', estadoTarea: '4. En Curso', fechaInicio: '', fechaFin: '',
+      usuarioAsignado: 'Valeria F.', estadoServicio: '1. Pendiente de asignacion', fechaInicio: '', fechaFin: '',
       contactoCliente: '', contactoOrganismo: '', directorTecnico: '', nroExpediente: '', nombreExpediente: '',
       fechaNotificacionRequeridos: '', fechaVtoRegistro: '', nroExpedienteSecundario: '', nombreExpedienteSecundario: '',
       marca: '', nroRegistro: '', establecimiento: '', descripcion: ''
@@ -196,9 +196,19 @@ const Servicios = () => {
                 </select>
               </div>
               <div className="form-grupo">
-                <label className="label-lineal">ESTADO DE TAREA</label>
-                <select name="estadoTarea" value={formData.estadoTarea} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="4. En Curso">4. En Curso</option>
+                <label className="label-lineal">ESTADO DE SERVICIO</label>
+                <select name="estadoServicio" value={formData.estadoServicio} onChange={manejarCambioInput} className="input-lineal">
+                  <option value="1. Pendiente de asignacion">1. Pendiente de asignacion</option>
+                  <option value="2. Asignada">2. Asignada</option>
+                  <option value="3. Servicio no aceptado">3. Servicio no aceptado</option>
+                  <option value="5. En obra">5. En obra</option>
+                  <option value="6. Presentada">6. Presentada</option>
+                  <option value="7. Demorada por el cliente">7. Demorada por el cliente</option>
+                  <option value="8. Demorada por el organismo">8. Demorada por el organismo</option>
+                  <option value="9. Observada">9. Observada</option>
+                  <option value="10. Finalizada">10. Finalizada</option>
+                  <option value="11. Finalizada. no corresponde facturar">11. Finalizada. no corresponde facturar</option>
+                  <option value="12. Anualidad">12. Anualidad</option>
                 </select>
                 <span className="helper-lineal">Estado "FACTURACIÓN PARCIAL" eliminado. 12 estados activos.</span>
               </div>
@@ -395,6 +405,7 @@ const Servicios = () => {
           </div>
         </form>
       )}
+
     </div>
   );
 };

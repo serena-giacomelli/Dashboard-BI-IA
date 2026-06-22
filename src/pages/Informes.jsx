@@ -9,7 +9,7 @@ import { COMPANY_CONFIG } from '../styles/reportTheme';
 import { LOGO_CIFAS_BASE64 } from '../utils/assets.js';
 import { PDF_THEME } from '../styles/Pdftheme.js';
 
-import '../styles/Global.css'; // Cargamos el core de diseño unificado
+import '../styles/Global.css';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
