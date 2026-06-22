@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { actividadesArca, serviciosData } from '../data/mockDB.js';
-import '../styles/servicios.css';
+import '../styles/Servicios.css';
 
 const Servicios = () => {
   const actividadesDisponibles = actividadesArca.map(a => ({ codigo: a.codigo, descripcion: a.nombre }));
@@ -115,7 +115,7 @@ const Servicios = () => {
                 {servicios.map((servicio) => (
                   <tr key={servicio.id}>
                     <td className="td-nombre">
-                      {servicio.nombre}
+                      {servicio.servicio}
                     </td>
                     <td>
                       <div className="chips-container">
