@@ -153,7 +153,7 @@ export const reportConfigs = {
       { key: 'contactoCliente',   label: 'Clientes',           type: 'select',       options: ['Todos', 'ALBERTO BERARDI S.A.', 'BERARDI JOSE', 'COOPERATIVA LA PAMPA', 'FRIGORIFICO SUR'] },
       { key: 'usuarioAsignado',   label: 'Usuario',            type: 'multiselect', options: ['M. Rojas', 'G. Perez', 'L. Gomez', 'C. Ruiz'] },
       { key: 'contactoOrganismo', label: 'Organismos',         type: 'select',       options: ['Todos', 'SENASA', 'ANMAT', 'INASE', 'INTA'] },
-      { key: 'estados',           label: 'Estados de servicios', type: 'multiselect', options: ['1. Pendiente de asignacion', '2. Asignada', '3. Servicio no aceptado', '5. En obra', '6. Presentada', '7.Demorada por el cliente', '8. Demorada por el organismo', '9. Observada', '10. Finalizada', '11. Finalizada. no corresponde facturar', '12. Anualidad'] },
+      { key: 'estados',           label: 'Estados de servicios', type: 'multiselect', options: ['1. Pendiente de asignacion', '2. Asignada', '3. Servicio no aceptado', '4. En curso', '5. En obra', '6. Presentada', '7.Demorada por el cliente', '8. Demorada por el organismo', '9. Observada', '10. Finalizada', '11. Finalizada. no corresponde facturar', '12. Anualidad'] },
     ],
     columns: [
       { key: 'idServicio',           label: 'Codigo' },
@@ -217,7 +217,7 @@ export const reportConfigs = {
         presupuesto:       'PRES-2024-004',
         tramite:           'Renovación de registro',
         usuarioAsignado:   'C. Ruiz',
-        estado:            '1. Pendiente de asignacion',
+        estado:            '11. Finalizada. no corresponde facturar',
         fechaInicio:       '2026-06-01',
         fechaFin:          null,
         contactoCliente:   'FRIGORIFICO SUR',
@@ -232,7 +232,7 @@ export const reportConfigs = {
         presupuesto:       'PRES-2024-005',
         tramite:           'Alta de producto',
         usuarioAsignado:   'M. Rojas',
-        estado:            '1. Pendiente de asignacion',
+        estado:            '11. Finalizada. no corresponde facturar',
         fechaInicio:       '2026-06-02',
         fechaFin:          null,
         contactoCliente:   'ALBERTO BERARDI S.A.',
@@ -800,6 +800,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-001',
+        idCatalogo: 'T-CAT-01',
         servicio: 'Gestión de Habilitaciones e Inscripciones',
         descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
         categoria: 'Regulaciones',
@@ -816,6 +817,26 @@ export const clientesData = [
         establecimiento: 'Ruta 34 Km 5',
         obsInternas: '',
         actividadesArca: ['016119', '749009']
+      },
+      { 
+        idServicio: 'T-018',
+        idCatalogo: 'T-CAT-07',
+        servicio: 'Asesoramiento Integral en Gestión Ambiental',
+        descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
+        categoria: 'Regulaciones',
+        modalidad: 'Abono Mensual',
+        presupuesto: 220000,
+        tramite: 'Gestión Ambiental',
+        usuarioAsignado: 'G. Perez',
+        estado: '1. Pendiente de asignacion',
+        fechaInicio: '16/06/2026',
+        fechaFin: '',
+        contactoCliente: 'AgroRosario S.A.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 34 Km 5',
+        obsInternas: '',
+        actividadesArca: ['749009']
       }
     ]
   },
@@ -843,6 +864,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-002',
+        idCatalogo: 'T-CAT-04',
         servicio: 'Diseño y Optimización de Layout Industrial',
         descripcion: 'Relevamiento y rediseño de procesos productivos, flujos de materiales y distribución de planta.',
         categoria: 'Ingeniería',
@@ -886,6 +908,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-003',
+        idCatalogo: 'T-CAT-01',
         servicio: 'Gestión de Habilitaciones e Inscripciones',
         descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
         categoria: 'Regulaciones',
@@ -905,8 +928,9 @@ export const clientesData = [
       },
       { 
         idServicio: 'T-004',
+        idCatalogo: 'T-CAT-03',
         servicio: 'Implementación de Sistemas HACCP y BPM',
-        descripcion: 'Diseño, documentación e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
+        descripcion: 'Diseño, documentation e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
         categoria: 'Calidad',
         modalidad: 'Por Proyecto',
         presupuesto: 380000,
@@ -944,6 +968,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-005',
+        idCatalogo: 'T-CAT-06',
         servicio: 'Validación de Procesos de Congelado y Conservación',
         descripcion: 'Análisis y verificación de parámetros térmicos para garantizar la inocuidad y calidad del producto.',
         categoria: 'Ingeniería',
@@ -985,6 +1010,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-006',
+        idCatalogo: 'T-CAT-07',
         servicio: 'Asesoramiento Integral en Gestión Ambiental',
         descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
         categoria: 'Regulaciones',
@@ -1001,6 +1027,26 @@ export const clientesData = [
         establecimiento: 'Ruta A012 Km 11',
         obsInternas: '',
         actividadesArca: ['749009']
+      },
+      {
+        idServicio: 'T-019',
+        idCatalogo: 'T-CAT-03',
+        servicio: 'Implementación de Sistemas HACCP y BPM',
+        descripcion: 'Diseño, documentation e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
+        categoria: 'Calidad',
+        modalidad: 'Por Proyecto',
+        presupuesto: 380000,
+        tramite: 'Certificación',
+        usuarioAsignado: 'L. Gomez',
+        estado: '7. Demorada por el cliente',
+        fechaInicio: '10/05/2026',
+        fechaFin: '',
+        contactoCliente: 'Agroinsumos Pampeanos S.A.',
+        contactoOrganismo: 'ANMAT',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta A012 Km 11',
+        obsInternas: '',
+        actividadesArca: ['749009', '711003']
       }
     ]
   },
@@ -1024,6 +1070,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-007',
+        idCatalogo: 'T-CAT-02',
         servicio: 'Auditoría de Ingeniería Térmica y Sistemas de Frío',
         descripcion: 'Evaluación técnica de eficiencia energética en cámaras frigoríficas y túneles de congelado.',
         categoria: 'Ingeniería',
@@ -1065,6 +1112,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-008',
+        idCatalogo: 'T-CAT-05',
         servicio: 'Capacitación en Manipulación Segura de Alimentos',
         descripcion: 'Formación teórico-práctica para operarios y mandos medios sobre normativas y buenas prácticas.',
         categoria: 'Capacitación',
@@ -1081,6 +1129,26 @@ export const clientesData = [
         establecimiento: 'Ruta 11 Km 345',
         obsInternas: '',
         actividadesArca: ['855900', '749009']
+      },
+      {
+        idServicio: 'T-020',
+        idCatalogo: 'T-CAT-06',
+        servicio: 'Validación de Procesos de Congelado y Conservación',
+        descripcion: 'Análisis y verificación de parámetros térmicos para garantizar la inocuidad y calidad del producto.',
+        categoria: 'Ingeniería',
+        modalidad: 'Por Proyecto',
+        presupuesto: 460000,
+        tramite: 'Validación',
+        usuarioAsignado: 'C. Ruiz',
+        estado: '9. Observada',
+        fechaInicio: '01/04/2026',
+        fechaFin: '',
+        contactoCliente: 'Alimentos Premium S.A.',
+        contactoOrganismo: 'SENASA',
+        directorTecnico: 'N/A',
+        establecimiento: 'Ruta 11 Km 345',
+        obsInternas: 'Revisión técnica de túneles',
+        actividadesArca: ['711003', '101011']
       }
     ]
   },
@@ -1127,6 +1195,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-009',
+        idCatalogo: 'T-CAT-08',
         servicio: 'Auditorías Internas para Certificación ISO 22000',
         descripcion: 'Evaluación de cumplimiento normativo y preparación para auditorías de certificación en seguridad alimentaria.',
         categoria: 'Calidad',
@@ -1134,7 +1203,7 @@ export const clientesData = [
         presupuesto: 210000,
         tramite: 'Auditoría',
         usuarioAsignado: 'M. Rojas',
-        estado: '2. Asignada',
+        estado: '10. Finalizada',
         fechaInicio: '01/01/2024',
         fechaFin: '',
         contactoCliente: 'Aceitera Regional S.A.',
@@ -1143,6 +1212,26 @@ export const clientesData = [
         establecimiento: 'Puerto General San Martín',
         obsInternas: '',
         actividadesArca: ['749009']
+      },
+      {
+        idServicio: 'T-021',
+        idCatalogo: 'T-CAT-04',
+        servicio: 'Diseño y Optimización de Layout Industrial',
+        descripcion: 'Relevamiento y rediseño de procesos productivos, flujos de materiales y distribución de planta.',
+        categoria: 'Ingeniería',
+        modalidad: 'Por Proyecto',
+        presupuesto: 520000,
+        tramite: 'Layout',
+        usuarioAsignado: 'G. Perez',
+        estado: '3. Servicio no aceptado',
+        fechaInicio: '',
+        fechaFin: '',
+        contactoCliente: 'Aceitera Regional S.A.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Puerto General San Martín',
+        obsInternas: 'Presupuesto elevado para el cliente',
+        actividadesArca: ['711003']
       }
     ]
   },
@@ -1166,11 +1255,12 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-010',
+        idCatalogo: 'T-CAT-01',
         servicio: 'Gestión de Habilitaciones e Inscripciones',
         descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
         categoria: 'Regulaciones',
         modalidad: 'Por Proyecto',
-        presupuesto: 120000,
+        presupuesto: 450000, // Corregido según catálogo (estaba en 120000)
         tramite: 'Habilitación',
         usuarioAsignado: 'G. Perez',
         estado: '2. Asignada',
@@ -1205,6 +1295,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-011',
+        idCatalogo: 'T-CAT-04',
         servicio: 'Diseño y Optimización de Layout Industrial',
         descripcion: 'Relevamiento y rediseño de procesos productivos, flujos de materiales y distribución de planta.',
         categoria: 'Ingeniería',
@@ -1246,6 +1337,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-012',
+        idCatalogo: 'T-CAT-07',
         servicio: 'Asesoramiento Integral en Gestión Ambiental',
         descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
         categoria: 'Regulaciones',
@@ -1285,8 +1377,9 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-013',
+        idCatalogo: 'T-CAT-03',
         servicio: 'Implementación de Sistemas HACCP y BPM',
-        descripcion: 'Diseño, documentación e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
+        descripcion: 'Diseño, documentation e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
         categoria: 'Calidad',
         modalidad: 'Por Proyecto',
         presupuesto: 380000,
@@ -1328,6 +1421,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-014',
+        idCatalogo: 'T-CAT-01',
         servicio: 'Gestión de Habilitaciones e Inscripciones',
         descripcion: 'Trámites integrales y registros ante SENASA, RUCA, RNE y RNPA para plantas e industrias.',
         categoria: 'Regulaciones',
@@ -1344,6 +1438,26 @@ export const clientesData = [
         establecimiento: 'Terminal Portuaria Sur',
         obsInternas: '',
         actividadesArca: ['016119', '749009']
+      },
+      {
+        idServicio: 'T-022',
+        idCatalogo: 'T-CAT-05',
+        servicio: 'Capacitación en Manipulación Segura de Alimentos',
+        descripcion: 'Formación teórico-práctica para operarios y mandos medios sobre normativas y buenas prácticas.',
+        categoria: 'Capacitación',
+        modalidad: 'Por Hora',
+        presupuesto: 180000,
+        tramite: 'Capacitación',
+        usuarioAsignado: 'L. Gomez',
+        estado: '11. Finalizada. no corresponde facturar',
+        fechaInicio: '05/05/2026',
+        fechaFin: '',
+        contactoCliente: 'Exportadora Santa Fe S.A.',
+        contactoOrganismo: 'N/A',
+        directorTecnico: 'N/A',
+        establecimiento: 'Terminal Portuaria Sur',
+        obsInternas: '',
+        actividadesArca: ['855900', '749009']
       }
     ]
   },
@@ -1367,6 +1481,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-015',
+        idCatalogo: 'T-CAT-06',
         servicio: 'Validación de Procesos de Congelado y Conservación',
         descripcion: 'Análisis y verificación de parámetros térmicos para garantizar la inocuidad y calidad del producto.',
         categoria: 'Ingeniería',
@@ -1406,6 +1521,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-016',
+        idCatalogo: 'T-CAT-05',
         servicio: 'Capacitación en Manipulación Segura de Alimentos',
         descripcion: 'Formación teórico-práctica para operarios y mandos medios sobre normativas y buenas prácticas.',
         categoria: 'Capacitación',
@@ -1413,7 +1529,7 @@ export const clientesData = [
         presupuesto: 180000,
         tramite: 'Capacitación',
         usuarioAsignado: 'L. Gomez',
-        estado: '2. Asignada',
+        estado: '11. Finalizada. no corresponde facturar',
         fechaInicio: '01/03/2026',
         fechaFin: '',
         contactoCliente: 'NutriFeed Argentina S.A.',
@@ -1447,6 +1563,7 @@ export const clientesData = [
     servicios: [
       { 
         idServicio: 'T-017',
+        idCatalogo: 'T-CAT-07',
         servicio: 'Asesoramiento Integral en Gestión Ambiental',
         descripcion: 'Desarrollo de planes de gestión de residuos, efluentes y cumplimiento de normativas ambientales.',
         categoria: 'Regulaciones',
@@ -1513,7 +1630,7 @@ export const serviciosData = [
     id: 3,
     idServicio: 'T-CAT-03',
     servicio: 'Implementación de Sistemas HACCP y BPM',
-    descripcion: 'Diseño, documentación e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
+    descripcion: 'Diseño, documentation e implementación de programas de Buenas Prácticas de Manufactura y análisis de peligros.',
     categoria: 'Calidad',
     modalidad: 'Por Proyecto',
     presupuesto: 380000,
@@ -1559,7 +1676,7 @@ export const serviciosData = [
     presupuesto: 180000,
     tramite: 'Capacitación',
     usuarioAsignado: '',
-    estado: '1. Pendiente de asignacion',
+    estado: '11. Finalizada. no corresponde facturar',
     fechaInicio: '',
     fechaFin: '',
     contactoCliente: '',
@@ -1619,7 +1736,7 @@ export const serviciosData = [
     presupuesto: 210000,
     tramite: 'Auditoría',
     usuarioAsignado: '',
-    estado: '1. Pendiente de asignacion',
+    estado: '10. Finalizada',
     fechaInicio: '',
     fechaFin: '',
     contactoCliente: '',

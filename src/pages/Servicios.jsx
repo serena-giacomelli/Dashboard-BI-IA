@@ -6,16 +6,15 @@ const Servicios = () => {
   const actividadesDisponibles = actividadesArca.map(a => ({ codigo: a.codigo, descripcion: a.nombre }));
   const [servicios, setServicios] = useState(serviciosData);
 
-  const [editandoId, setEditandoId] = useState(null); 
-  const [busquedaArca, setBusquedaArca] = useState(''); 
+  const [editandoId, setEditandoId] = useState(null);
+  const [busquedaArca, setBusquedaArca] = useState('');
   const [formData, setFormData] = useState({
     servicio: '',
-    precioBase: 0,
     categoria: 'Regulaciones',
     modalidad: 'Por Proyecto',
     actividadesArca: [],
     usuarioAsignado: 'Valeria F.',
-    estadoServicio: '1. Pendiente de asignacion', 
+    estadoServicio: '1. Pendiente de asignacion',
     fechaInicio: '',
     fechaFin: '',
     contactoCliente: '',
@@ -33,16 +32,16 @@ const Servicios = () => {
     descripcion: ''
   });
 
-  const actividadesFiltradas = actividadesDisponibles.filter(act => 
-    act.codigo.includes(busquedaArca) || 
+  const actividadesFiltradas = actividadesDisponibles.filter(act =>
+    act.codigo.includes(busquedaArca) ||
     act.descripcion.toLowerCase().includes(busquedaArca.toLowerCase())
   );
 
   const iniciarNuevo = () => {
     setEditandoId('nuevo');
     setBusquedaArca('');
-    setFormData({ 
-      servicio: '', precioBase: 0, categoria: 'Regulaciones', modalidad: 'Por Proyecto', actividadesArca: [],
+    setFormData({
+      servicio: '', categoria: 'Regulaciones', modalidad: 'Por Proyecto', actividadesArca: [],
       usuarioAsignado: 'Valeria F.', estadoServicio: '1. Pendiente de asignacion', fechaInicio: '', fechaFin: '',
       contactoCliente: '', contactoOrganismo: '', directorTecnico: '', nroExpediente: '', nombreExpediente: '',
       fechaNotificacionRequeridos: '', fechaVtoRegistro: '', nroExpedienteSecundario: '', nombreExpedienteSecundario: '',
@@ -66,7 +65,7 @@ const Servicios = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'precioBase' ? parseFloat(value) || 0 : value
+      [name]: value
     }));
   };
 
@@ -75,11 +74,11 @@ const Servicios = () => {
     if (!codigoSeleccionado) return;
 
     setFormData(prev => {
-      if (prev.actividadesArca.includes(codigoSeleccionado)) return prev; 
+      if (prev.actividadesArca.includes(codigoSeleccionado)) return prev;
       return { ...prev, actividadesArca: [...prev.actividadesArca, codigoSeleccionado] };
     });
-    setBusquedaArca(''); 
-    e.target.value = ''; 
+    setBusquedaArca('');
+    e.target.value = '';
   };
 
   const removerActividadArca = (codigo) => {
@@ -126,46 +125,28 @@ const Servicios = () => {
                   <th>Descripción</th>
                   <th className="th-categoria">Categoría</th>
                   <th className="th-modalidad">Modalidad</th>
-                  <th className="th-precio">Precio Base</th>
                   <th className="th-acciones">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {servicios.map((servicio) => (
                   <tr key={servicio.id}>
-                    <td className="td-nombre">
-                      {servicio.servicio}
-                    </td>
+                    <td className="td-nombre">{servicio.servicio}</td>
                     <td>
                       <div className="chips-container">
                         {(servicio.actividadesArca || []).map(cod => (
-                          <span key={cod} className="chip-codigo">
-                            {cod}
-                          </span>
+                          <span key={cod} className="chip-codigo">{cod}</span>
                         ))}
                       </div>
                     </td>
-                    <td className="td-descripcion">
-                      {servicio.descripcion}
-                    </td>
+                    <td className="td-descripcion">{servicio.descripcion}</td>
                     <td>
-                      <span className="badge-categoria">
-                        {servicio.categoria}
-                      </span>
+                      <span className="badge-categoria">{servicio.categoria}</span>
                     </td>
-                    <td className="td-modalidad">
-                      {servicio.modalidad}
-                    </td>
-                    <td className="td-precio">
-                      ${(servicio.precioBase || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                    </td>
+                    <td className="td-modalidad">{servicio.modalidad}</td>
                     <td className="td-acciones">
-                      <button onClick={() => iniciarEditar(servicio)} className="btn-tabla btn-tabla-editar">
-                        Editar
-                      </button>
-                      <button onClick={() => eliminarServicio(servicio.id)} className="btn-tabla btn-tabla-borrar">
-                        Borrar
-                      </button>
+                      <button onClick={() => iniciarEditar(servicio)} className="btn-tabla btn-tabla-editar">Editar</button>
+                      <button onClick={() => eliminarServicio(servicio.id)} className="btn-tabla btn-tabla-borrar">Borrar</button>
                     </td>
                   </tr>
                 ))}
@@ -177,11 +158,8 @@ const Servicios = () => {
 
       {editandoId && (
         <form onSubmit={guardarServicio} className="form-panel-horizontal">
-          <div className="form-header-interno">
-            DATOS DEL SERVICIO
-          </div>
+          <div className="form-header-interno">DATOS DEL SERVICIO</div>
 
-          {/* SECCIÓN: INFORMACIÓN PRINCIPAL */}
           <div className="form-seccion-lineal">
             <h3 className="seccion-titulo-lineal">INFORMACIÓN PRINCIPAL</h3>
             <div className="grid-lineal-5">
@@ -201,6 +179,7 @@ const Servicios = () => {
                   <option value="1. Pendiente de asignacion">1. Pendiente de asignacion</option>
                   <option value="2. Asignada">2. Asignada</option>
                   <option value="3. Servicio no aceptado">3. Servicio no aceptado</option>
+                  <option value="4. En curso">4. En curso</option>
                   <option value="5. En obra">5. En obra</option>
                   <option value="6. Presentada">6. Presentada</option>
                   <option value="7. Demorada por el cliente">7. Demorada por el cliente</option>
@@ -225,14 +204,9 @@ const Servicios = () => {
             </div>
           </div>
 
-          {/* SECCIÓN: DATOS COMERCIALES */}
           <div className="form-seccion-lineal">
             <h3 className="seccion-titulo-lineal">DATOS COMERCIALES</h3>
-            <div className="grid-lineal-3">
-              <div className="form-grupo">
-                <label className="label-lineal">HONORARIOS BASE ($)</label>
-                <input type="number" name="precioBase" value={formData.precioBase} onChange={manejarCambioInput} min="0" required className="input-lineal" />
-              </div>
+            <div className="grid-lineal-2">
               <div className="form-grupo">
                 <label className="label-lineal">CATEGORÍA</label>
                 <select name="categoria" value={formData.categoria} onChange={manejarCambioInput} className="input-lineal">
@@ -252,7 +226,6 @@ const Servicios = () => {
             </div>
           </div>
 
-          {/* SECCIÓN: CONTACTOS Y DIRECTOR TÉCNICO */}
           <div className="form-seccion-lineal">
             <h3 className="seccion-titulo-lineal">CONTACTOS Y DIRECTOR TÉCNICO</h3>
             <div className="grid-lineal-contactos">
@@ -280,13 +253,12 @@ const Servicios = () => {
             </div>
           </div>
 
-          {/* SECCIÓN: VINCULAR ACTIVIDADES OFICIALES ARCA */}
           <div className="form-seccion-lineal">
             <h3 className="seccion-titulo-lineal">VINCULAR ACTIVIDADES OFICIALES ARCA (CLAE)</h3>
             <div className="grid-lineal-2">
-              <input 
-                type="text" 
-                placeholder="Filtrar por código o nombre..." 
+              <input
+                type="text"
+                placeholder="Filtrar por código o nombre..."
                 value={busquedaArca}
                 onChange={(e) => setBusquedaArca(e.target.value)}
                 className="input-lineal bg-white"
@@ -322,7 +294,6 @@ const Servicios = () => {
             </div>
           </div>
 
-          {/* SECCIÓN: EXPEDIENTE PRINCIPAL */}
           <div className="form-seccion-lineal">
             <h3 className="seccion-titulo-lineal">EXPEDIENTE PRINCIPAL</h3>
             <div className="grid-lineal-4">
@@ -349,7 +320,6 @@ const Servicios = () => {
             </div>
           </div>
 
-          {/* SECCIÓN: EXPEDIENTE SECUNDARIO */}
           <div className="form-seccion-lineal">
             <h3 className="seccion-titulo-lineal">EXPEDIENTE SECUNDARIO</h3>
             <div className="grid-lineal-4">
@@ -372,7 +342,6 @@ const Servicios = () => {
             </div>
           </div>
 
-          {/* SECCIÓN: ESTABLECIMIENTO */}
           <div className="form-seccion-lineal">
             <h3 className="seccion-titulo-lineal">ESTABLECIMIENTO</h3>
             <div className="grid-lineal-establecimiento">
@@ -388,7 +357,6 @@ const Servicios = () => {
             </div>
           </div>
 
-          {/* SECCIÓN: DESCRIPCIÓN */}
           <div className="form-seccion-lineal no-border">
             <h3 className="seccion-titulo-lineal">DESCRIPCIÓN</h3>
             <div className="form-grupo">
@@ -398,14 +366,12 @@ const Servicios = () => {
             </div>
           </div>
 
-          {/* BOTONES ACCIONES */}
           <div className="form-acciones-lineal">
             <button type="button" onClick={() => setEditandoId(null)} className="btn-lineal-cancelar">Cancelar</button>
             <button type="submit" className="btn-lineal-guardar">Guardar Cambios</button>
           </div>
         </form>
       )}
-
     </div>
   );
 };

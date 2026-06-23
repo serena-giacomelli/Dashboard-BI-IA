@@ -20,6 +20,7 @@ export const STATE_STYLES = {
 
   // 🟡 Seguimiento
   '2. Asignada':               { bg: 'FFFFC107', text: 'FF000000' },
+  '4. En curso':          { bg: 'FFFFC107', text: 'FF000000' },
   '9. Observada':              { bg: 'FFFFC107', text: 'FF000000' },
 
   // 🟠 Bloqueado
