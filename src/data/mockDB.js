@@ -791,6 +791,7 @@ export const clientesData = [
     domicilioFiscal: "Av. Carballo 180, Piso 4",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'Carlos', apellido: 'Gómez', telefono: '0341-4321122', interno: '101', celular: '3415111222', mail: 'cgomez@agrorosario.com', cargo: 'TITULAR', obs: 'Firmante de contratos' }
     ],
@@ -855,6 +856,7 @@ export const clientesData = [
     domicilioFiscal: "Av. San Martín 1200",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'Ricardo', apellido: 'Ferreyra', telefono: '03400-474849', interno: '', celular: '3400611223', mail: 'rferreyra@metanucleo.com.ar', cargo: 'APODERADO', obs: 'Contactar por deudas pend.' }
     ],
@@ -899,6 +901,7 @@ export const clientesData = [
     domicilioFiscal: "Bv. Oroño 1450",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'María Laura', apellido: 'Piazza', telefono: '0341-4809000', interno: '42', celular: '3416554433', mail: 'mlpiazza@lacteosdelsur.com', cargo: 'CONTADOR', obs: 'Envío directo de facturación' }
     ],
@@ -963,6 +966,7 @@ export const clientesData = [
     domicilioFiscal: "Mitre 820",
     localidadFiscal: "Casilda",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [],
     historia: [],
     servicios: [
@@ -1003,6 +1007,7 @@ export const clientesData = [
     domicilioFiscal: "San Lorenzo 2145",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'Andrés', apellido: 'Vignatti', telefono: '', interno: '', celular: '3415998877', mail: 'avignatti@agropampeanos.com', cargo: 'TITULAR', obs: '' }
     ],
@@ -1065,6 +1070,7 @@ export const clientesData = [
     domicilioFiscal: "Urquiza 3550",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [],
     historia: [],
     servicios: [
@@ -1105,6 +1111,7 @@ export const clientesData = [
     domicilioFiscal: "España 980",
     localidadFiscal: "Rosario",
     enviarBoletin: true,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'Esteban', apellido: 'Quito', telefono: '0341-4261155', interno: '12', celular: '', mail: 'equito@alimentospremium.com', cargo: 'TITULAR', obs: 'Prefiere contacto vía email' }
     ],
@@ -1167,6 +1174,7 @@ export const clientesData = [
     domicilioFiscal: "Belgrano 1220",
     localidadFiscal: "Rafaela",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [],
     historia: [],
     servicios: [] 
@@ -1186,6 +1194,7 @@ export const clientesData = [
     domicilioFiscal: "Córdoba 2140",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'Laura', apellido: 'Méndez', telefono: '0341-4103000', interno: '310', celular: '3413998811', mail: 'lmendez@aceiteraregional.com', cargo: 'APODERADO', obs: 'Gerente Financiera' }
     ],
@@ -1250,6 +1259,7 @@ export const clientesData = [
     domicilioFiscal: "Av. Pellegrini 2850",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [],
     historia: [],
     servicios: [
@@ -1290,6 +1300,7 @@ export const clientesData = [
     domicilioFiscal: "Sarmiento 1800",
     localidadFiscal: "San Nicolás",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [],
     historia: [],
     servicios: [
@@ -1330,6 +1341,7 @@ export const clientesData = [
     domicilioFiscal: "25 de Mayo 720",
     localidadFiscal: "Venado Tuerto",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'Federico', apellido: 'Ibañez', telefono: '03462-422554', interno: '', celular: '3462155544', mail: 'fibanez@campofertil.com', cargo: 'TITULAR', obs: '' }
     ],
@@ -1372,6 +1384,7 @@ export const clientesData = [
     domicilioFiscal: "Moreno 1350",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [],
     historia: [],
     servicios: [
@@ -1412,6 +1425,7 @@ export const clientesData = [
     domicilioFiscal: "Wheelwright 1650",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'Gonzalo', apellido: 'Palacios', telefono: '0341-4498000', interno: '502', celular: '3415887766', mail: 'gpalacios@exportsf.com', cargo: 'APODERADO', obs: 'Contacto Corporativo Directo' }
     ],
@@ -1476,6 +1490,7 @@ export const clientesData = [
     domicilioFiscal: "Laprida 980",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [],
     historia: [],
     servicios: [
@@ -1516,6 +1531,7 @@ export const clientesData = [
     domicilioFiscal: "Rivadavia 2540",
     localidadFiscal: "Esperanza",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [],
     historia: [],
     servicios: [
@@ -1556,6 +1572,7 @@ export const clientesData = [
     domicilioFiscal: "Av. Francia 1850",
     localidadFiscal: "Rosario",
     enviarBoletin: false,
+    enviarNovedades: false,
     contactos: [
       { nombre: 'Juan Manuel', apellido: 'Rosas', telefono: '0341-4354040', interno: '', celular: '3416001122', mail: 'jmrosas@logagro.com', cargo: 'TITULAR', obs: '' }
     ],

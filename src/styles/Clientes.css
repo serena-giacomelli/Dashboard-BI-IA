@@ -24,8 +24,7 @@
 .filtros-toolbar {
   position: relative;
   z-index: 50; /* Lo trae al frente */
-  overflow: visible !important; /* Evita que algo lo corte */
-}
+  overflow: visible !important; /* Evita que algo lo corte */}
 
 .filtros-toolbar__dropdown {
   display: block; /* Asegura que no esté oculto */
@@ -36,8 +35,7 @@
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 15px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
 
 .filtros-toolbar__main-row {
   display: flex;
@@ -653,20 +651,17 @@
   gap: 8px;
   margin-bottom: 24px;
   border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 0px;
-}
+  padding-bottom: 0px;}
 
 .servicios-subtabs .ficha-tab-btn {
   padding: 8px 16px;
   font-size: 13px;
   border-bottom: 3px solid transparent;
   color: #64748b;
-  transition: all 0.2s ease;
-}
+  transition: all 0.2s ease;}
 
 .servicios-subtabs .ficha-tab-btn--activa {
   border-bottom-color: #3b82f6;
   color: #3b82f6;
   background-color: #f0f7ff;
-  border-radius: 6px 6px 0 0;
-}
+  border-radius: 6px 6px 0 0;}
