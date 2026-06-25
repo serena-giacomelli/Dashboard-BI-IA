@@ -7,16 +7,13 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     if (!act) return '';
     if (typeof act === 'object') {
       const cod = act.codigo || act.id || act.actividadArca || act.actividad || '';
-      return String(cod).split(' — ')[0].trim();
-    }
-    return String(act).split(' — ')[0].trim();
-  };
+      return String(cod).split(' — ')[0].trim();}
+    return String(act).split(' — ')[0].trim();};
 
   const getNombreActividad = (codigo) => {
     const limpia = String(codigo).split(' — ')[0].trim();
     const actividad = actividadesArca.find(a => String(a.codigo) === limpia);
-    return actividad ? actividad.nombre : limpia;
-  };
+    return actividad ? actividad.nombre : limpia;};
 
   const obtenerActividadDeServicio = (s) => {
     if (!s) return null;
@@ -25,11 +22,8 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     if (!actVal && serviciosData) {
       const srvInfo = serviciosData.find(sd => sd.servicio === s.servicio);
       if (srvInfo) {
-        actVal = srvInfo.actividadesArca || srvInfo.actividadArca || srvInfo.actividades || srvInfo.actividad;
-      }
-    }
-    return actVal;
-  };
+        actVal = srvInfo.actividadesArca || srvInfo.actividadArca || srvInfo.actividades || srvInfo.actividad;}}
+    return actVal;};
 
   const estadosServicios = [
     "1. Pendiente de asignacion",
@@ -43,8 +37,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     "9. Observada",
     "10. Finalizada",
     "11. Finalizada. no corresponde facturar",
-    "12. Anualidad"
-  ];
+    "12. Anualidad"];
 
   const [clienteEditando, setClienteEditando] = useState(null);
   const [formData, setFormData] = useState(null);
@@ -75,42 +68,34 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     clientes.flatMap(cliente => {
       const actividadesDeServicios = (cliente.servicios || []).flatMap(servicio => {
         const acts = obtenerActividadDeServicio(servicio);
-        return Array.isArray(acts) ? acts : (acts ? [acts] : []);
-      });
+        return Array.isArray(acts) ? acts : (acts ? [acts] : []);});
       const actividadesDirectas = cliente.actividades || [];
       return [...actividadesDirectas, ...actividadesDeServicios];
-    }).map(act => obtenerCodigoActividad(act)).filter(Boolean)
-  ));
+    }).map(act => obtenerCodigoActividad(act)).filter(Boolean)));
 
   const manejarOrden = (campo) => {
     if (ordenarPor === campo) {
       setOrdenDireccion(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setOrdenarPor(campo);
-      setOrdenDireccion('asc');
-    }
-  };
+      setOrdenDireccion('asc');}};
 
   const clientesFiltrados = clientes
     .filter(cliente => {
       const cumpleTexto = !filtroTexto ||
         cliente.razonSocial.toLowerCase().includes(filtroTexto.toLowerCase()) ||
         String(cliente.cuit || '').includes(filtroTexto);
-
       const cumpleEstado =
         filtroGlobalEstados.length === 0 || (cliente.servicios || []).some( s => 
-        filtroGlobalEstados.includes(s.estado)
-  );
+        filtroGlobalEstados.includes(s.estado));
 
       const cumpleActividad = !filtroGlobalActividad || 
         (cliente.servicios || []).some(s => {
           const acts = obtenerActividadDeServicio(s);
           const actsArray = Array.isArray(acts) ? acts : (acts ? [acts] : []);
-          return actsArray.some(act => obtenerCodigoActividad(act) === filtroGlobalActividad);
-        });
+          return actsArray.some(act => obtenerCodigoActividad(act) === filtroGlobalActividad);});
 
-      return cumpleTexto && cumpleEstado && cumpleActividad;
-    })
+      return cumpleTexto && cumpleEstado && cumpleActividad;})
     .sort((a, b) => {
       let valA = a[ordenarPor];
       let valB = b[ordenarPor];
@@ -122,9 +107,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
       } else {
         valA = valA || 0;
         valB = valB || 0;
-        return ordenDireccion === 'asc' ? valA - valB : valB - valA;
-      }
-    });
+        return ordenDireccion === 'asc' ? valA - valB : valB - valA;}});
 
   const getActividadesDeFichaActual = () => {
     const lista = [];
@@ -133,9 +116,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     (formData.actividades || []).forEach(act => {
       const cod = obtenerCodigoActividad(act);
       if (cod) {
-        lista.push({ codigo: cod, nombre: getNombreActividad(cod) }); 
-      }
-    });
+        lista.push({ codigo: cod, nombre: getNombreActividad(cod) });}});
 
     (formData.servicios || []).forEach(s => {
       const acts = obtenerActividadDeServicio(s);
@@ -143,52 +124,40 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
       actsArray.forEach(act => {
         const cod = obtenerCodigoActividad(act);
         if (cod) {
-          lista.push({ codigo: cod, nombre: getNombreActividad(cod) });
-        }
-      });
-    });
+          lista.push({ codigo: cod, nombre: getNombreActividad(cod) });}});});
 
     const vistas = new Set();
     return lista.filter(item => {
       const clave = `${item.codigo}`;
       if (vistas.has(clave)) return false;
       vistas.add(clave);
-      return true;
-    });
-  };
+      return true;});};
 
   const limpiarFiltrosInternosServicios = () => {
     setFiltroSrvNombre('');
     setFiltroSrvEstado('');
-    setFiltroSrvActividad('');
-  };
+    setFiltroSrvActividad('');};
 
   const limpiarTodosLosFiltrosGlobales = () => {
     setFiltroTexto('');
     setFiltroGlobalEstados([]);    
-    setFiltroGlobalActividad('');
-  };
+    setFiltroGlobalActividad('');};
 
   const toggleEstadoGlobal = (estado) => {
   setFiltroGlobalEstados(prev =>
     prev.includes(estado)
       ? prev.filter(e => e !== estado)
-      : [...prev, estado]
-  );
-};
+      : [...prev, estado]);};
 
   const cambiarSubTabServicios = (tab) => {
     setSubTabServicios(tab);
-    limpiarFiltrosInternosServicios();
-  };
+    limpiarFiltrosInternosServicios();};
 
   const toggleBoletin = (id) => {
-    setClientes(clientes.map(c => c.id === id ? { ...c, enviarBoletin: !c.enviarBoletin } : c));
-  };
+    setClientes(clientes.map(c => c.id === id ? { ...c, enviarBoletin: !c.enviarBoletin } : c));};
 
   const toggleNovedades = (id) => {
-  setClientes(clientes.map(c =>c.id === id ? { ...c, enviarNovedades: !c.enviarNovedades } : c));
-  };
+  setClientes(clientes.map(c =>c.id === id ? { ...c, enviarNovedades: !c.enviarNovedades } : c));};
 
   const manejarEdicion = (cliente) => {
     setClienteEditando(cliente.id);
@@ -209,17 +178,14 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
       contactos: cliente.contactos || [],
       historia: cliente.historia || [],
       servicios: cliente.servicios || [],
-      actividades: cliente.actividades || []
-    });
+      actividades: cliente.actividades || []});
     setTabActiva('Actividades');
     setSubTabServicios('activos');
-    limpiarFiltrosInternosServicios();
-  };
+    limpiarFiltrosInternosServicios();};
 
   const manejarCambio = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
-  };
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });};
 
   const manejarSeleccionServicio = (servicio) => {
     const servicioInfo = serviciosData?.find(s => s.servicio === servicio);
@@ -230,58 +196,46 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
       if (Array.isArray(posibles)) {
         actAsignada = posibles[0] || '';
       } else {
-        actAsignada = posibles || '';
-      }
-    }
+        actAsignada = posibles || '';}}
 
     setNuevoServicio({
       ...nuevoServicio,
       servicio,
-      actividadArca: actAsignada
-    });
-  };
+      actividadArca: actAsignada});};
 
   const agregarContacto = () => {
     if (!nuevoContacto.nombre && !nuevoContacto.apellido) return;
     setFormData({ ...formData, contactos: [...formData.contactos, nuevoContacto] });
-    setNuevoContacto({ nombre: '', apellido: '', telefono: '', interno: '', celular: '', mail: '', cargo: 'TITULAR', obs: '' });
-  };
+    setNuevoContacto({ nombre: '', apellido: '', telefono: '', interno: '', celular: '', mail: '', cargo: 'TITULAR', obs: '' });};
 
   const agregarHistoria = () => {
     if (!nuevaHistoria.descripcion) return;
     setFormData({ ...formData, historia: [...formData.historia, nuevaHistoria] });
-    setNuevaHistoria({ descripcion: '', fecha: '18/03/2026', tipo: 'Historia' });
-  };
+    setNuevaHistoria({ descripcion: '', fecha: '18/03/2026', tipo: 'Historia' });};
 
   const agregarServicio = () => {
     if (!nuevoServicio.servicio) return;
     setFormData({ ...formData, servicios: [...formData.servicios, nuevoServicio] });
-    setNuevoServicio({ servicio: '', estado: '1. Pendiente de asignacion', fechaInicio: '16/06/2026', actividadArca: '' });
-  };
+    setNuevoServicio({ servicio: '', estado: '1. Pendiente de asignacion', fechaInicio: '16/06/2026', actividadArca: '' });};
 
   const guardarCambios = (e) => {
     e.preventDefault();
     setClientes(clientes.map(c => c.id === formData.id ? formData : c));
     setClienteEditando(null);
     setFormData(null);
-    limpiarFiltrosInternosServicios();
-  };
+    limpiarFiltrosInternosServicios();};
 
   const todosFiltradosMarcados = clientesFiltrados.length > 0 && clientesFiltrados.every(c => c.enviarBoletin);
-
   const todosFiltradosNovedades = clientesFiltrados.length > 0 && clientesFiltrados.every(c => c.enviarNovedades);
-  
   const toggleTodosFiltrados = () => {
     const nuevoEstado = !todosFiltradosMarcados;
     const idsVisibles = clientesFiltrados.map(c => c.id);
-    setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarBoletin: nuevoEstado } : c));
-  };
+    setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarBoletin: nuevoEstado } : c));};
 
   const toggleTodosFiltradosNovedades = () => {
     const nuevoEstado = !todosFiltradosNovedades;
     const idsVisibles = clientesFiltrados.map(c => c.id);
-    setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarNovedades: nuevoEstado } : c));
-  };
+    setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarNovedades: nuevoEstado } : c));};
 
   const getBadgeServicioClass = (estado) => {
     if (!estado) return 'badge-servicio badge-servicio--default';
@@ -293,8 +247,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     if (est.includes('demorada') || est.includes('observada')) return 'badge-servicio badge-servicio--alerta';
     if (est.includes('finalizada')) return 'badge-servicio badge-servicio--finalizada';
     if (est.includes('anualidad')) return 'badge-servicio badge-servicio--anualidad';
-    return 'badge-servicio badge-servicio--default';
-  };
+    return 'badge-servicio badge-servicio--default';};
 
   const serviciosSegunSubTab = (formData?.servicios || [])
     .filter(s => {
@@ -309,10 +262,8 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
       if (filtroSrvActividad) {
         const acts = obtenerActividadDeServicio(s);
         const actsArray = Array.isArray(acts) ? acts : (acts ? [acts] : []);
-        cumpleActividad = actsArray.some(act => obtenerCodigoActividad(act) === filtroSrvActividad);
-      }
-      return cumpleNombre && cumpleEstado && cumpleActividad;
-    });
+        cumpleActividad = actsArray.some(act => obtenerCodigoActividad(act) === filtroSrvActividad);}
+      return cumpleNombre && cumpleEstado && cumpleActividad;});
 
   const actividadesFichaActual = getActividadesDeFichaActual();
 
@@ -335,7 +286,6 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                   className="search-bar-input"/>
               </div>
 
-              {/* Filtro Global por Estado de Servicio */}
               <div ref={filtroEstadosRef}
                 style={{flex: 1, minWidth: '240px', position: 'relative'}}>                
                 <button type="button" onClick={() =>
@@ -364,7 +314,6 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                   </div>)}
               </div>
 
-              {/* Filtro Global por Actividad ARCA */}
               <div style={{ flex: 1, minWidth: '220px' }}>
                 <select
                   value={filtroGlobalActividad}
@@ -375,8 +324,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                   {actividadesUnicas.map(codigo => (
                     <option key={codigo} value={codigo}>
                       [{codigo}] {getNombreActividad(codigo)}
-                    </option>
-                  ))}
+                    </option>))}
                 </select>
               </div>
             </div>
@@ -386,8 +334,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                 {( filtroTexto || filtroGlobalEstados.length > 0 || filtroGlobalActividad) && (
                   <button type="button" onClick={limpiarTodosLosFiltrosGlobales} className="btn-clear-inline" style={{ marginRight: '15px' }}>
                     Limpiar Filtros
-                  </button>
-                )}
+                  </button>                )}
                 <span className="results-count"><b>{clientesFiltrados.length}</b> {clientesFiltrados.length === 1 ? 'resultado' : 'resultados'}</span>
               </div>
             </div>
@@ -411,8 +358,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                               justifyContent: 'center',
                               gap: '6px',
                               cursor: 'pointer',
-                              margin: 0
-                            }}>
+                              margin: 0                            }}>
                             <input
                               type="checkbox"
                               checked={todosFiltradosMarcados}
@@ -782,7 +728,6 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                 </div>)}
             </div>
           </div>
-          
           <div className="ficha-form__acciones">
             <button type="button" onClick={() => { setClienteEditando(null); setFormData(null); limpiarFiltrosInternosServicios(); }} className="btn-cancelar">
               Cancelar
@@ -790,7 +735,6 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
             <button type="submit" className="btn-guardar">Guardar Cambios</button>
           </div>
         </form>)}
-    </div>);
-};
+    </div>);};
 
 export default Clientes;

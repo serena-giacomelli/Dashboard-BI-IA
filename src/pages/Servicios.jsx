@@ -29,13 +29,11 @@ const Servicios = () => {
     marca: '',
     nroRegistro: '',
     establecimiento: '',
-    descripcion: ''
-  });
+    descripcion: ''});
 
   const actividadesFiltradas = actividadesDisponibles.filter(act =>
     act.codigo.includes(busquedaArca) ||
-    act.descripcion.toLowerCase().includes(busquedaArca.toLowerCase())
-  );
+    act.descripcion.toLowerCase().includes(busquedaArca.toLowerCase()));
 
   const iniciarNuevo = () => {
     setEditandoId('nuevo');
@@ -46,28 +44,24 @@ const Servicios = () => {
       contactoCliente: '', contactoOrganismo: '', directorTecnico: '', nroExpediente: '', nombreExpediente: '',
       fechaNotificacionRequeridos: '', fechaVtoRegistro: '', nroExpedienteSecundario: '', nombreExpedienteSecundario: '',
       marca: '', nroRegistro: '', establecimiento: '', descripcion: ''
-    });
-  };
+    });};
 
   const iniciarEditar = (servicio) => {
     setEditandoId(servicio.id);
     setBusquedaArca('');
-    setFormData({ ...servicio });
-  };
+    setFormData({ ...servicio });};
 
   const eliminarServicio = (id) => {
     if (window.confirm('¿Seguro querés eliminar este servicio del portfolio comercial?')) {
       setServicios(servicios.filter(s => s.id !== id));
-    }
-  };
+    }};
 
   const manejarCambioInput = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
+    }));};
 
   const manejarSeleccionArca = (e) => {
     const codigoSeleccionado = e.target.value;
@@ -78,25 +72,21 @@ const Servicios = () => {
       return { ...prev, actividadesArca: [...prev.actividadesArca, codigoSeleccionado] };
     });
     setBusquedaArca('');
-    e.target.value = '';
-  };
+    e.target.value = '';};
 
   const removerActividadArca = (codigo) => {
     setFormData(prev => ({
       ...prev,
       actividadesArca: prev.actividadesArca.filter(c => c !== codigo)
-    }));
-  };
+    }));};
 
   const guardarServicio = (e) => {
     e.preventDefault();
     if (editandoId === 'nuevo') {
       setServicios([...servicios, { ...formData, id: Date.now() }]);
     } else {
-      setServicios(servicios.map(s => s.id === editandoId ? { ...formData } : s));
-    }
-    setEditandoId(null);
-  };
+      setServicios(servicios.map(s => s.id === editandoId ? { ...formData } : s));}
+    setEditandoId(null);};
 
   return (
     <div className="servicios-wrapper">
@@ -110,8 +100,7 @@ const Servicios = () => {
         {!editandoId && (
           <button onClick={iniciarNuevo} className="btn-base btn-crear">
             + Crear Servicio
-          </button>
-        )}
+          </button>)}
       </div>
 
       {!editandoId && (
@@ -135,8 +124,7 @@ const Servicios = () => {
                     <td>
                       <div className="chips-container">
                         {(servicio.actividadesArca || []).map(cod => (
-                          <span key={cod} className="chip-codigo">{cod}</span>
-                        ))}
+                          <span key={cod} className="chip-codigo">{cod}</span>))}
                       </div>
                     </td>
                     <td className="td-descripcion">{servicio.descripcion}</td>
@@ -148,13 +136,11 @@ const Servicios = () => {
                       <button onClick={() => iniciarEditar(servicio)} className="btn-tabla btn-tabla-editar">Editar</button>
                       <button onClick={() => eliminarServicio(servicio.id)} className="btn-tabla btn-tabla-borrar">Borrar</button>
                     </td>
-                  </tr>
-                ))}
+                  </tr>))}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        </div>)}
 
       {editandoId && (
         <form onSubmit={guardarServicio} className="form-panel-horizontal">
@@ -270,8 +256,7 @@ const Servicios = () => {
                 {actividadesFiltradas.map(act => (
                   <option key={act.codigo} value={act.codigo}>
                     [{act.codigo}] {act.descripcion}
-                  </option>
-                ))}
+                  </option>))}
               </select>
             </div>
 
@@ -285,12 +270,9 @@ const Servicios = () => {
                       <span className="chip-lineal-code">{codigo}</span>
                       <span className="chip-lineal-text">{infoAct ? infoAct.descripcion : ''}</span>
                       <button type="button" onClick={() => removerActividadArca(codigo)} className="chip-lineal-remove">×</button>
-                    </div>
-                  );
-                })
+                    </div>);})
               ) : (
-                <span className="helper-lineal italic">Ninguna actividad vinculada. Usá el buscador de arriba.</span>
-              )}
+                <span className="helper-lineal italic">Ninguna actividad vinculada. Usá el buscador de arriba.</span>)}
             </div>
           </div>
 
@@ -370,10 +352,7 @@ const Servicios = () => {
             <button type="button" onClick={() => setEditandoId(null)} className="btn-lineal-cancelar">Cancelar</button>
             <button type="submit" className="btn-lineal-guardar">Guardar Cambios</button>
           </div>
-        </form>
-      )}
-    </div>
-  );
-};
+        </form>)}
+    </div>);};
 
 export default Servicios;
