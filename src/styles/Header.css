@@ -1,19 +1,15 @@
-/* =============================================
-   Header.css — Diseño chato integrado al borde
-   ============================================= */
-
 .topbar-container {
   display: flex;
-  justify-content: flex-end; /* Alinea los elementos al extremo derecho */
+  justify-content: flex-end; 
   align-items: center;
-  height: 50px; /* Más compacto y elegante */
+  height: 50px; 
   padding: 0 24px;
   background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0; /* Línea divisoria sutil */
+  border-bottom: 1px solid #e2e8f0; 
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: none; /* 🚫 Chau efecto flotante/rectángulo separado */
+  box-shadow: none;
 }
 
 .topbar-der {
@@ -22,7 +18,6 @@
   gap: 20px;
 }
 
-/* --- Campanita --- */
 .notificaciones-wrapper {
   position: relative;
 }
@@ -63,7 +58,6 @@
   padding: 0 3px;
 }
 
-/* --- Desplegable Alertas --- */
 .panel-desplegable {
   position: absolute;
   top: 130%;
@@ -173,7 +167,6 @@
   font-style: italic;
 }
 
-/* --- Perfil de Usuario --- */
 .user-profile {
   display: flex;
   align-items: center;

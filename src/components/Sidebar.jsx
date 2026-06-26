@@ -22,11 +22,9 @@ function Sidebar() {
         <NavLink to="/clientes" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           CLIENTES
         </NavLink>
-        {/* Sección del nomenclador ARCA */}
         <NavLink to="/actividades" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           ACTIVIDADES
         </NavLink>
-        {/* Sección de prestaciones de la consultora */}
         <NavLink to="/servicios" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           SERVICIOS
         </NavLink>
@@ -37,8 +35,6 @@ function Sidebar() {
           NOVEDADES
         </NavLink>
       </nav>
-    </aside>
-  );
-}
+    </aside>  );}
 
 export default Sidebar;

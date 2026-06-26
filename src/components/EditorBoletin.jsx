@@ -494,8 +494,7 @@ const EditorBoletin = ({ clientesDB }) => {
                 );
               })}
             </div>
-          </div>
-        )}
+          </div>        )}
 
         <button 
           type="button" 

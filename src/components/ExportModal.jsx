@@ -8,8 +8,7 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
   // Al abrir el modal, pre-seleccionar todas las columnas
   useEffect(() => {
     if (isOpen) {
-      setSelected(columns.map((col) => col.key));
-    }
+      setSelected(columns.map((col) => col.key));}
   }, [isOpen, columns]);
 
   if (!isOpen) return null;
@@ -17,19 +16,16 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
   const toggleColumn = (key) => {
     setSelected((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
-  };
+    );};
 
   const toggleAll = () => {
-    setSelected(selected.length === columns.length ? [] : columns.map((c) => c.key));
-  };
+    setSelected(selected.length === columns.length ? [] : columns.map((c) => c.key));};
 
   const handleConfirm = () => {
     if (selected.length === 0) return;
     const ordered = columns.filter((col) => selected.includes(col.key)).map((col) => col.key);
     onConfirm(ordered, format);
-    onClose();
-  };
+    onClose();};
 
   const isOverLimit = format === 'pdf' && selected.length > MAX_COLUMNS;
   const allChecked = selected.length === columns.length;
@@ -58,8 +54,7 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
               {isOverLimit 
                 ? `Límite excedido: ${selected.length}/${MAX_COLUMNS} columnas seleccionadas. El PDF podría verse desordenado.`
                 : `Máximo recomendado para PDF: ${MAX_COLUMNS} columnas.`}
-            </span>
-          )}
+            </span>)}
         </p>
 
         <div className={styles.selectAllRow}>
@@ -76,7 +71,6 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
           </label>
           <span className={styles.counter}>{selected.length} / {columns.length}</span>
         </div>
-
         <div className={styles.columnGrid}>
           {columns.map((col) => (
             <label key={col.key} className={styles.checkItem}>
@@ -86,8 +80,7 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
                 onChange={() => toggleColumn(col.key)}
               />
               <span className={styles.checkLabel}>{col.label}</span>
-            </label>
-          ))}
+            </label>))}
         </div>
 
         <footer className={styles.footer}>
@@ -104,8 +97,6 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
           </button>
         </footer>
       </div>
-    </div>
-  );
-}
+    </div>);}
 
 export default ExportModal;

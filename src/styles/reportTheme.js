@@ -42,24 +42,18 @@ export const BUDGET_STATE_STYLES = {
   // 🔵 En proceso
   '1. Proceso Interno':         { bg: 'FF2196F3', text: 'FF000000' },
   '2. Enviado':                 { bg: 'FF2196F3', text: 'FF000000' },
-
   // 🟡 Revisión
   '3. Analisis de Condiciones': { bg: 'FFFFC107', text: 'FF000000' },
   '4. Revision':                { bg: 'FFFFC107', text: 'FF000000' },
-
   // 🔴 Rechazado
   '5. Rechazado':               { bg: 'FFCC0000', text: 'FF000000' },
-
   // 🟢 Aprobado
   '6. Aceptado':                { bg: 'FF28A745', text: 'FF000000' },
   '10. VALIDADO':               { bg: 'FF28A745', text: 'FF000000' },
-
   // 🟠 Demorado
   '7. Demorado por el Cliente': { bg: 'FFFF6B35', text: 'FF000000' },
-
   // ⚪ Cerrado
   '8. Finalizado':              { bg: 'FFD6D6D6', text: 'FF000000' },
-
   // ⚫ Especial
   '9. Mensual':                 { bg: 'FF16324F', text: 'FF000000' },
 };

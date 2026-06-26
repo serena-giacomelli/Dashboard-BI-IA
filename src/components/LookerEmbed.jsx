@@ -8,9 +8,7 @@ function LookerEmbed({
 }) {
   const handleOpenReport = () => {
     if (!src) return;
-
-    window.open(src, '_blank', 'noopener,noreferrer');
-  };
+    window.open(src, '_blank', 'noopener,noreferrer');  };
 
   const placeholderMarkup = `
     <html lang="es">
@@ -48,8 +46,7 @@ function LookerEmbed({
           <p>Reemplaza la URL del embed con el enlace real del reporte cuando esté disponible.</p>
         </div>
       </body>
-    </html>
-  `;
+    </html>  `;
 
   return (
     <section className={styles.wrapper}>
@@ -66,11 +63,9 @@ function LookerEmbed({
           title="Looker embed"
           loading="lazy"
           allowFullScreen
-          srcDoc={!src ? placeholderMarkup : undefined}
-        />
+          srcDoc={!src ? placeholderMarkup : undefined}/>
       </div>
     </section>
-  );
-}
+  );}
 
 export default LookerEmbed;

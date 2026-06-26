@@ -8,8 +8,6 @@ function IACard({ text, title = 'Resumen IA' }) {
         <h2>{title}</h2>
         <p>{text}</p>
       </div>
-    </article>
-  );
-}
+    </article>);}
 
 export default IACard;

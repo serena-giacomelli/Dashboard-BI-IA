@@ -23,9 +23,7 @@ function summarizeRows(rows) {
     byStatus,
     topRow,
     pendingRows,
-    count: rows.length,
-  };
-}
+    count: rows.length,};}
 
 function generateExecutiveReport(stats) {
   const pendingLabel = stats.pendingRows.length
@@ -41,8 +39,7 @@ function generateExecutiveReport(stats) {
     `Recomendación: priorizar los casos en revisión para evitar atrasos y sostener el ritmo de envío.`,
     `Alerta IA: ${pendingLabel}.`,
     `Contexto del tablero: los indicadores se leen junto con el reporte embebido para validar tendencias y desvíos.`,
-  ].join(' ');
-}
+  ].join(' ');}
 
 function answerQuestion(question, stats) {
   const normalized = question.toLowerCase();
@@ -50,22 +47,18 @@ function answerQuestion(question, stats) {
   if (!normalized.trim()) return 'Escribí una pregunta sobre los presupuestos...';
 
   if (normalized.includes('informe') || normalized.includes('resumen')) {
-    return generateExecutiveReport(stats);
-  }
+    return generateExecutiveReport(stats);  }
 
   if (normalized.includes('mayor') || normalized.includes('más alto')) {
-    return `${stats.topRow.cliente} (${stats.topRow.nroPresupuesto}) tiene el mayor total de honorarios: ${currencyFormatter.format(stats.topRow.honorarioMonto)}.`;
-  }
+    return `${stats.topRow.cliente} (${stats.topRow.nroPresupuesto}) tiene el mayor total de honorarios: ${currencyFormatter.format(stats.topRow.honorarioMonto)}.`;}
 
   if (normalized.includes('revisión') || normalized.includes('revision')) {
     const revisions = stats.byStatus.Revisión || 0;
-    return `Hay ${revisions} presupuesto${revisions === 1 ? '' : 's'} en estado Revisión.`;
-  }
+    return `Hay ${revisions} presupuesto${revisions === 1 ? '' : 's'} en estado Revisión.`;}
 
   if (normalized.includes('enviado')) {
     const sent = stats.byStatus.Enviado || 0;
-    return `Hay ${sent} presupuesto${sent === 1 ? '' : 's'} enviado${sent === 1 ? '' : 's'}.`;
-  }
+    return `Hay ${sent} presupuesto${sent === 1 ? '' : 's'} enviado${sent === 1 ? '' : 's'}.`;  }
 
   if (normalized.includes('total') || normalized.includes('honorarios') || normalized.includes('monto')) {
     return `El total de honorarios analizado es ${currencyFormatter.format(stats.totalFees)}.`;
@@ -82,20 +75,16 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
   const [answer, setAnswer] = useState('Pedime un informe ejecutivo...');
 
   const handleGenerateReport = () => {
-    setReport(generateExecutiveReport(stats));
-  };
+    setReport(generateExecutiveReport(stats));  };
 
   const handleAsk = (nextQuestion = question) => {
     const nextAnswer = answerQuestion(nextQuestion, stats);
     setQuestion(nextQuestion);
-    setAnswer(nextAnswer);
-  };
+    setAnswer(nextAnswer);  };
 
   const handleUseSuggestion = () => {
-    handleAsk(selectedSuggestion);
-  };
+    handleAsk(selectedSuggestion);  };
 
-  // ... (El resto del componente de renderizado se mantiene igual)
    return (
     <section className={styles.panel}>
       <div className={styles.workflowGrid}>
@@ -171,7 +160,6 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
        </article>
       </div>
     </section>
-  );
-}
+  );}
 
 export default AIInsightsPanel;

@@ -1,17 +1,10 @@
 // ── Tema PDF ──────────────────────────────────────────────────────────────────
-// Centralizá acá todos los valores visuales usados al generar PDFs con jsPDF.
-
 export const PDF_THEME = {
   colors: {
-    /** Azul corporativo principal (títulos, encabezado de tabla) */
     primary: [22, 50, 79],
-    /** Gris para texto secundario (metadata, filtros) */
     textSecondary: [80, 80, 80],
-    /** Gris claro para líneas separadoras */
     divider: [200, 200, 200],
-    /** Blanco para texto sobre fondo oscuro */
     white: 255,
-    /** Azul muy claro para filas alternas de la tabla */
     rowAlternate: [245, 248, 255],
   },
 
