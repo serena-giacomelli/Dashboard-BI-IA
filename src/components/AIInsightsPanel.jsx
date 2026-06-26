@@ -8,7 +8,6 @@ const currencyFormatter = new Intl.NumberFormat('es-AR', {
 });
 
 function summarizeRows(rows) {
-  // Ahora usamos honorarioMonto en lugar de totalFees
   const totalFees = rows.reduce((sum, row) => sum + (Number(row.honorarioMonto) || 0), 0);
   
   const byStatus = rows.reduce((accumulator, row) => {

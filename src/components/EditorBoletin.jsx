@@ -5,13 +5,83 @@ import html2pdf from 'html2pdf.js';
 import { LOGO_CIFAS_BASE64, LOGO_CIFAS_URL } from '../utils/assets.js';
 import '../styles/EditorBoletin.css';
 
+// Configuración matriz de la Primera Sección del BORA / InfoLeg
+const ESTRUCTURA_ORGANISMOS_BORA = [
+  {
+    id: 'min_economia',
+    label: 'Ministerio de Economía',
+    subtopicos: [
+      { id: 'eco_personal', label: 'Designaciones, Estructura Interna y Renuncias' },
+      { id: 'eco_subsidios', label: 'Transferencias de Partidas y Subsidios Provinciales' },
+      { id: 'eco_licitaciones', label: 'Licitaciones y Contratos Menores de Suministro' }
+    ]
+  },
+  {
+    id: 'arca_afip',
+    label: 'ARCA (Ex-AFIP) y Dirección de Aduanas',
+    subtopicos: [
+      { id: 'arca_personal', label: 'Cambios de Jefaturas y Funciones Internas' },
+      { id: 'arca_prorrogas', label: 'Prórrogas de Vencimientos Impositivos de Rutina' }
+    ]
+  },
+  {
+    id: 'min_capital_humano',
+    label: 'Ministerio de Capital Humano',
+    subtopicos: [
+      { id: 'ch_personal', label: 'Contrataciones y Altas de Personal' },
+      { id: 'ch_planes', label: 'Asignación de Fondos a Cooperativas y Planes Sociales' },
+      { id: 'ch_universidades', label: 'Convenios e Internas Universitarias' }
+    ]
+  },
+  {
+    id: 'bcra_cnv',
+    label: 'Banco Central (BCRA) y CNV',
+    subtopicos: [
+      { id: 'fin_comunicados', label: 'Circulares de Comunicación Interna y Rutina' },
+      { id: 'fin_sanciones', label: 'Sumarios Administrativos Menores a Entidades' }
+    ]
+  },
+  {
+    id: 'min_salud_anmat',
+    label: 'Ministerio de Salud y ANMAT',
+    subtopicos: [
+      { id: 'salud_compras', label: 'Compras de Insumos y Equipamiento Hospitalario' },
+      { id: 'salud_autorizaciones', label: 'Inscripciones de Rutina en el Registro de Medicamentos' }
+    ]
+  },
+  {
+    id: 'min_seguridad_justicia',
+    label: 'Ministerios de Seguridad y Justicia',
+    subtopicos: [
+      { id: 'seg_ascensos', label: 'Ascensos, Retiros y Movimientos de Fuerzas Federales' },
+      { id: 'seg_erratas', label: 'Fe de Erratas y Avisos Oficiales de Juzgados' }
+    ]
+  }
+];
+
 const EditorBoletin = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
   const [boletinCompleto, setBoletinCompleto] = useState(''); 
-  const [puntosClave, setPuntosClave] = useState('');
   const [cargando, setCargando] = useState(false);
+  
+  // Estados de control de la IA
   const [generandoIA, setGenerandoIA] = useState(false);
+  const [jurisdiccion, setJurisdiccion] = useState('nacional');
+  
+  // Control de visibilidad global de la matriz para optimizar espacio
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  
+  // Guardamos las exclusiones de la matriz
+  const [organismosExcluidos, setOrganismosExcluidos] = useState([]);
+  const [subtopicosExcluidos, setSubtopicosExcluidos] = useState([]);
+  
+  // Control individual de qué desplegable está abierto { [orgId]: true/false }
+  const [dropdownsAbiertos, setDropdownsAbiertos] = useState({});
+  
+  // Log para auditar las decisiones de Groq
+  const [logAuditoriaIA, setLogAuditoriaIA] = useState([]);
+
   const [envioActual, setEnvioActual] = useState(0);
   const [historial, setHistorial] = useState([]);
   const [boletinSeleccionado, setBoletinSeleccionado] = useState(null);
@@ -25,16 +95,26 @@ const EditorBoletin = ({ clientesDB }) => {
 
   useEffect(() => {
     const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
-    setHistorial(historialGuardado);}, []);
+    setHistorial(historialGuardado);
+  }, []);
+
+  // Cerrar desplegables si se hace clic afuera del panel
+  useEffect(() => {
+    const cerrarDesplegablesAfuera = () => setDropdownsAbiertos({});
+    window.addEventListener('click', cerrarDesplegablesAfuera);
+    return () => window.removeEventListener('click', cerrarDesplegablesAfuera);
+  }, []);
 
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
 
   const destinatariosFiltrados = destinatarios.filter(c =>
     c.razonSocial?.toLowerCase().includes(busquedaDestinatario.toLowerCase()) ||
-    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase())  );
+    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase())
+  );
 
   const historialFiltrado = historial.filter(item =>
-    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase())  );
+    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase())
+  );
 
   const historialOrdenado = [...historialFiltrado].sort((a, b) => {
     switch (ordenHistorial) {
@@ -42,7 +122,9 @@ const EditorBoletin = ({ clientesDB }) => {
       case 'antiguos': return a.id - b.id;
       case 'alfa-asc': return (a.asunto || '').localeCompare(b.asunto || '');
       case 'alfa-desc': return (b.asunto || '').localeCompare(b.asunto || '');
-      default: return 0;    }});
+      default: return 0;
+    }
+  });
 
   const totalPaginas = Math.ceil(historialOrdenado.length / itemsPorPagina);
   const paginaValida = Math.min(paginaActual, totalPaginas || 1);
@@ -57,28 +139,103 @@ const EditorBoletin = ({ clientesDB }) => {
     const domingo = new Date(lunes);
     domingo.setDate(lunes.getDate() + 6);
     const formatoFecha = (fecha) => fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(domingo)}`;  };
+    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(domingo)}`;
+  };
+
+  // Manejadores de la matriz de exclusión
+  const manejarToggleOrganismo = (orgId) => {
+    if (organismosExcluidos.includes(orgId)) {
+      setOrganismosExcluidos(organismosExcluidos.filter(id => id !== orgId));
+    } else {
+      setOrganismosExcluidos([...organismosExcluidos, orgId]);
+      // Si excluimos el organismo completo, limpiamos sus subtópicos específicos
+      const configOrg = ESTRUCTURA_ORGANISMOS_BORA.find(o => o.id === orgId);
+      const subIds = configOrg.subtopicos.map(s => s.id);
+      setSubtopicosExcluidos(subtopicosExcluidos.filter(id => !subIds.includes(id)));
+      // Cerramos su desplegable por lógica
+      setDropdownsAbiertos(prev => ({ ...prev, [orgId]: false }));
+    }
+  };
+
+  const manejarToggleSubtopico = (subId) => {
+    if (subtopicosExcluidos.includes(subId)) {
+      setSubtopicosExcluidos(subtopicosExcluidos.filter(id => id !== subId));
+    } else {
+      setSubtopicosExcluidos([...subtopicosExcluidos, subId]);
+    }
+  };
+
+  const toggleDropdown = (e, orgId) => {
+    e.stopPropagation(); // Evita que el listener global de ventana lo cierre al abrirlo
+    setDropdownsAbiertos(prev => ({
+      ...Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {}), // cerramos los demás
+      [orgId]: !prev[orgId]
+    }));
+  };
 
   const generarConIA = async () => {
-    if (!puntosClave.trim()) return alert("Por favor, ingresa algunos puntos clave antes de generar.");
-    setGenerandoIA(true);
-    try {
-      const response = await fetch('/.netlify/functions/generarBoletinIA', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ puntosClave })});
-      const data = await response.json();
-    
-      if (data.resumenEmail && data.boletinCompleto) {
-        setCuerpoHtml(data.resumenEmail);
-        setBoletinCompleto(data.boletinCompleto);
-        setTabActivo('resumen');
-      } else {
-        throw new Error("La respuesta de la IA no contiene los bloques requeridos.");}
-    } catch (error) {
-      alert("Error al conectar con el asistente de IA: " + error.message);
-    } finally {
-      setGenerandoIA(false);}};
+      setGenerandoIA(true);
+      setLogAuditoriaIA([]);
+      try {
+        const instruccionesExclusion = [];
+
+        ESTRUCTURA_ORGANISMOS_BORA.forEach(org => {
+          if (organismosExcluidos.includes(org.id)) {
+            instruccionesExclusion.push(`EXCLUIR POR COMPLETO cualquier acto, decreto o resolución emanado por: ${org.label}.`);
+          } else {
+            org.subtopicos.forEach(sub => {
+              if (subtopicosExcluidos.includes(sub.id)) {
+                instruccionesExclusion.push(`Del organismo [${org.label}], EXCLUIR los actos relacionados con: ${sub.label}.`);
+              }
+            });
+          }
+        });
+
+        // Estructuramos directivas ultra específicas para cambiar el estilo del informe semanal
+        const payload = {
+          fuentes: [
+            "https://www.boletinoficial.gob.ar/seccion/primera",
+            "https://www.infoleg.gob.ar/?page_id=216"
+          ],
+          directivasExclusion: instruccionesExclusion,
+          jurisdiccion,
+          limitePaginas: 2,
+          // Agregamos reglas estrictas de estructura de negocio
+          directivasFormato: {
+            tipoDocumento: "Informe Ejecutivo Semanal y Compilado Legal",
+            requiereSeccionesPorOrganismo: true,
+            estiloContenido: "Estructurado, analítico y profesional. Cada medida debe indicar: Organismo Emisor, Número de Norma (Decreto/Resolución), Síntesis de la medida e Impacto estimado o relevancia para el sector privado.",
+            estructuraEsperada: "Agrupar cronológicamente bajo títulos claros del organismo emisor (ej: '### MINISTERIO DE ECONOMÍA'). Si un organismo no tuvo novedades relevantes en la semana, no incluir su sección."
+          }
+        };
+
+        const response = await fetch('/.netlify/functions/generarBoletinIA', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+      
+        if (data.resumenEmail && data.boletinCompleto) {
+          setCuerpoHtml(data.resumenEmail);
+          setBoletinCompleto(data.boletinCompleto);
+          
+          if (data.auditoriaFiltros && Array.isArray(data.auditoriaFiltros)) {
+            setLogAuditoriaIA(data.auditoriaFiltros);
+          } else {
+            setLogAuditoriaIA(["Compilado generado con éxito. Estructura de informe aplicada."]);
+          }
+
+          setTabActivo('resumen');
+        } else {
+          throw new Error("La respuesta de la IA no contiene los bloques requeridos.");
+        }
+      } catch (error) {
+        alert("Error al conectar con el asistente de IA: " + error.message);
+      } finally {
+        setGenerandoIA(false);
+      }
+    };
 
   const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
@@ -112,13 +269,14 @@ const EditorBoletin = ({ clientesDB }) => {
     const tablaCore = `
       <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
         <tr><td align="center" style="padding-bottom: 20px;"><img src="${logoSeleccionado}" width="154" style="display: block;" /></td></tr>
-        <tr><td align="center" style="padding-bottom: 10px;"><h1 style="margin: 0; font-size: 24px; color: #333;">BOLETIN</h1><h2 style="margin: 5px 0 20px 0; font-size: 16px; color: #666;">${obtenerRangoSemana()}</h2></td></tr>
+        <tr><td align="center" style="padding-bottom: 10px;"><h1 style="margin: 0; font-size: 24px; color: #333;">BOLETÍN</h1><h2 style="margin: 5px 0 20px 0; font-size: 16px; color: #666;">${obtenerRangoSemana()}</h2></td></tr>
         <tr><td bgcolor="#E2E2E2" style="padding: 30px; border-radius: 8px;">
           <p style="margin-top: 0;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
           <div style="line-height: 1.6; color: #222;">${contenido}</div>
           <p style="margin-bottom: 0; margin-top: 20px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
         </td></tr>
-      </table>    `;
+      </table>
+    `;
 
     return `
       <!DOCTYPE html>
@@ -127,7 +285,8 @@ const EditorBoletin = ({ clientesDB }) => {
       <body style="margin: 0; padding: 20px; background-color: #f4f4f4;">
         ${tablaCore}
       </body>
-      </html>    `;
+      </html>
+    `;
   };
 
   const manejarEnvio = async (e) => {
@@ -199,25 +358,157 @@ const EditorBoletin = ({ clientesDB }) => {
     <div className="eb-container">
       <h2>Centro de Despacho de Boletines</h2>
       
-      {/* Sección IA */}
-      <div className="eb-ia-section">
-        <h4 className="eb-ia-title">Generar con IA</h4>
-        <textarea 
-          value={puntosClave} 
-          onChange={(e) => setPuntosClave(e.target.value)} 
-          placeholder="Puntos clave..." 
-          className="eb-ia-textarea" 
-        />
+      {/* Sección IA Compacta y Colapsable */}
+      <div className="eb-ia-section" style={{ background: '#f8fafc', padding: '12px 18px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>Compilado Semanal</span>
+            
+            {/* Selector de Jurisdicción en Línea */}
+            <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <input 
+                  type="radio" 
+                  checked={jurisdiccion === 'nacional'} 
+                  onChange={() => setJurisdiccion('nacional')} 
+                  style={{ marginRight: '4px' }}
+                /> 
+                Nacional
+              </label>
+              <label style={{ color: '#94a3b8', cursor: 'not-allowed', display: 'flex', alignItems: 'center' }}>
+                <input type="radio" disabled checked={jurisdiccion === 'provincial'} style={{ marginRight: '4px' }} /> 
+                Provincial
+              </label>
+            </div>
+          </div>
+
+          {/* Botón de alternar visualización de la Matriz */}
+          <button
+            type="button"
+            onClick={() => setMostrarFiltros(!mostrarFiltros)}
+            style={{
+              background: '#ffffff',
+              border: '1px solid #cbd5e1',
+              padding: '5px 12px',
+              borderRadius: '5px',
+              fontSize: '12px',
+              color: '#334155',
+              cursor: 'pointer',
+              fontWeight: '500',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            {mostrarFiltros ? 'Ocultar Filtros de Exclusión' : 'Configurar Exclusiones Avanzadas'}
+          </button>
+        </div>
+
+        {/* Matriz de Exclusión en Grilla Responsiva */}
+        {mostrarFiltros && (
+          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
+            <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
+              Seleccioná qué organismos o tópicos específicos querés que la IA ignore por completo:
+            </p>
+            
+            {/* Grilla compacta de 2 columnas */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '8px' }}>
+              {ESTRUCTURA_ORGANISMOS_BORA.map(org => {
+                const estaOrgExcluido = organismosExcluidos.includes(org.id);
+                const subIds = org.subtopicos.map(s => s.id);
+                const cantidadOmitidos = subtopicosExcluidos.filter(id => subIds.includes(id)).length;
+                const isOpen = !!dropdownsAbiertos[org.id];
+
+                let textoDesplegable = "Todos los temas incluidos";
+                if (estaOrgExcluido) textoDesplegable = "Organismo omitido por completo";
+                else if (cantidadOmitidos > 0) textoDesplegable = `${cantidadOmitidos} tema${cantidadOmitidos > 1 ? 's' : ''} a omitir`;
+
+                return (
+                  <div key={org.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: estaOrgExcluido ? '#cbd5e1' : '#334155', textDecoration: estaOrgExcluido ? 'line-through' : 'none', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                        {org.label}
+                      </span>
+                      <label style={{ fontSize: '11px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', fontWeight: '500' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={estaOrgExcluido} 
+                          onChange={() => manejarToggleOrganismo(org.id)} 
+                        />
+                        Excluir
+                      </label>
+                    </div>
+
+                    <div style={{ position: 'relative', width: '100%' }}>
+                      <button
+                        type="button"
+                        disabled={estaOrgExcluido}
+                        onClick={(e) => toggleDropdown(e, org.id)}
+                        style={{
+                          width: '100%',
+                          padding: '5px 8px',
+                          background: estaOrgExcluido ? '#f8fafc' : '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '4px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          color: estaOrgExcluido ? '#cbd5e1' : '#64748b',
+                          cursor: estaOrgExcluido ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <span>{textoDesplegable}</span>
+                        <span style={{ fontSize: '9px', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▼</span>
+                      </button>
+
+                      {isOpen && !estaOrgExcluido && (
+                        <div 
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            position: 'absolute', top: '100%', left: 0, right: 0,
+                            backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '4px',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.08)', zIndex: 100, marginTop: '2px',
+                            maxHeight: '140px', overflowY: 'auto', padding: '4px 0'
+                          }}
+                        >
+                          {org.subtopicos.map(sub => {
+                            const estaSubOmitido = subtopicosExcluidos.includes(sub.id);
+                            return (
+                              <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', backgroundColor: estaSubOmitido ? '#fffbeb' : 'transparent' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={estaSubOmitido} 
+                                  onChange={() => manejarToggleSubtopico(sub.id)} 
+                                />
+                                <span style={{ color: estaSubOmitido ? '#b45309' : '#475569' }}>Omitir: {sub.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <button 
           type="button" 
           onClick={generarConIA} 
           disabled={generandoIA} 
           className="eb-btn-generar-ia"
+          style={{ width: '100%', padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: generandoIA ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '12px', fontSize: '13px' }}
         >
-          {generandoIA ? 'Generando...' : 'Generar Boletín Dual'}
+          {generandoIA ? 'Analizando fuentes oficiales...' : 'Generar Compilado de la Semana'}
         </button>
       </div>
 
+      {/* Formulario de Redacción y Editores */}
       <form onSubmit={manejarEnvio} className="eb-form">
         <input
           type="text"
@@ -242,7 +533,6 @@ const EditorBoletin = ({ clientesDB }) => {
         </div>
 
         <div className="eb-tabs-container">
-          {/* Cabecera de las Pestañas */}
           <div className="eb-tabs-header">
             <button
               type="button"
@@ -433,7 +723,7 @@ const EditorBoletin = ({ clientesDB }) => {
               <div className="eb-modal-title-wrapper">
                 <h3 className="eb-modal-detail-title">{boletinSeleccionado.asunto}</h3>
                 <span className="eb-modal-detail-fecha">Enviado el: {boletinSeleccionado.fecha}</span>
-                {boletinSeleccionado.text !== '' && boletinSeleccionado.clientes && boletinSeleccionado.clientes.length > 0 && (
+                {boletinSeleccionado.clientes && boletinSeleccionado.clientes.length > 0 && (
                   <div className="eb-modal-detail-destinatarios">
                     <strong className="eb-modal-detail-destinatarios-label">Destinatarios en ese momento:</strong>
                     <div className="eb-chips-container">

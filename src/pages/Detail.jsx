@@ -15,7 +15,6 @@ function Detail() {
         </p>
       </div>
     </section>
-  );
-}
+  );}
 
 export default Detail;

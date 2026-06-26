@@ -705,7 +705,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                             if (Array.isArray(actVal)) {
                               textoActividad = actVal.map(transformarActividad).filter(Boolean).join(', ');
                             } else {
-                              textoActividad = transformarActividad(actVal);                                            }}              
+                              textoActividad = transformarActividad(actVal);}}              
                           return (
                             <tr key={i}>
                               <td style={{ fontWeight: '500' }}>{s.servicio}</td>

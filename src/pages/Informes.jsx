@@ -174,7 +174,7 @@ function Informes() {
       }
       doc.setFont(COMPANY_CONFIG.font, 'bold');
       doc.setFontSize(PDF_THEME.header.companyName.fontSize);
-      doc.setTextColor(PDF_THEME.colors.primary);
+      doc.setTextColor(...PDF_THEME.colors.primary);
       doc.text(COMPANY_CONFIG.name, PDF_THEME.header.companyName.x, PDF_THEME.header.companyName.y);
       doc.setFont(COMPANY_CONFIG.font, 'normal');
       doc.setFontSize(PDF_THEME.header.reportTitle.fontSize);
