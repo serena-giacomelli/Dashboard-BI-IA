@@ -221,9 +221,6 @@ const EditorNovedades = ({ clientesDB }) => {
             className="en-btn-destinatarios">
             Destinatarios actuales ({destinatarios.length})
           </button>
-          <span className="en-destinatarios-hint">
-            Hacé clic para ver la lista filtrada de envío.
-          </span>
         </div>
 
         <div className="en-tabs-container">
