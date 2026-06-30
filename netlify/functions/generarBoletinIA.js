@@ -3,7 +3,9 @@ export const handler = async (event) => {
     if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
     try {
-        const { noticias, instruccionesExclusion } = JSON.parse(event.body);
+        // Renombrados para que coincidan idéntico con tu Frontend
+        const { fuentes, directivasExclusion } = JSON.parse(event.body);
+
         const responseIA = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: { 
@@ -15,9 +17,9 @@ export const handler = async (event) => {
                 messages: [
                     { 
                         role: "system", 
-                        content: `Eres un asistente legal experto. Analiza las noticias proporcionadas y sigue estas instrucciones: ${instruccionesExclusion.join(', ')}. Responde SOLO con un objeto JSON. Claves: "resumenEmail" y "boletinCompleto".` 
+                        content: `Eres un asistente legal experto. Sigue estas instrucciones de exclusión: ${directivasExclusion.join(', ')}. Responde SOLO con un objeto JSON. Claves: "resumenEmail" y "boletinCompleto".` 
                     },
-                    { role: "user", content: `Noticias a analizar: ${JSON.stringify(noticias)}` }
+                    { role: "user", content: `Fuentes oficiales a analizar: ${JSON.stringify(fuentes)}` }
                 ],
                 temperature: 0.1
             })});
@@ -29,4 +31,5 @@ export const handler = async (event) => {
 
     } catch (error) {
         return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
-    }};
+    }
+};

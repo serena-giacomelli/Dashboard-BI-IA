@@ -151,7 +151,7 @@ const EditorBoletin = ({ clientesDB }) => {
           <style>
             .evitar-corte p, .evitar-corte li, .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte strong {
               page-break-inside: avoid !important;
-              break-inside: avoid !important;            }
+              break-inside: avoid !important;           }
           </style>
           <div style="text-align: center; margin-bottom: 20px;">
             <img src="${logoSeleccionado}" width="154" style="display: inline-block;" />
@@ -467,7 +467,7 @@ const EditorBoletin = ({ clientesDB }) => {
                 </div>))) : (
               <div className="eb-historial-empty">
                 No se encontraron boletines en el historial.
-              </div>            )}
+              </div>             )}
           </div>
           {totalPaginas > 1 && (
             <div className="eb-paginacion-bar">
@@ -525,7 +525,7 @@ const EditorBoletin = ({ clientesDB }) => {
               <button type="button" onClick={() => setBoletinSeleccionado(null)} className="eb-btn-cerrar">Cerrar</button>
               <button type="button" onClick={() => cargarEnEditor(boletinSeleccionado)} className="eb-btn-cargar-editor">Cargar en Editor</button>
             </div></div>
-        </div>      )}
+        </div>       )}
     </div>  );};
 
 export default EditorBoletin;
