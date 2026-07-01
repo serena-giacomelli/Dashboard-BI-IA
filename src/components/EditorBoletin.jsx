@@ -21,6 +21,7 @@ const EditorBoletin = ({ clientesDB }) => {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [organismosExcluidos, setOrganismosExcluidos] = useState([]);
   const [subtopicosExcluidos, setSubtopicosExcluidos] = useState([]);
+  const [modoOrganismo, setModoOrganismo] = useState('excluir');
   const [dropdownsAbiertos, setDropdownsAbiertos] = useState({});
   const [logAuditoriaIA, setLogAuditoriaIA] = useState([]);
   const [envioActual, setEnvioActual] = useState(0);
@@ -56,20 +57,21 @@ const EditorBoletin = ({ clientesDB }) => {
   const indiceInicial = (paginaValida - 1) * itemsPorPagina;
   const historialPaginado = historialOrdenado.slice(indiceInicial, indiceInicial + itemsPorPagina);
   const obtenerRangoSemana = () => {    const hoy = new Date();
-    const diaSemana = hoy.getDay();
-    const diferenciaLunes = hoy.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
-    const lunes = new Date(hoy.setDate(diferenciaLunes));
-    const domingo = new Date(lunes);
-    domingo.setDate(lunes.getDate() + 6);
+    const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() - (diaSemana - 1));
+    const viernes = new Date(lunes);
+    viernes.setDate(lunes.getDate() + 4);
     const formatoFecha = (fecha) => fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(domingo)}`;};
+    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(viernes)}`;};
   const obtenerFechasSemana = () => {    const fechas = [];
     const hoy = new Date();
-    let diaSemana = hoy.getDay(); 
-    if (diaSemana === 0) diaSemana = 7;
-    for (let i = 1; i <= Math.min(diaSemana, 5); i++) {
-      const fechaIteracion = new Date(hoy);
-      fechaIteracion.setDate(hoy.getDate() - (diaSemana - i));
+    const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() - (diaSemana - 1));
+    for (let i = 0; i < Math.min(diaSemana, 5); i++) {
+      const fechaIteracion = new Date(lunes);
+      fechaIteracion.setDate(lunes.getDate() + i);
       const yyyy = fechaIteracion.getFullYear();
       const mm = String(fechaIteracion.getMonth() + 1).padStart(2, '0');
       const dd = String(fechaIteracion.getDate()).padStart(2, '0');
@@ -85,6 +87,65 @@ const EditorBoletin = ({ clientesDB }) => {
   const toggleDropdown = (e, orgId) => {    e.stopPropagation(); 
     setDropdownsAbiertos(prev => ({...Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
       [orgId]: !prev[orgId]}));};
+
+const escapeHtml = (texto = '') => texto
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+const formatearContenidoPdf = (contenido = '') => {
+  const textoPlano = String(contenido)
+    .replace(/\r\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/^\s*BOLETIN SEMANAL\s*\n+/i, '')
+    .replace(/^\s*Boletin Semanal\s*\n+/i, '')
+    .trim();
+
+  if (!textoPlano) return '<p style="margin: 0; line-height: 1.6; color: #334155;">Sin contenido para mostrar.</p>';
+
+  if (/<[a-z][\s\S]*>/i.test(textoPlano)) {
+    return textoPlano;
+  }
+
+  const lineas = textoPlano.split('\n').map((linea) => linea.trim()).filter(Boolean);
+  const partes = [];
+  let listaAbierta = false;
+
+  const cerrarLista = () => {
+    if (listaAbierta) {
+      partes.push('</ul>');
+      listaAbierta = false;
+    }
+  };
+
+  lineas.forEach((linea) => {
+    if (/^#{1,3}\s+/.test(linea)) {
+      cerrarLista();
+      const nivel = linea.match(/^#{1,3}/)[0].length;
+      const texto = escapeHtml(linea.replace(/^#{1,3}\s+/, ''));
+      const tamanio = nivel === 1 ? '20px' : nivel === 2 ? '17px' : '15px';
+      partes.push(`<h${Math.min(nivel + 1, 4)} style="margin: 18px 0 8px 0; font-size: ${tamanio}; color: #0f172a; line-height: 1.25;">${texto}</h${Math.min(nivel + 1, 4)}>`);
+      return;
+    }
+
+    if (/^[-*•]\s+/.test(linea)) {
+      if (!listaAbierta) {
+        partes.push('<ul style="margin: 10px 0 14px 0; padding-left: 20px;">');
+        listaAbierta = true;
+      }
+      partes.push(`<li style="margin: 0 0 8px 0; line-height: 1.55; color: #334155;">${escapeHtml(linea.replace(/^[-*•]\s+/, ''))}</li>`);
+      return;
+    }
+
+    cerrarLista();
+    partes.push(`<p style="margin: 0 0 12px 0; line-height: 1.65; color: #334155;">${escapeHtml(linea)}</p>`);
+  });
+
+  cerrarLista();
+  return partes.join('');
+};
 
 const generarConIA = async () => {
     setGenerandoIA(true);
@@ -106,7 +167,7 @@ const generarConIA = async () => {
 
       for (const fecha of fechas) {
         setEstadoGeneracion(`Consultando índice BORA del ${fecha}...`);
-        const urlBoletin = `https://www.boletinoficial.gob.ar/seccion/primera/fecha/${fecha}`;
+        const urlBoletin = `https://www.boletinoficial.gob.ar/seccion/primera/${fecha}`;
 
         try {
           const res = await fetch('/.netlify/functions/generarBoletinIA', {
@@ -129,15 +190,16 @@ const generarConIA = async () => {
         }
       }
 
-      const listaLinks = Array.from(todosLosLinks).slice(0, 15);
-      
-      // CAMBIO AQUÍ: En lugar de throw, usamos un aviso suave y retornamos
+      const listaLinks = Array.from(todosLosLinks);
+
       if (listaLinks.length === 0) {
         alert("No se encontraron normativas en los días seleccionados. Probá otra fecha o revisá los filtros.");
         setGenerandoIA(false);
         setEstadoGeneracion("");
         return; 
       }
+
+      setEstadoGeneracion(`Se encontraron aproximadamente ${listaLinks.length} avisos. Iniciando procesamiento...`);
 
       setEstadoGeneracion("Iniciando procesamiento de textos...");
       const resIniciar = await fetch('/.netlify/functions/generarBoletinIA', {
@@ -149,6 +211,7 @@ const generarConIA = async () => {
           links: listaLinks,
           organismosExcluidos: etiquetasOrganismosExcluidos,
           subtopicosExcluidos: etiquetasSubtopicosExcluidos,
+          modoOrganismo,
         }),
       });
 
@@ -157,7 +220,7 @@ const generarConIA = async () => {
       let procesando = true;
       let fallosSeguidos = 0;
       let iteracion = 0;
-      const MAX_ITERACIONES = listaLinks.length + 5;
+      const MAX_ITERACIONES = listaLinks.length + 10;
 
       while (procesando) {
         iteracion++;
@@ -215,34 +278,35 @@ const generarConIA = async () => {
 const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
     if (paraPdf) {return `
-        <div style="font-family: Arial, Helvetica, sans-serif; max-width: 720px; margin: 0 auto; padding: 5px; background: #ffffff;">
+        <div style="font-family: Arial, Helvetica, sans-serif; max-width: 760px; margin: 0 auto; padding: 0; background: #ffffff; color: #0f172a;">
           <style>
-            .evitar-corte p, .evitar-corte li, .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte strong {
+            .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte h4, .evitar-corte strong {
               page-break-inside: avoid !important;
               break-inside: avoid !important;}
-            h3 { font-size: 15px; color: #1e3a8a; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
+            h1, h2, h3, h4 { page-break-after: avoid !important; }
+            p, li { orphans: 2; widows: 2; }
             ul { margin-top: 5px; padding-left: 20px; }
-            li { font-size: 12px; margin-bottom: 6px; line-height: 1.4; color: #334155; }
+            li { font-size: 12px; margin-bottom: 6px; line-height: 1.5; color: #334155; }
           </style>
-          <div style="text-align: center; margin-bottom: 15px;">
-            <img src="${logoSeleccionado}" width="130" style="display: inline-block;" />
+          <div style="text-align: center; padding: 18px 20px 10px 20px;">
+            <img src="${logoSeleccionado}" width="132" style="display: inline-block;" />
           </div>
-          <div style="text-align: center; margin-bottom: 15px;">
-            <h1 style="margin: 0; font-size: 18px; color: #111111; font-weight: bold; letter-spacing: 1px;">COMPILADO INFORMATIVO LEGAL</h1>
-            <h2 style="margin: 3px 0 0 0; font-size: 13px; color: #4b5563; font-weight: normal;">${obtenerRangoSemana()}</h2>
+          <div style="text-align: center; margin-bottom: 14px; padding: 0 20px;">
+            <h1 style="margin: 0; font-size: 22px; color: #0f172a; font-weight: 800; letter-spacing: 0.6px;">BOLETIN SEMANAL</h1>
+            <h2 style="margin: 4px 0 0 0; font-size: 13px; color: #64748b; font-weight: 500;">${obtenerRangoSemana()}</h2>
           </div>
-          <div class="evitar-corte" style="background-color: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 6px;">
-            <p style="margin-top: 0; font-size: 13px; color: #1f2937;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-            <div style="word-wrap: break-word; overflow-wrap: break-word;">
-              ${contenido}
+          <div class="evitar-corte" style="background-color: #ffffff; margin: 0 20px 20px 20px; padding: 22px 22px 24px 22px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);">
+            <p style="margin: 0 0 16px 0; font-size: 13px; color: #334155;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
+            <div style="word-wrap: break-word; overflow-wrap: break-word; font-size: 12.5px; line-height: 1.65; color: #334155;">
+              ${formatearContenidoPdf(contenido)}
             </div>
-            <p style="margin-bottom: 0; margin-top: 20px; font-size: 13px; color: #1f2937;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
+            <p style="margin-bottom: 0; margin-top: 20px; font-size: 13px; color: #334155;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
           </div>
         </div>`;}
     const tablaCore = `
       <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
         <tr><td align="center" style="padding-bottom: 20px;"><img src="${logoSeleccionado}" width="154" style="display: block;" /></td></tr>
-        <tr><td align="center" style="padding-bottom: 10px;"><h1 style="margin: 0; font-size: 24px; color: #333;">BOLETÍN</h1><h2 style="margin: 5px 0 20px 0; font-size: 16px; color: #666;">${obtenerRangoSemana()}</h2></td></tr>
+        <tr><td align="center" style="padding-bottom: 10px;"><h1 style="margin: 0; font-size: 24px; color: #333;">BOLETIN SEMANAL</h1><h2 style="margin: 5px 0 20px 0; font-size: 16px; color: #666;">${obtenerRangoSemana()}</h2></td></tr>
         <tr><td bgcolor="#E2E2E2" style="padding: 30px; border-radius: 8px;">
           <p style="margin-top: 0;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
           <div style="line-height: 1.6; color: #222;">${contenido}</div>
@@ -262,7 +326,7 @@ const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
         setEnvioActual(prev => prev + 1);
         const htmlEmail = generarTemplateEmpresa(cuerpoHtml, cliente, false);
         const htmlPdf = generarTemplateEmpresa(boletinCompleto || cuerpoHtml, cliente, true);
-        const opcionesPdf = {margin:[15, 15, 15, 15], filename: 'boletin.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, letterRendering: true }, jsPDF:{ unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak:    { mode: ['css', 'legacy'] }};
+        const opcionesPdf = {margin:[8, 8, 8, 8], filename: 'boletin.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 1, useCORS: true, letterRendering: false, scrollY: 0, windowWidth: 1100 }, jsPDF:{ unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css'] }};
         const pdfBase64Uri = await html2pdf().set(opcionesPdf).from(htmlPdf).outputPdf('datauristring');
         const pdfBase64Limpio = pdfBase64Uri.split('base64,')[1];
         await fetch('/.netlify/functions/enviarBoletin', {
@@ -311,35 +375,45 @@ const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
           <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
             <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
               Seleccioná qué organismos o tópicos específicos querés que la IA ignore por completo:</p>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '12px', flexWrap: 'wrap' }}>
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input type="radio" checked={modoOrganismo === 'excluir'} onChange={() => setModoOrganismo('excluir')} />
+                Excluir marcados
+              </label>
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input type="radio" checked={modoOrganismo === 'incluir'} onChange={() => setModoOrganismo('incluir')} />
+                Incluir solo marcados
+              </label>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '8px' }}>
               {ESTRUCTURA_ORGANISMOS_BORA.map(org => {
                 const estaOrgExcluido = organismosExcluidos.includes(org.id);
                 const subIds = org.subtopicos.map(s => s.id);
                 const cantidadOmitidos = subtopicosExcluidos.filter(id => subIds.includes(id)).length;
                 const isOpen = !!dropdownsAbiertos[org.id];
-                let textoDesplegable = "Todos los temas incluidos";
-                if (estaOrgExcluido) textoDesplegable = "Organismo omitido por completo";
+                let textoDesplegable = modoOrganismo === 'incluir' ? 'Se incluirá solo si está marcado' : 'Todos los temas incluidos';
+                if (modoOrganismo === 'excluir' && estaOrgExcluido) textoDesplegable = "Organismo omitido por completo";
                 else if (cantidadOmitidos > 0) textoDesplegable = `${cantidadOmitidos} tema${cantidadOmitidos > 1 ? 's' : ''} a omitir`;
                 return (
                   <div key={org.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: estaOrgExcluido ? '#cbd5e1' : '#334155', textDecoration: estaOrgExcluido ? 'line-through' : 'none', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', textDecoration: modoOrganismo === 'excluir' && estaOrgExcluido ? 'line-through' : 'none', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                         {org.label}</span>
                       <label style={{ fontSize: '11px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', fontWeight: '500' }}>
                         <input 
                           type="checkbox" 
                           checked={estaOrgExcluido} 
                           onChange={() => manejarToggleOrganismo(org.id)}/>
-                        Excluir</label></div>
+                        {modoOrganismo === 'incluir' ? 'Incluir' : 'Excluir'}</label></div>
                     <div style={{ position: 'relative', width: '100%' }}>
                       <button type="button"
-                        disabled={estaOrgExcluido}
+                        disabled={modoOrganismo === 'excluir' && estaOrgExcluido}
                         onClick={(e) => toggleDropdown(e, org.id)}
-                        style={{ width: '100%', padding: '5px 8px',  background: estaOrgExcluido ? '#f8fafc' : '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', textAlign: 'left', fontSize: '11px', color: estaOrgExcluido ? '#cbd5e1' : '#64748b', cursor: estaOrgExcluido ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                        style={{ width: '100%', padding: '5px 8px',  background: (modoOrganismo === 'excluir' && estaOrgExcluido) ? '#f8fafc' : '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', textAlign: 'left', fontSize: '11px', color: (modoOrganismo === 'excluir' && estaOrgExcluido) ? '#cbd5e1' : '#64748b', cursor: (modoOrganismo === 'excluir' && estaOrgExcluido) ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                         <span>{textoDesplegable}</span>
                         <span style={{ fontSize: '9px', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▼</span>
                       </button>
-                      {isOpen && !estaOrgExcluido && (
+                      {isOpen && !(modoOrganismo === 'excluir' && estaOrgExcluido) && (
                         <div 
                           onClick={(e) => e.stopPropagation()}
                           style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '4px', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', zIndex: 100, marginTop: '2px', maxHeight: '140px', overflowY: 'auto', padding: '4px 0'}}>
