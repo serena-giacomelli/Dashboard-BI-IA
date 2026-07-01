@@ -14,6 +14,12 @@ exports.handler = async (event) => {
     // --- ACCIÓN: EXTRAER LINKS ---
     if (action === 'extraer_links') {
       const { urlBoletin } = body;
+      
+      if (!process.env.SCRAPINGBEE_API_KEY) {
+        console.error("ERROR CRÍTICO: Falta la variable SCRAPINGBEE_API_KEY");
+        return { statusCode: 500, body: JSON.stringify({ error: "Falta configurar la API Key de ScrapingBee" }) };
+      }
+
       const client = new ScrapingBeeClient(process.env.SCRAPINGBEE_API_KEY);
 
       const response = await client.get({
@@ -57,7 +63,7 @@ exports.handler = async (event) => {
           method: "POST",
           headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
+            model: "openai/gpt-oss-120b", // <-- Cambiado al nuevo modelo estable de producción
             temperature: 0.1,
             response_format: { type: "json_object" },
             messages: [
@@ -68,7 +74,6 @@ exports.handler = async (event) => {
         });
 
         const dataIA = await resIA.json();
-        // Agregamos manejo de errores de la API de Groq
         if (!dataIA.choices) throw new Error("Error en respuesta de IA: " + JSON.stringify(dataIA));
         
         state.textos.push(JSON.parse(dataIA.choices[0].message.content));
@@ -86,7 +91,7 @@ exports.handler = async (event) => {
           method: "POST",
           headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
+            model: "openai/gpt-oss-120b", // <-- Cambiado al nuevo modelo estable de producción
             temperature: 0.2,
             response_format: { type: "json_object" },
             messages: [
