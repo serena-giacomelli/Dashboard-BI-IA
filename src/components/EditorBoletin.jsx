@@ -86,6 +86,27 @@ const EditorBoletin = ({ clientesDB }) => {
     return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(viernes)}`;
   };
 
+  const obtenerNombreArchivoPdf = () => {
+    const hoy = new Date();
+    const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() - (diaSemana - 1));
+    const viernes = new Date(lunes);
+    viernes.setDate(lunes.getDate() + 4);
+
+    const meses = [
+      'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
+      'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+    ];
+    
+    const mesInicio = meses[lunes.getMonth()];
+    const mesFin = meses[viernes.getMonth()];
+    const diaInicio = String(lunes.getDate()).padStart(2, '0');
+    const diaFin = String(viernes.getDate()).padStart(2, '0');
+    const anio = viernes.getFullYear();
+    return `NOVEDADES ${mesInicio} del ${diaInicio} AL ${diaFin} DE ${mesFin} ${anio}.pdf`;
+  };
+
   const obtenerFechasSemana = () => {
     const fechas = [];
     const hoy = new Date();
@@ -321,28 +342,38 @@ const EditorBoletin = ({ clientesDB }) => {
   const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
     if (paraPdf) {
-      // 1. Eliminamos el saludo, el borde, el sombreado y dejamos el flujo natural para que no colapse al cambiar de página
       return `
-        <div style="font-family: Arial, Helvetica, sans-serif; color: #0f172a;">
+        <div style="font-family: Arial, Helvetica, sans-serif; color: #333333; padding: 10px;">
           <style>
             .evitar-corte { page-break-inside: avoid !important; }
             h1, h2, h3, h4, strong { page-break-after: avoid !important; }
-            p, li { orphans: 2; widows: 2; }
-            ul { margin-top: 5px; padding-left: 20px; }
-            li { font-size: 13px; margin-bottom: 8px; line-height: 1.5; color: #334155; }
+            p { orphans: 2; widows: 2; margin-bottom: 10px; font-size: 11pt; line-height: 1.5; color: #222222; text-align: justify; }
+            .organismo-titulo { font-size: 13pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #000000; padding-bottom: 5px; }
           </style>
-          
-          <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoSeleccionado}" width="140" style="display: inline-block;" />
+
+          <div style="text-align: center; margin-bottom: 25px;">
+            <img src="${logoSeleccionado}" width="160" style="display: inline-block; margin-bottom: 15px;" />
+            <h1 style="margin: 0 0 5px 0; font-size: 16pt; color: #000000; font-weight: bold;">BOLETÍN DE NOVEDADES</h1>
+            <h2 style="margin: 0; font-size: 12pt; color: #333333; font-weight: normal;">Semana del ${obtenerRangoSemana()}</h2>
           </div>
           
-          <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">
-            <h1 style="margin: 0 0 6px 0; font-size: 20px; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">INFORME DE ACTUALIDAD NORMATIVA</h1>
-            <h2 style="margin: 0; font-size: 13px; color: #64748b; font-weight: 500;">${obtenerRangoSemana()}</h2>
+          <div style="margin-bottom: 30px; text-align: justify;" class="evitar-corte">
+            <p style="font-weight: bold; color: #000000;">Estimados Clientes de CIFAS:</p>
+            <p>Desde CIFAS, como parte de nuestro servicio de asesoramiento, elaboramos un informe semanal con las actualizaciones más relevantes en materia impositiva y comercial, tanto a nivel nacional como provincial, del rubro y de aquellas que afectan a todos los sectores en general.</p>
+            <p>En esta ocasión, queremos compartirlo también con ustedes, con el propósito de brindar información clave para la toma de decisiones y fortalecer el conocimiento dentro del sector.</p>
+            <p>Si alguna de estas novedades es de su interés o desean profundizar en su impacto, estamos a disposición para asesorarlos.</p>
+            <p style="margin-top: 25px; color: #000000; text-align: justify;">Saludos cordiales,<br><strong>El equipo de CIFAS</strong></p>
           </div>
           
-          <div style="word-wrap: break-word; overflow-wrap: break-word; font-size: 13px; line-height: 1.6; color: #334155;">
+          <div style="word-wrap: break-word; overflow-wrap: break-word; font-size: 11pt; line-height: 1.5; color: #222222;">
             ${formatearContenidoPdf(contenido)}
+          </div>
+
+          <div style="margin-top: 40px; padding-top: 20px; text-align: center !important;" class="evitar-corte">
+            <img src="${logoSeleccionado}" width="140" style="display: inline-block; margin-bottom: 15px;" />
+            <p style="font-size: 11pt; text-align: center !important; color: #000000; margin-bottom: 5px;"><strong>Referente Comercial:</strong></p>
+            <p style="font-size: 11pt; text-align: center !important; color: #000000; margin-bottom: 5px;">valeriafabrizio@cifas.com.ar // +54 9 341 307-1907</p>
+            <p style="font-size: 11pt; text-align: center !important; font-weight: bold; margin-bottom: 0;"><a href="http://www.cifas.com.ar" style="color: #000000; text-decoration: none;">www.cifas.com.ar</a></p>
           </div>
         </div>`;
     }
@@ -375,7 +406,7 @@ const EditorBoletin = ({ clientesDB }) => {
         const htmlPdf = generarTemplateEmpresa(boletinCompleto || cuerpoHtml, cliente, true);
         const opcionesPdf = { 
               margin: [10, 10, 10, 10], 
-              filename: 'boletin.pdf', 
+              filename: obtenerNombreArchivoPdf(),
               // Subimos la calidad de imagen al 98%
               image: { type: 'jpeg', quality: 0.98 }, 
               // Restauramos la escala a 1 para que el texto sea completamente nítido

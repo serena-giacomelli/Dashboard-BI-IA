@@ -276,31 +276,31 @@ const invocarGroqResumenEmail = async (textoBase, titulo, subtitulo) => {
   return invocarGroqConReintentos(payload);
 };
 
-// PASO 3 — Prompt Ajustado para procesar Boletín Completo mediante IA sin fechas individuales
-// PASO 3 — Prompt Ajustado para procesar Boletín Completo mediante IA sin fechas individuales
 const invocarGroqBoletinCompleto = async (itemsCompactos, titulo, subtitulo) => {
   const payload = {
     model: 'llama-3.3-70b-versatile',
-    temperature: 0.2,
+    temperature: 0.1, 
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system',
         content: [
           'Sos un editor legal senior encargado de confeccionar un informe ejecutivo semanal corporativo.',
-          'A partir de los datos proveídos, generá un reporte impecable en formato HTML dentro de la propiedad "boletinCompleto".',
-          'Seguí estrictamente estas reglas editoriales y de diseño:',
-          '1. NO inventes datos ni asumas nada que no esté explícito en los ítems factuales.',
-          '2. Estructuración obligatoria: Agrupá absolutamente todo el contenido por Organismo.',
-          '3. Por cada Organismo, creá un título destacado usando h3 estilizado de la siguiente manera: <h3 style="margin: 20px 0 10px 0; font-size: 16px; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; font-weight: bold; text-transform: uppercase;">NOMBRE DEL ORGANISMO</h3>',
-          '4. ESTRICTAMENTE PROHIBIDO copiar el texto legal completo. Por cada normativa analizada, redactá una síntesis curada de máximo 3 párrafos cortos explicando en lenguaje claro de qué se trata y su impacto.',
-          '5. El documento final debe ser conciso, al estilo de un resumen ejecutivo corto.',
-          '6. PROHIBIDO: No incluyas fechas individuales por normativa, ni un título general para el documento, ni saludos. Solo devolvé el cuerpo del reporte.',          '7. Limpieza: Omití por completo menciones al sitio web, botones de búsqueda o apartados legales repetitivos de impugnaciones.',
-          '8. Inclui al final del boletin el link de referencia al Boletín Oficial: <p style="margin-top: 20px; font-size: 12px; color: #64748b;">Referencia: <a href="https://www.boletinoficial.gob.ar/" target="_blank" style="color: #1e3a8a; text-decoration: underline;">Boletín Oficial de la República Argentina</a></p>',
+          'Copia ESTRICTAMENTE el siguiente formato editorial para cada normativa:',
+          '1. Agrupá por Organismo usando esta etiqueta: <h3 class="organismo-titulo" style="font-size: 13pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #000000; padding-bottom: 5px;">NOMBRE DEL ORGANISMO</h3>',
+          '2. NO USES LISTAS CON VIÑETAS. Usá estrictamente la siguiente estructura HTML.',
+          '3. Respetá este orden y estilo exacto:',
+          '   <div style="page-break-inside: avoid; margin-bottom: 25px;">',
+          '     <p style="margin: 0 0 5px 0; font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase;">COPIA AQUÍ LITERALMENTE EL CAMPO "NORMA_EXACTA"</p>',
+          '     <p style="margin: 0 0 8px 0; font-size: 11pt; font-weight: bold; color: #000000;">Breve título o asunto principal de la norma.</p>',
+          '     <p style="margin: 0 0 10px 0; font-size: 11pt; color: #222222; line-height: 1.5; text-align: justify;">Desarrollo corto y claro de la normativa en 1 o 2 párrafos.</p>',
+          '     <p style="margin: 0; font-size: 11pt; word-break: break-all;"><a href="ACÁ_VA_EL_ENLACE" style="color: #0563c1; text-decoration: underline;">ACÁ_VA_EL_ENLACE</a></p>',
+          '   </div>',
+          '4. PROHIBIDO: No incluyas fechas individuales, saludos, ni el título general. Arrancá directamente con el primer organismo.',
           'Devolvé exactamente un objeto JSON con esta clave: {"boletinCompleto":"html"}'
         ].join('\n'),      
       },
       { role: 'user',
-        content: `Título Principal: ${titulo}\nSubtítulo/Período: ${subtitulo}\n\nItems factuales a sintetizar y agrupar:\n${itemsCompactos}`,  
+        content: `Items factuales a sintetizar y agrupar:\n${itemsCompactos}`,  
       }, 
     ],
   };
@@ -484,9 +484,9 @@ exports.handler = async (event) => {
           
           // --- 2. PREVENCIÓN DE COLAPSO IA (Limitar tokens) ---
           const itemsCompactosParaGroq = finalState.textos.map((item) => {
-            // Tomamos estrictamente el inicio del texto para no saturar y que la IA no falle
             const primerParrafo = item.texto.split('\n').filter(l => l.length > 20)[0] || '';
-            return `Organismo: ${item.organismo}\nTítulo: ${item.titulo}\nDetalle: ${primerParrafo.substring(0, 450)}\n---`;
+            // Le cambiamos el nombre para que la IA entienda que NO es un título genérico
+            return `Organismo: ${item.organismo}\nNORMA_EXACTA: ${item.titulo}\nEnlace: ${item.url || ''}\nDetalle: ${primerParrafo.substring(0, 450)}\n---`;
           }).join('\n');
 
           let cuerpoEmailHtml = '';
