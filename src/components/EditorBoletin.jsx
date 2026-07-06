@@ -4,17 +4,20 @@ import 'react-quill-new/dist/quill.snow.css';
 import html2pdf from 'html2pdf.js';
 import { LOGO_CIFAS_BASE64, LOGO_CIFAS_URL } from '../utils/assets.js';
 import '../styles/EditorBoletin.css';
-const ESTRUCTURA_ORGANISMOS_BORA = [  
-  { id: 'min_economia', label: 'Ministerio de Economía', subtopicos: [{ id: 'eco_personal', label: 'Designaciones, Estructura Interna y Renuncias' }, { id: 'eco_subsidios', label: 'Transferencias de Partidas y Subsidios Provinciales' },{ id: 'eco_licitaciones', label: 'Licitaciones y Contratos Menores de Suministro' }]},
-  { id: 'arca_afip', label: 'ARCA (Ex-AFIP) y Dirección de Aduanas', subtopicos: [{ id: 'arca_personal', label: 'Cambios de Jefaturas y Funciones Internas' },{ id: 'arca_prorrogas', label: 'Prórrogas de Vencimientos Impositivos de Rutina' }]},
-  { id: 'min_capital_humano',label: 'Ministerio de Capital Humano', subtopicos: [{ id: 'ch_personal', label: 'Contrataciones y Altas de Personal' },{ id: 'ch_planes', label: 'Asignación de Fondos a Cooperativas y Planes Sociales' },{ id: 'ch_universidades', label: 'Convenios e Internas Universitarias' }]},
-  { id: 'bcra_cnv', label: 'Banco Central (BCRA) y CNV', subtopicos: [{ id: 'fin_comunicados', label: 'Circulares de Comunicación Interna y Rutina' },{ id: 'fin_sanciones', label: 'Sumarios Administrativos Menores a Entidades' }]},
-  { id: 'min_salud_anmat', label: 'Ministerio de Salud y ANMAT', subtopicos: [{ id: 'salud_compras', label: 'Compras de Insumos y Equipamiento Hospitalario' },{ id: 'salud_autorizaciones', label: 'Inscripciones de Rutina en el Registro de Medicamentos' }]},
-  { id: 'min_seguridad_justicia', label: 'Ministerios de Seguridad y Justicia', subtopicos: [{ id: 'seg_ascensos', label: 'Ascensos, Retiros y Movimientos de Fuerzas Federales' },{ id: 'seg_erratas', label: 'Fe de Erratas y Avisos Oficiales de Juzgados' }]}];
+
+const ESTRUCTURA_ORGANISMOS_BORA = [
+  { id: 'min_economia', label: 'Ministerio de Economía', subtopicos: [{ id: 'eco_personal', label: 'Designaciones, Estructura Interna y Renuncias' }, { id: 'eco_subsidios', label: 'Transferencias de Partidas y Subsidios Provinciales' }, { id: 'eco_licitaciones', label: 'Licitaciones y Contratos Menores de Suministro' }] },
+  { id: 'arca_afip', label: 'ARCA (Ex-AFIP) y Dirección de Aduanas', subtopicos: [{ id: 'arca_personal', label: 'Cambios de Jefaturas y Funciones Internas' }, { id: 'arca_prorrogas', label: 'Prórrogas de Vencimientos Impositivos de Rutina' }] },
+  { id: 'min_capital_humano', label: 'Ministerio de Capital Humano', subtopicos: [{ id: 'ch_personal', label: 'Contrataciones y Altas de Personal' }, { id: 'ch_planes', label: 'Asignación de Fondos a Cooperativas y Planes Sociales' }, { id: 'ch_universidades', label: 'Convenios e Internas Universitarias' }] },
+  { id: 'bcra_cnv', label: 'Banco Central (BCRA) y CNV', subtopicos: [{ id: 'fin_comunicados', label: 'Circulares de Comunicación Interna y Rutina' }, { id: 'fin_sanciones', label: 'Sumarios Administrativos Menores a Entidades' }] },
+  { id: 'min_salud_anmat', label: 'Ministerio de Salud y ANMAT', subtopicos: [{ id: 'salud_compras', label: 'Compras de Insumos y Equipamiento Hospitalario' }, { id: 'salud_autorizaciones', label: 'Inscripciones de Rutina en el Registro de Medicamentos' }] },
+  { id: 'min_seguridad_justicia', label: 'Ministerios de Seguridad y Justicia', subtopicos: [{ id: 'seg_ascensos', label: 'Ascensos, Retiros y Movimientos de Fuerzas Federales' }, { id: 'seg_erratas', label: 'Fe de Erratas y Avisos Oficiales de Juzgados' }] }
+];
+
 const EditorBoletin = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
-  const [boletinCompleto, setBoletinCompleto] = useState(''); 
+  const [boletinCompleto, setBoletinCompleto] = useState('');
   const [cargando, setCargando] = useState(false);
   const [generandoIA, setGenerandoIA] = useState(false);
   const [jurisdiccion, setJurisdiccion] = useState('nacional');
@@ -35,36 +38,56 @@ const EditorBoletin = ({ clientesDB }) => {
   const [paginaActual, setPaginaActual] = useState(1);
   const [itemsPorPagina, setItemsPorPagina] = useState(5);
   const [estadoGeneracion, setEstadoGeneracion] = useState('');
-  useEffect(() => {const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
-    setHistorial(historialGuardado);}, []);
-  useEffect(() => {const cerrarDesplegablesAfuera = () => setDropdownsAbiertos({});
+
+  useEffect(() => {
+    const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
+    setHistorial(historialGuardado);
+  }, []);
+
+  useEffect(() => {
+    const cerrarDesplegablesAfuera = () => setDropdownsAbiertos({});
     window.addEventListener('click', cerrarDesplegablesAfuera);
-    return () => window.removeEventListener('click', cerrarDesplegablesAfuera);}, []);
+    return () => window.removeEventListener('click', cerrarDesplegablesAfuera);
+  }, []);
+
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
   const destinatariosFiltrados = destinatarios.filter(c =>
     c.razonSocial?.toLowerCase().includes(busquedaDestinatario.toLowerCase()) ||
-    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase()));
+    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase())
+  );
+
   const historialFiltrado = historial.filter(item =>
-    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase()));
+    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase())
+  );
+
   const historialOrdenado = [...historialFiltrado].sort((a, b) => {
-    switch (ordenHistorial) {case 'recientes': return b.id - a.id;
+    switch (ordenHistorial) {
+      case 'recientes': return b.id - a.id;
       case 'antiguos': return a.id - b.id;
       case 'alfa-asc': return (a.asunto || '').localeCompare(b.asunto || '');
-      case 'alfa-desc': return (b.asunto || '').localeCompare(b.asunto || '');
-      default: return 0;}});
+      case 'alfa-desc': return (b.asunto || '').localeCompare(a.asunto || '');
+      default: return 0;
+    }
+  });
+
   const totalPaginas = Math.ceil(historialOrdenado.length / itemsPorPagina);
   const paginaValida = Math.min(paginaActual, totalPaginas || 1);
   const indiceInicial = (paginaValida - 1) * itemsPorPagina;
   const historialPaginado = historialOrdenado.slice(indiceInicial, indiceInicial + itemsPorPagina);
-  const obtenerRangoSemana = () => {    const hoy = new Date();
+
+  const obtenerRangoSemana = () => {
+    const hoy = new Date();
     const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
     const lunes = new Date(hoy);
     lunes.setDate(hoy.getDate() - (diaSemana - 1));
     const viernes = new Date(lunes);
     viernes.setDate(lunes.getDate() + 4);
     const formatoFecha = (fecha) => fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(viernes)}`;};
-  const obtenerFechasSemana = () => {    const fechas = [];
+    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(viernes)}`;
+  };
+
+  const obtenerFechasSemana = () => {
+    const fechas = [];
     const hoy = new Date();
     const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
     const lunes = new Date(hoy);
@@ -75,82 +98,125 @@ const EditorBoletin = ({ clientesDB }) => {
       const yyyy = fechaIteracion.getFullYear();
       const mm = String(fechaIteracion.getMonth() + 1).padStart(2, '0');
       const dd = String(fechaIteracion.getDate()).padStart(2, '0');
-      fechas.push(`${yyyy}${mm}${dd}`);} return fechas;};
-  const manejarToggleOrganismo = (orgId) => {if (organismosExcluidos.includes(orgId)) {setOrganismosExcluidos(organismosExcluidos.filter(id => id !== orgId));
-    } else {setOrganismosExcluidos([...organismosExcluidos, orgId]);
+      fechas.push(`${yyyy}${mm}${dd}`);
+    }
+    return fechas;
+  };
+
+  const manejarToggleOrganismo = (orgId) => {
+    if (organismosExcluidos.includes(orgId)) {
+      setOrganismosExcluidos(organismosExcluidos.filter(id => id !== orgId));
+    } else {
+      setOrganismosExcluidos([...organismosExcluidos, orgId]);
       const configOrg = ESTRUCTURA_ORGANISMOS_BORA.find(o => o.id === orgId);
       const subIds = configOrg.subtopicos.map(s => s.id);
       setSubtopicosExcluidos(subtopicosExcluidos.filter(id => !subIds.includes(id)));
-      setDropdownsAbiertos(prev => ({ ...prev, [orgId]: false }));}};
-  const manejarToggleSubtopico = (subId) => {    if (subtopicosExcluidos.includes(subId)) {setSubtopicosExcluidos(subtopicosExcluidos.filter(id => id !== subId));
-    } else {setSubtopicosExcluidos([...subtopicosExcluidos, subId]);}};
-  const toggleDropdown = (e, orgId) => {    e.stopPropagation(); 
-    setDropdownsAbiertos(prev => ({...Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
-      [orgId]: !prev[orgId]}));};
-
-const escapeHtml = (texto = '') => texto
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;');
-
-const formatearContenidoPdf = (contenido = '') => {
-  const textoPlano = String(contenido)
-    .replace(/\r\n/g, '\n')
-    .replace(/\\n/g, '\n')
-    .replace(/^\s*BOLETIN SEMANAL\s*\n+/i, '')
-    .replace(/^\s*Boletin Semanal\s*\n+/i, '')
-    .trim();
-
-  if (!textoPlano) return '<p style="margin: 0; line-height: 1.6; color: #334155;">Sin contenido para mostrar.</p>';
-
-  if (/<[a-z][\s\S]*>/i.test(textoPlano)) {
-    return textoPlano;
-  }
-
-  const lineas = textoPlano.split('\n').map((linea) => linea.trim()).filter(Boolean);
-  const partes = [];
-  let listaAbierta = false;
-
-  const cerrarLista = () => {
-    if (listaAbierta) {
-      partes.push('</ul>');
-      listaAbierta = false;
+      setDropdownsAbiertos(prev => ({ ...prev, [orgId]: false }));
     }
   };
 
-  lineas.forEach((linea) => {
-    if (/^#{1,3}\s+/.test(linea)) {
-      cerrarLista();
-      const nivel = linea.match(/^#{1,3}/)[0].length;
-      const texto = escapeHtml(linea.replace(/^#{1,3}\s+/, ''));
-      const tamanio = nivel === 1 ? '20px' : nivel === 2 ? '17px' : '15px';
-      partes.push(`<h${Math.min(nivel + 1, 4)} style="margin: 18px 0 8px 0; font-size: ${tamanio}; color: #0f172a; line-height: 1.25;">${texto}</h${Math.min(nivel + 1, 4)}>`);
-      return;
+  const manejarToggleSubtopico = (subId) => {
+    if (subtopicosExcluidos.includes(subId)) {
+      setSubtopicosExcluidos(subtopicosExcluidos.filter(id => id !== subId));
+    } else {
+      setSubtopicosExcluidos([...subtopicosExcluidos, subId]);
     }
+  };
 
-    if (/^[-*•]\s+/.test(linea)) {
-      if (!listaAbierta) {
-        partes.push('<ul style="margin: 10px 0 14px 0; padding-left: 20px;">');
-        listaAbierta = true;
+  const toggleDropdown = (e, orgId) => {
+    e.stopPropagation();
+    setDropdownsAbiertos(prev => ({
+      ...Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
+      [orgId]: !prev[orgId]
+    }));
+  };
+
+  const escapeHtml = (texto = '') => texto
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+  const formatearContenidoPdf = (contenido = '') => {
+    const textoPlano = String(contenido)
+      .replace(/\r\n/g, '\n')
+      .replace(/\\n/g, '\n')
+      .replace(/^\s*BOLETIN SEMANAL\s*\n+/i, '')
+      .replace(/^\s*Boletin Semanal\s*\n+/i, '')
+      .trim();
+    if (!textoPlano) return '<p style="margin: 0; line-height: 1.6; color: #334155;">Sin contenido para mostrar.</p>';
+    if (/<[a-z][\s\S]*>/i.test(textoPlano)) {
+      return textoPlano;
+    }
+    const lineas = textoPlano.split('\n').map((linea) => linea.trim()).filter(Boolean);
+    const partes = [];
+    let listaAbierta = false;
+    const cerrarLista = () => {
+      if (listaAbierta) {
+        partes.push('</ul>');
+        listaAbierta = false;
       }
-      partes.push(`<li style="margin: 0 0 8px 0; line-height: 1.55; color: #334155;">${escapeHtml(linea.replace(/^[-*•]\s+/, ''))}</li>`);
-      return;
-    }
-
+    };
+    lineas.forEach((linea) => {
+      if (/^#{1,3}\s+/.test(linea)) {
+        cerrarLista();
+        const nivel = linea.match(/^#{1,3}/)[0].length;
+        const texto = escapeHtml(linea.replace(/^#{1,3}\s+/, ''));
+        const tamanio = nivel === 1 ? '20px' : nivel === 2 ? '17px' : '15px';
+        partes.push(`<h${Math.min(nivel + 1, 4)} style="margin: 18px 0 8px 0; font-size: ${tamanio}; color: #0f172a; line-height: 1.25;">${texto}</h${Math.min(nivel + 1, 4)}>`);
+        return;
+      }
+      if (/^[-*•]\s+/.test(linea)) {
+        if (!listaAbierta) {
+          partes.push('<ul style="margin: 10px 0 14px 0; padding-left: 20px;">');
+          listaAbierta = true;
+        }
+        partes.push(`<li style="margin: 0 0 8px 0; line-height: 1.55; color: #334155;">${escapeHtml(linea.replace(/^[-*•]\s+/, ''))}</li>`);
+        return;
+      }
+      cerrarLista();
+      partes.push(`<p style="margin: 0 0 12px 0; line-height: 1.65; color: #334155;">${escapeHtml(linea)}</p>`);
+    });
     cerrarLista();
-    partes.push(`<p style="margin: 0 0 12px 0; line-height: 1.65; color: #334155;">${escapeHtml(linea)}</p>`);
-  });
+    return partes.join('');
+  };
 
-  cerrarLista();
-  return partes.join('');
-};
+  const compactarHtmlParaPdf = (contenido = '', maxSecciones = 5, maxParrafosPorBloque = 2) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div id="root">${contenido}</div>`, 'text/html');
+    const root = doc.getElementById('root');
+    if (!root) return contenido;
+    const titulo = root.querySelector('h2, h1');
+    const subtitulo = root.querySelector('p');
+    const secciones = Array.from(root.querySelectorAll('section, article'));
+    const piezas = [];
+    if (titulo) piezas.push(titulo.outerHTML);
+    if (subtitulo) piezas.push(subtitulo.outerHTML);
+    secciones.slice(0, maxSecciones).forEach((seccion) => {
+      const h = seccion.querySelector('h3, h4');
+      const bloques = Array.from(seccion.querySelectorAll('p, li')).slice(0, maxParrafosPorBloque);
+      const contenidoBloque = [h ? h.outerHTML : '']
+        .concat(bloques.map((nodo) => nodo.outerHTML))
+        .filter(Boolean)
+        .join('');
+      piezas.push(`<section style="margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">${contenidoBloque}</section>`);
+    });
+    return piezas.length > 0 ? piezas.join('') : contenido;
+  };
 
-const generarConIA = async () => {
+  const generarConIA = async () => {
     setGenerandoIA(true);
     setLogAuditoriaIA([]);
     const sessionId = Date.now().toString();
+
+    const formatearFechaVista = (fechaStr) => {
+      if (!fechaStr || fechaStr.length !== 8) return fechaStr;
+      const yyyy = fechaStr.slice(0, 4);
+      const mm = fechaStr.slice(4, 6);
+      const dd = fechaStr.slice(6, 8);
+      return `${dd}/${mm}/${yyyy}`;
+    };
 
     const etiquetasOrganismosExcluidos = ESTRUCTURA_ORGANISMOS_BORA
       .filter(o => organismosExcluidos.includes(o.id))
@@ -159,28 +225,24 @@ const generarConIA = async () => {
       .flatMap(o => o.subtopicos)
       .filter(s => subtopicosExcluidos.includes(s.id))
       .map(s => s.label);
-
+      
     try {
       setEstadoGeneracion("Calculando fechas y consultando fuentes...");
       const fechas = obtenerFechasSemana();
       let todosLosLinks = new Set();
-
       for (const fecha of fechas) {
-        setEstadoGeneracion(`Consultando índice BORA del ${fecha}...`);
+        setEstadoGeneracion(`Consultando índice BORA del ${formatearFechaVista(fecha)}...`);
         const urlBoletin = `https://www.boletinoficial.gob.ar/seccion/primera/${fecha}`;
-
         try {
           const res = await fetch('/.netlify/functions/generarBoletinIA', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'extraer_links', urlBoletin })
           });
-
           if (!res.ok) {
             console.warn(`[Frontend] Falló extracción para ${fecha} (HTTP ${res.status}). Omitiendo día.`);
-            continue; // Seguimos con la siguiente fecha en lugar de romper todo
+            continue;
           }
-
           const data = await res.json();
           if (data.links && data.links.length > 0) {
             data.links.forEach(link => todosLosLinks.add(link));
@@ -189,83 +251,64 @@ const generarConIA = async () => {
           console.error(`Error de conexión al extraer links para ${fecha}:`, e);
         }
       }
-
       const listaLinks = Array.from(todosLosLinks);
-
       if (listaLinks.length === 0) {
         alert("No se encontraron normativas en los días seleccionados. Probá otra fecha o revisá los filtros.");
         setGenerandoIA(false);
         setEstadoGeneracion("");
-        return; 
+        return;
       }
-
       setEstadoGeneracion(`Se encontraron aproximadamente ${listaLinks.length} avisos. Iniciando procesamiento...`);
-
       setEstadoGeneracion("Iniciando procesamiento de textos...");
       const resIniciar = await fetch('/.netlify/functions/generarBoletinIA', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'iniciar',
-          sessionId,
-          links: listaLinks,
-          organismosExcluidos: etiquetasOrganismosExcluidos,
-          subtopicosExcluidos: etiquetasSubtopicosExcluidos,
-          modoOrganismo,
-        }),
+        body: JSON.stringify({ action: 'iniciar', sessionId, links: listaLinks, organismosExcluidos: etiquetasOrganismosExcluidos, subtopicosExcluidos: etiquetasSubtopicosExcluidos, modoOrganismo }),
       });
-
       if (!resIniciar.ok) throw new Error(`No se pudo iniciar la sesión (HTTP ${resIniciar.status})`);
-
+      
       let procesando = true;
       let fallosSeguidos = 0;
       let iteracion = 0;
       const MAX_ITERACIONES = listaLinks.length + 10;
-
+      
       while (procesando) {
         iteracion++;
         if (iteracion > MAX_ITERACIONES) throw new Error("Se superó el límite de iteraciones de seguridad.");
-
         const res = await fetch('/.netlify/functions/generarBoletinIA', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'procesar_siguiente', sessionId }),
         });
-
         if (!res.ok) {
           fallosSeguidos++;
           if (fallosSeguidos >= 3) throw new Error(`El backend falló repetidamente (HTTP ${res.status}).`);
           await new Promise(r => setTimeout(r, 800));
           continue;
         }
-
         fallosSeguidos = 0;
         const data = await res.json();
-        
-        // Asumimos que el backend retorna 'continuar' o 'finalizado'
-        // Si el backend aún no está enviando 'finalizado', podemos chequear el progreso
         if (data.progress >= data.total) {
-            procesando = false;
+          procesando = false;
         } else {
-            setEstadoGeneracion(`Procesando normativa ${data.progress} de ${data.total}...`);
+          setEstadoGeneracion(`Procesando normativa ${data.progress} de ${data.total}...`);
         }
       }
-
+      
       setEstadoGeneracion("Consultando a la IA para el resumen final (Groq)...");
       const finalRes = await fetch('/.netlify/functions/generarBoletinIA', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'resumir', sessionId }),
       });
-
       const dataFinal = await finalRes.json();
       if (!finalRes.ok) throw new Error(dataFinal.error || "Error en la fase final de compilación");
-
+      
       setCuerpoHtml(dataFinal.resumenEmail);
       setBoletinCompleto(dataFinal.boletinCompleto);
       setTabActivo('resumen');
       if (dataFinal.fallidos?.length) setLogAuditoriaIA(dataFinal.fallidos);
-
+      
     } catch (error) {
       console.error(error);
       alert("Error crítico durante la generación: " + error.message);
@@ -275,106 +318,137 @@ const generarConIA = async () => {
     }
   };
 
-const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
+  const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
-    if (paraPdf) {return `
-        <div style="font-family: Arial, Helvetica, sans-serif; max-width: 760px; margin: 0 auto; padding: 0; background: #ffffff; color: #0f172a;">
+    if (paraPdf) {
+      // 1. Eliminamos el saludo, el borde, el sombreado y dejamos el flujo natural para que no colapse al cambiar de página
+      return `
+        <div style="font-family: Arial, Helvetica, sans-serif; color: #0f172a;">
           <style>
-            .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte h4, .evitar-corte strong {
-              page-break-inside: avoid !important;
-              break-inside: avoid !important;}
-            h1, h2, h3, h4 { page-break-after: avoid !important; }
+            .evitar-corte { page-break-inside: avoid !important; }
+            h1, h2, h3, h4, strong { page-break-after: avoid !important; }
             p, li { orphans: 2; widows: 2; }
             ul { margin-top: 5px; padding-left: 20px; }
-            li { font-size: 12px; margin-bottom: 6px; line-height: 1.5; color: #334155; }
+            li { font-size: 13px; margin-bottom: 8px; line-height: 1.5; color: #334155; }
           </style>
-          <div style="text-align: center; padding: 18px 20px 10px 20px;">
-            <img src="${logoSeleccionado}" width="132" style="display: inline-block;" />
+          
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="${logoSeleccionado}" width="140" style="display: inline-block;" />
           </div>
-          <div style="text-align: center; margin-bottom: 14px; padding: 0 20px;">
-            <h1 style="margin: 0; font-size: 22px; color: #0f172a; font-weight: 800; letter-spacing: 0.6px;">BOLETIN SEMANAL</h1>
-            <h2 style="margin: 4px 0 0 0; font-size: 13px; color: #64748b; font-weight: 500;">${obtenerRangoSemana()}</h2>
+          
+          <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">
+            <h1 style="margin: 0 0 6px 0; font-size: 20px; color: #0f172a; font-weight: bold; letter-spacing: 0.5px;">INFORME DE ACTUALIDAD NORMATIVA</h1>
+            <h2 style="margin: 0; font-size: 13px; color: #64748b; font-weight: 500;">${obtenerRangoSemana()}</h2>
           </div>
-          <div class="evitar-corte" style="background-color: #ffffff; margin: 0 20px 20px 20px; padding: 22px 22px 24px 22px; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);">
-            <p style="margin: 0 0 16px 0; font-size: 13px; color: #334155;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-            <div style="word-wrap: break-word; overflow-wrap: break-word; font-size: 12.5px; line-height: 1.65; color: #334155;">
-              ${formatearContenidoPdf(contenido)}
-            </div>
-            <p style="margin-bottom: 0; margin-top: 20px; font-size: 13px; color: #334155;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
+          
+          <div style="word-wrap: break-word; overflow-wrap: break-word; font-size: 13px; line-height: 1.6; color: #334155;">
+            ${formatearContenidoPdf(contenido)}
           </div>
-        </div>`;}
+        </div>`;
+    }
     const tablaCore = `
       <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
         <tr><td align="center" style="padding-bottom: 20px;"><img src="${logoSeleccionado}" width="154" style="display: block;" /></td></tr>
-        <tr><td align="center" style="padding-bottom: 10px;"><h1 style="margin: 0; font-size: 24px; color: #333;">BOLETIN SEMANAL</h1><h2 style="margin: 5px 0 20px 0; font-size: 16px; color: #666;">${obtenerRangoSemana()}</h2></td></tr>
+        <tr><td align="center" style="padding-bottom: 10px;"><h1 style="margin: 0; font-size: 24px; color: #333;">COMPILADO INFORMATIVO LEGAL</h1><h2 style="margin: 5px 0 20px 0; font-size: 16px; color: #666;">${obtenerRangoSemana()}</h2></td></tr>
         <tr><td bgcolor="#E2E2E2" style="padding: 30px; border-radius: 8px;">
           <p style="margin-top: 0;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
           <div style="line-height: 1.6; color: #222;">${contenido}</div>
           <p style="margin-bottom: 0; margin-top: 20px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
-        </td></tr>
-      </table>`;
+        </td></tr></table>`;
     return `
       <!DOCTYPE html>
       <html><head><meta charset="utf-8"></head>
       <body style="margin: 0; padding: 20px; background-color: #f4f4f4;">
-        ${tablaCore}</body></html>`;};
-  const manejarEnvio = async (e) => { e.preventDefault();
+        ${tablaCore}</body></html>`;
+  };
+
+  const manejarEnvio = async (e) => {
+    e.preventDefault();
     if (destinatarios.length === 0) return alert("No hay clientes habilitados.");
     if (!asunto.trim() || !cuerpoHtml) return alert("Por favor, completa el asunto y el mensaje.");
     setCargando(true);
-    try {for (const cliente of destinatarios) {
+    try {
+      for (const cliente of destinatarios) {
         setEnvioActual(prev => prev + 1);
         const htmlEmail = generarTemplateEmpresa(cuerpoHtml, cliente, false);
+        // Reemplaza las dos líneas anteriores por esta única línea:
         const htmlPdf = generarTemplateEmpresa(boletinCompleto || cuerpoHtml, cliente, true);
-        const opcionesPdf = {margin:[8, 8, 8, 8], filename: 'boletin.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 1, useCORS: true, letterRendering: false, scrollY: 0, windowWidth: 1100 }, jsPDF:{ unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css'] }};
+        const opcionesPdf = { 
+              margin: [10, 10, 10, 10], 
+              filename: 'boletin.pdf', 
+              // Subimos la calidad de imagen al 98%
+              image: { type: 'jpeg', quality: 0.98 }, 
+              // Restauramos la escala a 1 para que el texto sea completamente nítido
+              html2canvas: { scale: 1, useCORS: true, letterRendering: true, scrollY: 0, windowWidth: 1000 }, 
+              // Mantenemos compress en true para optimizar el peso sin perder calidad visual
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }, 
+              pagebreak: { mode: ['css', 'legacy'] } 
+            };
         const pdfBase64Uri = await html2pdf().set(opcionesPdf).from(htmlPdf).outputPdf('datauristring');
         const pdfBase64Limpio = pdfBase64Uri.split('base64,')[1];
         await fetch('/.netlify/functions/enviarBoletin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ asunto, destinatario: cliente.email, cuerpoHtml: htmlEmail, adjuntoPdf: pdfBase64Limpio }),});}
-      const nuevoRegistro = {id: Date.now(), fecha: new Date().toLocaleString('es-AR'), asunto, cuerpoHtml, boletinCompleto, clientes: destinatarios.map(c => c.razonSocial)};
+          body: JSON.stringify({ asunto, destinatario: cliente.email, cuerpoHtml: htmlEmail, adjuntoPdf: pdfBase64Limpio }),
+        });
+      }
+      const nuevoRegistro = { id: Date.now(), fecha: new Date().toLocaleString('es-AR'), asunto, cuerpoHtml, boletinCompleto, clientes: destinatarios.map(c => c.razonSocial) };
       const nuevoHistorial = [nuevoRegistro, ...historial];
       setHistorial(nuevoHistorial);
       localStorage.setItem('historial_boletines', JSON.stringify(nuevoHistorial));
       alert("Boletines enviados correctamente.");
-    } catch (error) {alert(`❌ Error: ${error.message}`);
-    } finally {setCargando(false);
-      setEnvioActual(0);}};
-  const borrarHistorial = () => { if (window.confirm("¿Seguro querés borrar el historial?")) {
+    } catch (error) {
+      alert(`❌ Error: ${error.message}`);
+    } finally {
+      setCargando(false);
+      setEnvioActual(0);
+    }
+  };
+
+  const borrarHistorial = () => {
+    if (window.confirm("¿Seguro querés borrar el historial?")) {
       localStorage.removeItem('historial_boletines');
       setHistorial([]);
-      setBoletinSeleccionado(null);}};
-  const cargarEnEditor = (boletin) => {setAsunto(boletin.asunto);
+      setBoletinSeleccionado(null);
+    }
+  };
+
+  const cargarEnEditor = (boletin) => {
+    setAsunto(boletin.asunto);
     setCuerpoHtml(boletin.cuerpoHtml);
     setBoletinCompleto(boletin.boletinCompleto || '');
-    setBoletinSeleccionado(null);};
-  return (<div className="eb-container">
+    setBoletinSeleccionado(null);
+  };
+
+  return (
+    <div className="eb-container">
       <h2>Centro de Despacho de Boletines</h2>
       <div className="eb-ia-section" style={{ background: '#f8fafc', padding: '12px 18px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>Compilado Semanal</span>
-              <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
+            <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                <input 
-                  type="radio" 
-                  checked={jurisdiccion === 'nacional'} 
-                  onChange={() => setJurisdiccion('nacional')} 
-                  style={{ marginRight: '4px' }}/> 
-                Nacional</label>
+                <input type="radio" checked={jurisdiccion === 'nacional'} onChange={() => setJurisdiccion('nacional')} style={{ marginRight: '4px' }} />
+                Nacional
+              </label>
               <label style={{ color: '#94a3b8', cursor: 'not-allowed', display: 'flex', alignItems: 'center' }}>
-                <input type="radio" disabled checked={jurisdiccion === 'provincial'} style={{ marginRight: '4px' }} /> 
-                Provincial</label></div></div>
+                <input type="radio" disabled checked={jurisdiccion === 'provincial'} style={{ marginRight: '4px' }} />
+                Provincial
+              </label>
+            </div>
+          </div>
           <button type="button"
             onClick={() => setMostrarFiltros(!mostrarFiltros)}
-            style={{background: '#ffffff', border: '1px solid #cbd5e1', padding: '5px 12px', borderRadius: '5px', fontSize: '12px', color: '#334155', cursor: 'pointer', fontWeight: '500', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'}}>
+            style={{ background: '#ffffff', border: '1px solid #cbd5e1', padding: '5px 12px', borderRadius: '5px', fontSize: '12px', color: '#334155', cursor: 'pointer', fontWeight: '500', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
             {mostrarFiltros ? 'Ocultar Filtros de Exclusión' : 'Configurar Exclusiones Avanzadas'}
-          </button></div>
+          </button>
+        </div>
         {mostrarFiltros && (
           <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
             <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
-              Seleccioná qué organismos o tópicos específicos querés que la IA ignore por completo:</p>
+              Seleccioná qué organismos o tópicos específicos querés que la IA ignore por completo:
+            </p>
             <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '12px', flexWrap: 'wrap' }}>
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input type="radio" checked={modoOrganismo === 'excluir'} onChange={() => setModoOrganismo('excluir')} />
@@ -398,127 +472,195 @@ const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
                   <div key={org.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                       <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', textDecoration: modoOrganismo === 'excluir' && estaOrgExcluido ? 'line-through' : 'none', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                        {org.label}</span>
+                        {org.label}
+                      </span>
                       <label style={{ fontSize: '11px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', fontWeight: '500' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={estaOrgExcluido} 
-                          onChange={() => manejarToggleOrganismo(org.id)}/>
-                        {modoOrganismo === 'incluir' ? 'Incluir' : 'Excluir'}</label></div>
+                        <input
+                          type="checkbox"
+                          checked={estaOrgExcluido}
+                          onChange={() => manejarToggleOrganismo(org.id)} />
+                        {modoOrganismo === 'incluir' ? 'Incluir' : 'Excluir'}
+                      </label>
+                    </div>
                     <div style={{ position: 'relative', width: '100%' }}>
                       <button type="button"
                         disabled={modoOrganismo === 'excluir' && estaOrgExcluido}
                         onClick={(e) => toggleDropdown(e, org.id)}
-                        style={{ width: '100%', padding: '5px 8px',  background: (modoOrganismo === 'excluir' && estaOrgExcluido) ? '#f8fafc' : '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', textAlign: 'left', fontSize: '11px', color: (modoOrganismo === 'excluir' && estaOrgExcluido) ? '#cbd5e1' : '#64748b', cursor: (modoOrganismo === 'excluir' && estaOrgExcluido) ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                        style={{ width: '100%', padding: '5px 8px', background: (modoOrganismo === 'excluir' && estaOrgExcluido) ? '#f8fafc' : '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', textAlign: 'left', fontSize: '11px', color: (modoOrganismo === 'excluir' && estaOrgExcluido) ? '#cbd5e1' : '#64748b', cursor: (modoOrganismo === 'excluir' && estaOrgExcluido) ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>{textoDesplegable}</span>
                         <span style={{ fontSize: '9px', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▼</span>
                       </button>
                       {isOpen && !(modoOrganismo === 'excluir' && estaOrgExcluido) && (
-                        <div 
+                        <div
                           onClick={(e) => e.stopPropagation()}
-                          style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '4px', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', zIndex: 100, marginTop: '2px', maxHeight: '140px', overflowY: 'auto', padding: '4px 0'}}>
-                          {org.subtopicos.map(sub => {const estaSubOmitido = subtopicosExcluidos.includes(sub.id);
+                          style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '4px', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', zIndex: 100, marginTop: '2px', maxHeight: '140px', overflowY: 'auto', padding: '4px 0' }}>
+                          {org.subtopicos.map(sub => {
+                            const estaSubOmitido = subtopicosExcluidos.includes(sub.id);
                             return (
                               <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', backgroundColor: estaSubOmitido ? '#fffbeb' : 'transparent' }}>
-                                <input type="checkbox" 
-                                  checked={estaSubOmitido} 
+                                <input type="checkbox"
+                                  checked={estaSubOmitido}
                                   onChange={() => manejarToggleSubtopico(sub.id)} />
                                 <span style={{ color: estaSubOmitido ? '#b45309' : '#475569' }}>Omitir: {sub.label}</span>
-                              </label>);})}</div>)}</div></div>);})}</div></div>)}
-      <button type="button" 
-          onClick={generarConIA} 
-          disabled={generandoIA} 
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        <button type="button"
+          onClick={generarConIA}
+          disabled={generandoIA}
           className="eb-btn-generar-ia"
-          style={{ width: '100%', padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: generandoIA ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '12px', fontSize: '13px' }}   >
+          style={{ width: '100%', padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: generandoIA ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '12px', fontSize: '13px' }}>
           {generandoIA ? estadoGeneracion : 'Generar Compilado de la Semana (Retroactivo)'}
-        </button></div>
+        </button>
+      </div>
+
       <form onSubmit={manejarEnvio} className="eb-form">
         <input type="text"
           value={asunto}
           onChange={(e) => setAsunto(e.target.value)}
           placeholder="Asunto del boletín..."
-          className="eb-input-asunto"/>
+          className="eb-input-asunto" />
         <div className="eb-destinatarios-bar">
           <button type="button"
-            onClick={() => {setBusquedaDestinatario(''); setVerDestinatariosModal(true);}}
-            className="eb-btn-destinatarios">Destinatarios actuales ({destinatarios.length})</button>
-        </div><div className="eb-tabs-container">
+            onClick={() => { setBusquedaDestinatario(''); setVerDestinatariosModal(true); }}
+            className="eb-btn-destinatarios">
+            Destinatarios actuales ({destinatarios.length})
+          </button>
+        </div>
+        <div className="eb-tabs-container">
           <div className="eb-tabs-header">
             <button type="button"
               onClick={() => setTabActivo('resumen')}
-              className={`eb-tab-button ${tabActivo === 'resumen' ? 'eb-tab-button--active' : ''}`} >
-              Resumen para el Email</button>
+              className={`eb-tab-button ${tabActivo === 'resumen' ? 'eb-tab-button--active' : ''}`}>
+              Resumen para el Email
+            </button>
             <button type="button"
               onClick={() => setTabActivo('completo')}
               disabled={!boletinCompleto}
               className={`eb-tab-button ${tabActivo === 'completo' ? 'eb-tab-button--active' : ''} ${!boletinCompleto ? 'eb-tab-button--disabled' : ''}`}>
-              Detalle para el PDF { !boletinCompleto && '(Generá con IA primero)' }
-            </button></div><div className="eb-tab-content">
+              Detalle para el PDF {!boletinCompleto && '(Generá con IA primero)'}
+            </button>
+          </div>
+          <div className="eb-tab-content">
             <div className={`eb-tab-panel ${tabActivo === 'resumen' ? '' : 'eb-tab-panel--hidden'}`}>
-              <ReactQuill theme="snow" value={cuerpoHtml} onChange={setCuerpoHtml} className="eb-quill-editor" /> </div>
+              <ReactQuill theme="snow" value={cuerpoHtml} onChange={setCuerpoHtml} className="eb-quill-editor" />
+            </div>
             <div className={`eb-tab-panel ${tabActivo === 'completo' ? '' : 'eb-tab-panel--hidden'}`}>
-              <ReactQuill theme="snow" value={boletinCompleto} onChange={setBoletinCompleto} className="eb-quill-editor" /> </div></div></div>
+              <ReactQuill theme="snow" value={boletinCompleto} onChange={setBoletinCompleto} className="eb-quill-editor" />
+            </div>
+          </div>
+        </div>
+
         <button type="submit" disabled={cargando} className="eb-btn-submit">
-          {cargando ? `Enviando (${envioActual}/${destinatarios.length})...` : 'Enviar Boletines'} </button>
-      </form> {verDestinatariosModal && (
+          {cargando ? `Enviando (${envioActual}/${destinatarios.length})...` : 'Enviar Boletines'}
+        </button>
+      </form>
+
+      {verDestinatariosModal && (
         <div className="eb-modal-overlay">
           <div className="eb-modal-box">
-            <div className="eb-modal-header"><div>
+            <div className="eb-modal-header">
+              <div>
                 <h4 className="eb-modal-title">Lista de Destinatarios Activos</h4>
-                <p className="eb-modal-subtitle">Clientes que recibirán este boletín</p></div>
+                <p className="eb-modal-subtitle">Clientes que recibirán este boletín</p>
+              </div>
               <button type="button" onClick={() => setVerDestinatariosModal(false)} className="eb-modal-close-btn">&times;</button>
-            </div> <div className="eb-modal-search-bar">
-              <input type="text" 
-                value={busquedaDestinatario} 
+            </div>
+            <div className="eb-modal-search-bar">
+              <input type="text"
+                value={busquedaDestinatario}
                 onChange={(e) => setBusquedaDestinatario(e.target.value)}
                 placeholder="Buscar por Empresa o Email..."
-                className="eb-input-busqueda"/></div>
+                className="eb-input-busqueda" />
+            </div>
             <div className="eb-modal-list">
-              {destinatariosFiltrados.length > 0 ? (destinatariosFiltrados.map((cli) => (<div key={cli.id || cli.email} className="eb-destinatario-item">
+              {destinatariosFiltrados.length > 0 ? (
+                destinatariosFiltrados.map((cli) => (
+                  <div key={cli.id || cli.email} className="eb-destinatario-item">
                     <span className="eb-destinatario-nombre">{cli.razonSocial}</span>
                     <span className="eb-destinatario-email">{cli.email}</span>
-                  </div>))) : (<div className="eb-empty-state">No se encontraron destinatarios activos.</div>)}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="eb-empty-state">No se encontraron destinatarios activos.</div>
+              )}
+            </div>
             <div className="eb-modal-footer">
               <button type="button" onClick={() => setVerDestinatariosModal(false)} className="eb-btn-entendido">Entendido</button>
-            </div></div></div>)}
-      {historial.length > 0 && ( <div className="eb-historial-section">
+            </div>
+          </div>
+        </div>
+      )}
+
+      {historial.length > 0 && (
+        <div className="eb-historial-section">
           <div className="eb-historial-header">
             <h3 className="eb-historial-title">Historial de Boletines Enviados</h3>
-            <button type="button" onClick={borrarHistorial} className="eb-btn-borrar-historial">Borrar Historial</button></div>
+            <button type="button" onClick={borrarHistorial} className="eb-btn-borrar-historial">Borrar Historial</button>
+          </div>
           <div className="eb-historial-filtros">
             <div className="eb-filtro-input-wrapper">
               <input type="text"
                 value={filtroHistorial}
-                onChange={(e) => { setFiltroHistorial(e.target.value);
-                  setPaginaActual(1);}}
+                onChange={(e) => {
+                  setFiltroHistorial(e.target.value);
+                  setPaginaActual(1);
+                }}
                 placeholder="Filtrar historial por asunto..."
-                className="eb-input-filtro"/></div>
+                className="eb-input-filtro" />
+            </div>
             <div className="eb-orden-controls">
               <label className="eb-orden-label">Ordenar por:</label>
               <select value={ordenHistorial}
-                onChange={(e) => { setOrdenHistorial(e.target.value);
-                  setPaginaActual(1);}}
-                className="eb-select-orden"              >
+                onChange={(e) => {
+                  setOrdenHistorial(e.target.value);
+                  setPaginaActual(1);
+                }}
+                className="eb-select-orden">
                 <option value="recientes">Más recientes primero</option>
                 <option value="antiguos">Más antiguos primero</option>
                 <option value="alfa-asc">Asunto (A-Z)</option>
-                <option value="alfa-desc">Asunto (Z-A)</option></select>
+                <option value="alfa-desc">Asunto (Z-A)</option>
+              </select>
               <select value={itemsPorPagina}
-                onChange={(e) => {setItemsPorPagina(Number(e.target.value));
-                  setPaginaActual(1);}} className="eb-select-items-pagina">
+                onChange={(e) => {
+                  setItemsPorPagina(Number(e.target.value));
+                  setPaginaActual(1);
+                }} className="eb-select-items-pagina">
                 <option value={5}>Ver 5</option>
                 <option value={10}>Ver 10</option>
                 <option value={20}>Ver 20</option>
-              </select> </div></div>
+              </select>
+            </div>
+          </div>
           <div className="eb-historial-list">
-            {historialPaginado.length > 0 ? (historialPaginado.map((item, index) => (<div key={item.id}
+            {historialPaginado.length > 0 ? (
+              historialPaginado.map((item, index) => (
+                <div key={item.id}
                   onClick={() => setBoletinSeleccionado(item)}
                   className={`eb-historial-item ${index === historialPaginado.length - 1 ? 'eb-historial-item--last' : ''}`}>
                   <span className="eb-historial-item-asunto">{item.asunto}</span>
                   <span className="eb-historial-item-fecha">{item.fecha}</span>
-                </div>))) : (<div className="eb-historial-empty"> No se encontraron boletines en el historial.</div>)}</div>{totalPaginas > 1 && (<div className="eb-paginacion-bar">
+                </div>
+              ))
+            ) : (
+              <div className="eb-historial-empty">No se encontraron boletines en el historial.</div>
+            )}
+          </div>
+          {totalPaginas > 1 && (
+            <div className="eb-paginacion-bar">
               <span className="eb-paginacion-info">
-                Mostrando página <strong>{paginaValida}</strong> de <strong>{totalPaginas}</strong> ({historialFiltrado.length} resultados)</span>
+                Mostrando página <strong>{paginaValida}</strong> de <strong>{totalPaginas}</strong> ({historialFiltrado.length} resultados)
+              </span>
               <div className="eb-paginacion-buttons">
                 <button type="button"
                   disabled={paginaValida === 1}
@@ -527,20 +669,52 @@ const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
                 <button type="button"
                   disabled={paginaValida === totalPaginas}
                   onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
-                  className={`eb-btn-paginacion ${paginaValida === totalPaginas ? 'eb-btn-paginacion--disabled' : ''}`}>Siguiente</button></div></div>)}</div>)}
-      {boletinSeleccionado && (<div className="eb-modal-overlay eb-modal-overlay--detail">
-          <div className="eb-modal-box eb-modal-box--large"><div className="eb-modal-header eb-modal-header--detail"><div className="eb-modal-title-wrapper">
+                  className={`eb-btn-paginacion ${paginaValida === totalPaginas ? 'eb-btn-paginacion--disabled' : ''}`}>Siguiente</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {boletinSeleccionado && (
+        <div className="eb-modal-overlay eb-modal-overlay--detail">
+          <div className="eb-modal-box eb-modal-box--large">
+            <div className="eb-modal-header eb-modal-header--detail">
+              <div className="eb-modal-title-wrapper">
                 <h3 className="eb-modal-detail-title">{boletinSeleccionado.asunto}</h3>
                 <span className="eb-modal-detail-fecha">Enviado el: {boletinSeleccionado.fecha}</span>
-                {boletinSeleccionado.clientes && boletinSeleccionado.clientes.length > 0 && (<div className="eb-modal-detail-destinatarios"><strong className="eb-modal-detail-destinatarios-label">Destinatarios en ese momento:</strong>
-                    <div className="eb-chips-container">{boletinSeleccionado.clientes.map((cli, idx) => (<span key={idx} className="eb-chip">{cli}</span>))} </div></div>)} </div>
+                {boletinSeleccionado.clientes && boletinSeleccionado.clientes.length > 0 && (
+                  <div className="eb-modal-detail-destinatarios">
+                    <strong className="eb-modal-detail-destinatarios-label">Destinatarios en ese momento:</strong>
+                    <div className="eb-chips-container">
+                      {boletinSeleccionado.clientes.map((cli, idx) => (<span key={idx} className="eb-chip">{cli}</span>))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <button type="button" onClick={() => setBoletinSeleccionado(null)} className="eb-modal-close-btn--large">&times;</button>
-            </div><div className="eb-modal-detail-body"><div className="eb-content-card"><h5 className="eb-content-card-title--email">Cuerpo del Email Enviado:</h5>
-                <div dangerouslySetInnerHTML={{ __html: boletinSeleccionado.cuerpoHtml }} /></div>{boletinSeleccionado.boletinCompleto && (<div className="eb-content-card">
+            </div>
+            <div className="eb-modal-detail-body">
+              <div className="eb-content-card">
+                <h5 className="eb-content-card-title--email">Cuerpo del Email Enviado:</h5>
+                <div dangerouslySetInnerHTML={{ __html: boletinSeleccionado.cuerpoHtml }} />
+              </div>
+              {boletinSeleccionado.boletinCompleto && (
+                <div className="eb-content-card">
                   <h5 className="eb-content-card-title--pdf">Contenido del PDF Adjunto:</h5>
                   <div dangerouslySetInnerHTML={{ __html: boletinSeleccionado.boletinCompleto }} />
-                </div>)}</div>
-            <div className="eb-modal-detail-footer"><button type="button" onClick={() => setBoletinSeleccionado(null)} className="eb-btn-cerrar">Cerrar</button>
+                </div>
+              )}
+            </div>
+            <div className="eb-modal-detail-footer">
+              <button type="button" onClick={() => setBoletinSeleccionado(null)} className="eb-btn-cerrar">Cerrar</button>
               <button type="button" onClick={() => cargarEnEditor(boletinSeleccionado)} className="eb-btn-cargar-editor">Cargar en Editor</button>
-            </div></div></div>)}</div>);};
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default EditorBoletin;
