@@ -6,6 +6,13 @@ const DEFAULT_HEADERS = {
   'accept-language': 'es-AR,es;q=0.9,en;q=0.8',
 };
 
+// --- PALABRAS CLAVE ESTRATÉGICAS ---
+const PALABRAS_CLAVE_ESTRATEGICAS = [
+  'INGRESOS BRUTOS', 'GANADERÍA', 'INDUSTRIAS', 'INDUSTRIA FRIGORÍFICA', 
+  'IMPUESTOS', 'PLANES DE PAGO', 'CODIGO FISCAL', 'LEY IMPOSITIVA', 
+  'LEY TRIBUTARIA', 'ALICUOTAS'
+];
+
 const ORGANISMO_ALIASES = {
   'Ministerio de Economía': ['Economía', 'Min. de Economía', 'Ministro de Economía', 'MEC'],
   'ARCA (Ex-AFIP) y Dirección de Aduanas': ['ARCA', 'AFIP', 'Aduana', 'Aduanas', 'Administración Federal de Ingresos Públicos'],
@@ -46,8 +53,6 @@ const normalizarComparacion = (texto = '') => normalizarTexto(texto)
 
 const recortarTexto = (texto = '', max = 5000) => normalizarTexto(texto).slice(0, max);
 
-const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const buscarCoincidencia = (texto = '', filtros = []) => {
   const base = normalizarComparacion(texto);
   return filtros.some((filtro) => {
@@ -76,7 +81,7 @@ const extraerFechaPublicacion = (texto = '', url = '') => {
     const raw = matchUrl[1];
     return `${raw.slice(6, 8)}/${raw.slice(4, 6)}/${raw.slice(0, 4)}`;  
   }
-  return '';
+  return new Date().toLocaleDateString('es-AR');
 };
 
 const tomarFragmentos = (texto = '', cantidad = 4) => {
@@ -88,7 +93,7 @@ const tomarFragmentos = (texto = '', cantidad = 4) => {
 };
 
 const limpiarTituloPresentacion = (titulo = '') => titulo
-  .replace(/^b[uú]squeda:\s*/i, '') // Limpia "Búsqueda: " al inicio
+  .replace(/^b[uú]squeda:\s*/i, '')
   .replace(/\bResoluciones?\s+Sintetizadas?\b/i, 'Resolución')
   .replace(/\bResoluciones?\s+Generales?\b/i, 'Resolución General')
   .replace(/\bAprobación\.?$/i, '')
@@ -116,12 +121,6 @@ const construirHtmlListado = (items = [], titulo, subtitulo, opciones = {}) => {
       <p style="margin: 0 0 18px 0; font-size: 13px; color: #4b5563;">${subtitulo}</p>
       ${bloques || '<p>No se extrajeron items para este boletín.</p>'}
     </div>`;
-};
-
-const extraerTextoDesdeHtml = (html = '') => {
-  const $ = cheerio.load(html);
-  $('script, style, noscript').remove();
-  return normalizarTexto($.text());
 };
 
 const acotarHtmlResumenEmail = (html = '') => {
@@ -162,28 +161,7 @@ const acotarHtmlResumenEmail = (html = '') => {
   return permitidos.join('');
 };
 
-const limpiarHtmlParaPdf = (contenido = '') => {
-  const texto = String(contenido || '').trim();
-  if (!texto) return '<p>Sin contenido para mostrar.</p>';
-  if (/<[a-z][\s\S]*>/i.test(texto)) {
-    const $ = cheerio.load(texto, { decodeEntities: false });
-    $('script, style, noscript').remove();
-    $('h1').each((_, el) => {
-      const textoTitulo = $(el).text().trim();
-      if (textoTitulo.toLowerCase() === 'boletin semanal') {
-        $(el).remove();      
-      }    
-    });
-    const htmlLimpio = $.html();
-    return htmlLimpio && htmlLimpio.trim() ? htmlLimpio : '<p>Sin contenido para mostrar.</p>';  
-  }
-  return '<p>Sin contenido para mostrar.</p>';
-};
-
-// PASO 4 — Factual Fallback Estructural Mejorado (Sin IA)
 const construirHtmlFactualFallback = (items = [], titulo, subtitulo) => {
-  console.log("DEBUG - Entrando a construirHtmlFactualFallback. Cantidad items:", items.length);
-
   const agrupados = items.reduce((acc, item) => {
     const clave = item.organismo || 'Otros Organismos';
     if (!acc[clave]) acc[clave] = [];
@@ -193,10 +171,6 @@ const construirHtmlFactualFallback = (items = [], titulo, subtitulo) => {
 
   const secciones = Object.entries(agrupados).map(([organismo, lista]) => {
     const bloques = lista.map((item) => {
-      // DEBUG: Verificamos qué estamos procesando
-      console.log(`DEBUG - Procesando item: ${item.titulo}, texto largo: ${item.texto ? item.texto.length : 0}`);
-
-      // BLINDAJE: Si no existe tomarFragmentos o falla, evitamos que rompa todo
       let primerParrafo = "Sin descripción disponible.";
       try {
         if (typeof tomarFragmentos === 'function') {
@@ -206,7 +180,6 @@ const construirHtmlFactualFallback = (items = [], titulo, subtitulo) => {
       } catch (e) {
         console.error("Error en tomarFragmentos:", e);
       }
-
       return `
         <li style="margin-bottom: 10px; line-height: 1.5; color: #334155;">
           <strong style="color: #1e3a8a;">${limpiarTituloPresentacion(item.titulo)}:</strong> ${primerParrafo}
@@ -276,6 +249,7 @@ const invocarGroqResumenEmail = async (textoBase, titulo, subtitulo) => {
   return invocarGroqConReintentos(payload);
 };
 
+// --- PROMPT BLINDADO CON PROTECCIONES DE FORMATO Y PALABRAS CLAVE ---
 const invocarGroqBoletinCompleto = async (itemsCompactos, titulo, subtitulo) => {
   const payload = {
     model: 'llama-3.3-70b-versatile',
@@ -285,17 +259,20 @@ const invocarGroqBoletinCompleto = async (itemsCompactos, titulo, subtitulo) => 
       { role: 'system',
         content: [
           'Sos un editor legal senior encargado de confeccionar un informe ejecutivo semanal corporativo.',
-          'Copia ESTRICTAMENTE el siguiente formato editorial para cada normativa:',
-          '1. Agrupá por Organismo usando esta etiqueta: <h3 class="organismo-titulo" style="font-size: 13pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #000000; padding-bottom: 5px;">NOMBRE DEL ORGANISMO</h3>',
-          '2. NO USES LISTAS CON VIÑETAS. Usá estrictamente la siguiente estructura HTML.',
-          '3. Respetá este orden y estilo exacto:',
+          `PALABRAS CLAVE PRIORITARIAS: ${PALABRAS_CLAVE_ESTRATEGICAS.join(', ')}.`,
+          'REGLA 1: Si una normativa contiene alguna de estas palabras clave, DALE PRIORIDAD ABSOLUTA y extrae los datos duros vinculados a esos temas.',
+          'REGLA 2: Si la norma pertenece a una provincia (ej: "SANTA FE" o "ENTRE RÍOS"), NO la mezcles con organismos nacionales. Agrupá todas las normas provinciales al final bajo este único título: <h3 class="organismo-titulo" style="font-size: 13pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #000000; padding-bottom: 5px;">PROVINCIAS</h3>',
+          'REEMPLAZA las variables entre llaves con la información solicitada respetando estrictamente este formato HTML:',
+          '1. Agrupá por Organismo usando este título (Excepto provincias): <h3 class="organismo-titulo" style="font-size: 13pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #000000; padding-bottom: 5px;">NOMBRE DEL ORGANISMO</h3>',
+          '2. NO USES LISTAS CON VIÑETAS.',
+          '3. Estructura exacta por norma:',
           '   <div style="page-break-inside: avoid; margin-bottom: 25px;">',
-          '     <p style="margin: 0 0 5px 0; font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase;">COPIA AQUÍ LITERALMENTE EL CAMPO "NORMA_EXACTA"</p>',
-          '     <p style="margin: 0 0 8px 0; font-size: 11pt; font-weight: bold; color: #000000;">Breve título o asunto principal de la norma.</p>',
-          '     <p style="margin: 0 0 10px 0; font-size: 11pt; color: #222222; line-height: 1.5; text-align: justify;">Desarrollo corto y claro de la normativa en 1 o 2 párrafos.</p>',
-          '     <p style="margin: 0; font-size: 11pt; word-break: break-all;"><a href="ACÁ_VA_EL_ENLACE" style="color: #0563c1; text-decoration: underline;">ACÁ_VA_EL_ENLACE</a></p>',
+          '     <p style="margin: 0 0 5px 0; font-size: 11pt; font-weight: bold; color: #000000; text-transform: uppercase;">{{NORMA_EXACTA}}</p>',
+          '     <p style="margin: 0 0 8px 0; font-size: 11pt; font-weight: bold; color: #000000;">{{TÍTULO_O_ASUNTO_BREVE}}</p>',
+          '     <p style="margin: 0 0 10px 0; font-size: 11pt; color: #222222; line-height: 1.5; text-align: justify;">{{RESUMEN_CON_DATOS_DUROS_FECHAS_Y_MONTOS}}</p>',
+          '     <p style="margin: 0; font-size: 11pt; word-break: break-all;"><a href="{{ENLACE}}" style="color: #0563c1; text-decoration: underline;">{{ENLACE}}</a></p>',
           '   </div>',
-          '4. PROHIBIDO: No incluyas fechas individuales, saludos, ni el título general. Arrancá directamente con el primer organismo.',
+          '4. PROHIBIDO: No incluyas fechas individuales, saludos, ni el título general.',
           'Devolvé exactamente un objeto JSON con esta clave: {"boletinCompleto":"html"}'
         ].join('\n'),      
       },
@@ -315,28 +292,17 @@ const obtenerHtml = async (url) => {
   return response.text();
 };
   
-// PASO 1 Y 2 — Limpieza quirúrgica de extracción y corte de boilerplate legal
 const extraerDatosDetalle = (html, url = '') => {
   const $ = cheerio.load(html);
-
-  // 1. LIMPIEZA DEL DOM: Eliminamos etiquetas que contienen código, estilos o basura técnica
   $('style, script, noscript, svg, link, meta, head').remove();
-
-  // 2. Extracción del encabezado (Organismo)
   const encabezado = $('h1').first().text().trim() || 'Organismo no especificado';
-
-  // 3. Extracción y limpieza del cuerpo
-  // Utilizamos normalizarTexto (de tu archivo generarBoletinIA_4.js)
   let textoCompleto = normalizarTexto($('body').text())
-    // Filtro de seguridad: si alguna regla CSS quedó como texto plano, la borramos
     .replace(/table\s*\{[\s\S]*?\}/gi, '')
     .replace(/table\s*tr\s*td\s*\{[\s\S]*?\}/gi, '')
     .replace(/[ \t]+/g, ' '); 
 
   const indiceInicio = textoCompleto.indexOf(encabezado);
   let cuerpo = indiceInicio !== -1 ? textoCompleto.slice(indiceInicio + encabezado.length) : textoCompleto;
-
-  // 4. Corte de marcadores de pie de página
   const marcadoresFin = ['fecha de publicación', 'compartir por email', 'biblioteca de normativas'];
   let indiceFin = cuerpo.length;
   const cuerpoMin = cuerpo.toLowerCase();
@@ -346,7 +312,6 @@ const extraerDatosDetalle = (html, url = '') => {
   });
   cuerpo = cuerpo.slice(0, indiceFin).trim();
 
-  // 5. Identificación del título de la norma
   const tituloPagina = ($('meta[property="og:title"]').attr('content') || $('title').text() || '').trim();
   let tituloNorma = '';
   if (tituloPagina) {
@@ -359,7 +324,6 @@ const extraerDatosDetalle = (html, url = '') => {
     }
   }
 
-  // Si no encontramos título en el meta, lo buscamos en el cuerpo
   if (!tituloNorma) {
     const matchIdentificador = cuerpo.match(
       /(Resoluci[oó]n(?:\s+General)?\s*N?[°ºo]?\.?\s*[\d/\-A-Z]+|Disposici[oó]n\s*N?[°ºo]?\.?\s*[\d/\-A-Z]+|Decreto\s*N?[°ºo]?\.?\s*[\d/\-A-Z]+|Comunicaci[oó]n\s*[“"]?[A-Z][”"]?\s*[\d/]+|RESOL-[\w-]+)/i
@@ -367,7 +331,6 @@ const extraerDatosDetalle = (html, url = '') => {
     tituloNorma = matchIdentificador ? matchIdentificador[0].trim() : '';
   }
 
-  // 6. Corte en anclas legales (cierre de texto)
   const anclasCorteLegal = [
     "contra la medida dispuesta",
     "son oponibles los siguientes recursos",
@@ -386,7 +349,6 @@ const extraerDatosDetalle = (html, url = '') => {
     }
   }
 
-  // 7. Retorno de datos
   const fechaPublicacion = extraerFechaPublicacion(textoCompleto, url);
   const contenidoInicial = recortarTexto(textoLimpio, 1800);
 
@@ -398,6 +360,114 @@ const extraerDatosDetalle = (html, url = '') => {
     fechaPublicacion,
   };
 };
+
+// ==========================================
+// --- MÓDULOS DE SCRAPING PROVINCIAL ---
+// ==========================================
+
+const scrapeSantaFe = async () => {
+  console.log("Iniciando scraping de Boletín Oficial de Santa Fe...");
+  const resultados = [];
+  try {
+    const urlBase = 'https://www.santafe.gob.ar/boletinoficial/';
+    const html = await obtenerHtml(urlBase);
+    const $ = cheerio.load(html);
+
+    const linksNormativas = [];
+    // TODO: Si ves que no entra ninguna norma de Santa Fe, acá hay que ajustar el 'a[href]' 
+    // al selector CSS real donde están los links de los decretos diarios.
+    $('a').each((i, el) => {
+      const href = $(el).attr('href');
+      if (href && (href.toLowerCase().includes('normativa') || href.toLowerCase().includes('detalle') || href.toLowerCase().includes('pdf'))) {
+        const urlCompleta = href.startsWith('http') ? href : new URL(href, urlBase).toString();
+        linksNormativas.push(urlCompleta);
+      }
+    });
+
+    // Filtramos duplicados y nos limitamos a los 5 primeros links para no saturar Netlify (time-out)
+    const linksAProcesar = [...new Set(linksNormativas)].slice(0, 5);
+
+    for (const link of linksAProcesar) {
+      try {
+        const htmlDetalle = await obtenerHtml(link);
+        const $det = cheerio.load(htmlDetalle);
+        
+        // Removemos basura
+        $det('style, script, nav, footer, header').remove();
+        const textoNorma = normalizarTexto($det('body').text());
+        const tituloNorma = $det('h1, h2').first().text().trim() || 'Norma Provincial';
+
+        // Solo agregamos si hay texto sustancial
+        if (textoNorma.length > 50) {
+          resultados.push({
+            organismo: 'PROVINCIA DE SANTA FE',
+            titulo: tituloNorma,
+            texto: recortarTexto(textoNorma, 4000), 
+            url: link,
+            fechaPublicacion: new Date().toLocaleDateString('es-AR') 
+          });
+        }
+      } catch (errDetalle) {
+        console.error(`Omitiendo link de Santa Fe ${link}:`, errDetalle.message);
+      }
+    }
+  } catch (error) {
+    console.error("Error global en scraping Santa Fe:", error.message);
+  }
+  return resultados;
+};
+
+const scrapeEntreRios = async () => {
+  console.log("Iniciando scraping de Boletín Oficial de Entre Ríos...");
+  const resultados = [];
+  try {
+    const urlBase = 'https://portal.entrerios.gov.ar/gobernacion/imprenta/pf/consulta/7948';
+    const html = await obtenerHtml(urlBase);
+    const $ = cheerio.load(html);
+
+    const linksNormativas = [];
+    // TODO: Ajustar selector CSS en caso de que Entre Ríos maneje los links en una tabla específica (ej: 'table tr a')
+    $('a').each((i, el) => {
+      const href = $(el).attr('href');
+      if (href && (href.toLowerCase().includes('decreto') || href.toLowerCase().includes('resolucion') || href.toLowerCase().includes('descargar'))) {
+        const urlCompleta = href.startsWith('http') ? href : new URL(href, 'https://portal.entrerios.gov.ar').toString();
+        linksNormativas.push(urlCompleta);
+      }
+    });
+
+    const linksAProcesar = [...new Set(linksNormativas)].slice(0, 5);
+
+    for (const link of linksAProcesar) {
+      try {
+        const htmlDetalle = await obtenerHtml(link);
+        const $det = cheerio.load(htmlDetalle);
+        
+        $det('style, script, nav, footer, header').remove();
+        const textoNorma = normalizarTexto($det('body').text());
+        const tituloNorma = $det('h1, h2, h3').first().text().trim() || 'Normativa de Entre Ríos';
+
+        if (textoNorma.length > 50) {
+          resultados.push({
+            organismo: 'PROVINCIA DE ENTRE RÍOS',
+            titulo: tituloNorma,
+            texto: recortarTexto(textoNorma, 4000), 
+            url: link,
+            fechaPublicacion: new Date().toLocaleDateString('es-AR') 
+          });
+        }
+      } catch (errDetalle) {
+        console.error(`Omitiendo link de Entre Ríos ${link}:`, errDetalle.message);
+      }
+    }
+  } catch (error) {
+    console.error("Error global en scraping Entre Ríos:", error.message);
+  }
+  return resultados;
+};
+
+// ==========================================
+// --- HANDLER PRINCIPAL ---
+// ==========================================
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
@@ -420,6 +490,7 @@ exports.handler = async (event) => {
       });
       return { statusCode: 200, body: JSON.stringify({ links: [...new Set(links)] }) };    
     }
+    
     if (!sessionId) {
       return { statusCode: 400, body: JSON.stringify({ error: "Falta sessionId" }) };    
     }
@@ -427,24 +498,31 @@ exports.handler = async (event) => {
     switch (action) {
       case 'iniciar':
         sesiones[sessionId] = {
-          links: body.links,
+          links: body.links || [],
           index: 0,
           textos: [],
           fallidos: [],
           omitidos: [],
           organismosExcluidos: expandirFiltrosConAlias(body.organismosExcluidos || [], ORGANISMO_ALIASES),
           subtopicosExcluidos: expandirFiltrosConAlias(body.subtopicosExcluidos || [], SUBTOPICO_ALIASES),
-          modoOrganismo: body.modoOrganismo || 'excluir',        
+          modoOrganismo: body.modoOrganismo || 'excluir',
+          incluirSantaFe: body.incluirSantaFe || false,
+          incluirEntreRios: body.incluirEntreRios || false,
         };
         return { statusCode: 200, body: JSON.stringify({ status: 'ok' }) };
         
       case 'procesar_siguiente':
         const state = sesiones[sessionId];
         if (!state) return { statusCode: 400, body: JSON.stringify({ error: "Sesión no encontrada (el servidor se reinició)" }) };
+        
+        if (!state.links || state.links.length === 0) {
+          return { statusCode: 200, body: JSON.stringify({ progress: 1, total: 1, omitidos: 0 }) };
+        }
+
         while (state.index < state.links.length) {
           const targetUrl = state.links[state.index];
           const htmlDetalle = await obtenerHtml(targetUrl);
-          const { organismo, titulo, texto, textoInicial, fechaPublicacion } = extraerDatosDetalle(htmlDetalle, targetUrl); // <-- pasa url y usa fechaPublicacion del return
+          const { organismo, titulo, texto, textoInicial, fechaPublicacion } = extraerDatosDetalle(htmlDetalle, targetUrl);
           const organismoCoincide = buscarCoincidencia(organismo, state.organismosExcluidos);
           const organismoPermitido = state.modoOrganismo === 'incluir' ? organismoCoincide : !organismoCoincide;
           const textoSubtopico = `${titulo} ${textoInicial}`;
@@ -459,40 +537,56 @@ exports.handler = async (event) => {
         }
         return { statusCode: 200, body: JSON.stringify({ progress: state.index, total: state.links.length, omitidos: state.omitidos.length }) };
         
-  case 'resumir':
+      case 'resumir':
           const finalState = sesiones[sessionId];
           if (!finalState) return { statusCode: 400, body: JSON.stringify({ error: "Sesión expirada" }) };
 
-          // --- 1. LIMPIEZA DE DATOS (CON EL BUG CORREGIDO) ---
-          finalState.textos = finalState.textos.map(item => ({
+          // --- INYECCIÓN DE PROVINCIAS ---
+          // Se disparan en paralelo para ahorrar tiempo antes de ir a Groq
+          if (finalState.incluirSantaFe || finalState.incluirEntreRios) {
+            const promesasProvinciales = [];
+            if (finalState.incluirSantaFe) promesasProvinciales.push(scrapeSantaFe());
+            if (finalState.incluirEntreRios) promesasProvinciales.push(scrapeEntreRios());
+            
+            const resultadosProvinciales = await Promise.all(promesasProvinciales);
+            
+            resultadosProvinciales.forEach(noticias => {
+              finalState.textos = [...finalState.textos, ...noticias];
+            });
+          }
+
+          // --- LIMPIEZA DE DATOS Y PROTECCIÓN ANTI-DUPLICADOS ---
+          let textosLimpios = finalState.textos.map(item => ({
             ...item,
             organismo: item.organismo.replace(/^Búsqueda:\s*/gi, '').trim(),
             titulo: item.titulo.replace(/^Búsqueda:\s*/gi, '').trim(),
-            // Usamos [ \t]+ para no destruir los Enter (\n)
             texto: item.texto.replace(/table\s*tr\s*td\s*\{[\s\S]*?\}/gi, '').replace(/[ \t]+/g, ' ').trim() 
           }));
-          // --- FIN DE LIMPIEZA ---
+
+          const titulosUnicos = new Set();
+          finalState.textos = textosLimpios.filter(item => {
+            if (titulosUnicos.has(item.titulo)) return false;
+            titulosUnicos.add(item.titulo);
+            return true;
+          });
 
           const rango = finalState.textos.length
             ? `${finalState.textos[0].fechaPublicacion || ''} - ${finalState.textos[finalState.textos.length - 1].fechaPublicacion || ''}`.replace(/^[\s-]+|[\s-]+$/g, '')
             : '';
           const tituloBase = 'BOLETIN SEMANAL';
-          const subtituloBase = rango ? `Período: ${rango}` : 'Compilado generado desde el Boletín Oficial de la República Argentina';
+          const subtituloBase = rango ? `Período: ${rango}` : 'Compilado generado desde fuentes oficiales';
 
-          // Estructura de respaldo manual (Ahora armará 1 párrafo corto porque cuidamos los \n)
           const fallbackEstructural = construirHtmlFactualFallback(finalState.textos, tituloBase, subtituloBase);
           
-          // --- 2. PREVENCIÓN DE COLAPSO IA (Limitar tokens) ---
+          // --- LÍMITE DE 800 CARACTERES ANTI-COLAPSO DE IA ---
           const itemsCompactosParaGroq = finalState.textos.map((item) => {
-            const primerParrafo = item.texto.split('\n').filter(l => l.length > 20)[0] || '';
-            // Le cambiamos el nombre para que la IA entienda que NO es un título genérico
-            return `Organismo: ${item.organismo}\nNORMA_EXACTA: ${item.titulo}\nEnlace: ${item.url || ''}\nDetalle: ${primerParrafo.substring(0, 450)}\n---`;
+            const textoLimpio = item.texto.replace(/\n+/g, '\n').trim();
+            return `Organismo: ${item.organismo}\nNORMA_EXACTA: ${item.titulo}\nEnlace: ${item.url || ''}\nDetalle: ${textoLimpio.substring(0, 800)}\n---`;
           }).join('\n');
 
           let cuerpoEmailHtml = '';
           let cuerpoPdfHtml = '';
 
-          // --- 3. GENERAR EL EMAIL CORTO ---
           try {
             const resultadoEmail = await invocarGroqResumenEmail(itemsCompactosParaGroq, tituloBase, subtituloBase);
             cuerpoEmailHtml = resultadoEmail?.resumenEmail || resultadoEmail;
@@ -501,7 +595,6 @@ exports.handler = async (event) => {
             cuerpoEmailHtml = fallbackEstructural.resumenEmail;
           }
 
-          // --- 4. GENERAR EL RESUMEN EJECUTIVO PARA EL PDF ---
           try {
             const resultadoPdf = await invocarGroqBoletinCompleto(itemsCompactosParaGroq, tituloBase, subtituloBase);
             cuerpoPdfHtml = resultadoPdf?.boletinCompleto || resultadoPdf;
@@ -517,7 +610,6 @@ exports.handler = async (event) => {
             boletinCompleto: cuerpoPdfHtml,
           };
 
-          // Aplicación de estilos inline al Email
           if (resultadoFinal.resumenEmail && typeof resultadoFinal.resumenEmail === 'string') {
             resultadoFinal.resumenEmail = resultadoFinal.resumenEmail.replace(
               '<div style="font-family: Arial, Helvetica, sans-serif; color: #111827;">',

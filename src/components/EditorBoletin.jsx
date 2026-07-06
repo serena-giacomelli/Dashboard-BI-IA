@@ -461,10 +461,10 @@ const EditorBoletin = ({ clientesDB }) => {
             <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
               <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                 <input type="radio" checked={jurisdiccion === 'nacional'} onChange={() => setJurisdiccion('nacional')} style={{ marginRight: '4px' }} />
-                Nacional
+                Nacional (BORA)
               </label>
-              <label style={{ color: '#94a3b8', cursor: 'not-allowed', display: 'flex', alignItems: 'center' }}>
-                <input type="radio" disabled checked={jurisdiccion === 'provincial'} style={{ marginRight: '4px' }} />
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <input type="radio" checked={jurisdiccion === 'provincial'} onChange={() => setJurisdiccion('provincial')} style={{ marginRight: '4px' }} />
                 Provincial
               </label>
             </div>
@@ -472,10 +472,31 @@ const EditorBoletin = ({ clientesDB }) => {
           <button type="button"
             onClick={() => setMostrarFiltros(!mostrarFiltros)}
             style={{ background: '#ffffff', border: '1px solid #cbd5e1', padding: '5px 12px', borderRadius: '5px', fontSize: '12px', color: '#334155', cursor: 'pointer', fontWeight: '500', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-            {mostrarFiltros ? 'Ocultar Filtros de Exclusión' : 'Configurar Exclusiones Avanzadas'}
+            {mostrarFiltros ? 'Ocultar Filtros / Provincias' : 'Configurar Inclusiones y Exclusiones'}
           </button>
         </div>
-        {mostrarFiltros && (
+
+        {/* --- LÓGICA VISUAL: MUESTRA PROVINCIAS SOLO SI ESTÁ EN "PROVINCIAL" --- */}
+        {mostrarFiltros && jurisdiccion === 'provincial' && (
+          <div style={{ marginTop: '15px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
+            <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
+              Seleccioná qué boletines provinciales querés incluir en el reporte:
+            </p>
+            <div style={{ display: 'flex', gap: '20px', fontSize: '12px', color: '#334155' }}>
+                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input type="checkbox" checked={incluirSantaFe} onChange={(e) => setIncluirSantaFe(e.target.checked)} />
+                  Boletín Oficial - Santa Fe
+                </label>
+                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input type="checkbox" checked={incluirEntreRios} onChange={(e) => setIncluirEntreRios(e.target.checked)} />
+                  Boletín Oficial - Entre Ríos
+                </label>
+            </div>
+          </div>
+        )}
+
+        {/* --- LÓGICA VISUAL: MUESTRA FILTROS BORA SOLO SI ESTÁ EN "NACIONAL" --- */}
+        {mostrarFiltros && jurisdiccion === 'nacional' && (
           <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
             <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
               Seleccioná qué organismos o tópicos específicos querés que la IA ignore por completo:
