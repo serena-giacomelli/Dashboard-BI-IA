@@ -76,6 +76,20 @@ const extraerFechaPublicacion = (texto = '', url = '') => {
   return new Date().toLocaleDateString('es-AR');
 };
 
+const obtenerFechasSemana = () => {
+  const fechas = [];
+  const hoy = new Date();
+  const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
+  const lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() - (diaSemana - 1));
+  for (let i = 0; i < Math.min(diaSemana, 5); i++) {
+    const fechaIteracion = new Date(lunes);
+    fechaIteracion.setDate(lunes.getDate() + i);
+    fechas.push(fechaIteracion);
+  }
+  return fechas;
+};
+
 const tomarFragmentos = (texto = '', cantidad = 4) => {
   return texto.split('\n')
     .map(linea => linea.trim())
@@ -322,40 +336,96 @@ const obtenerPdfTexto = async (url) => {
   const response = await fetch(url, { headers: DEFAULT_HEADERS });
   if (!response.ok) throw new Error(`No se pudo obtener PDF ${url} (HTTP ${response.status})`);
   const arrayBuffer = await response.arrayBuffer();
-  const data = await pdfParse(Buffer.from(arrayBuffer));
-  return data.text;
+  const bufferData = Buffer.isBuffer(arrayBuffer) ? arrayBuffer : Buffer.from(arrayBuffer);
+  let parseFunc;
+  if (typeof pdfParse === 'function') {
+    parseFunc = pdfParse;
+  } else if (pdfParse && typeof pdfParse.PDFParse === 'function') {
+    parseFunc = pdfParse.PDFParse;
+  } else if (pdfParse && typeof pdfParse.default === 'function') {
+    parseFunc = pdfParse.default;
+  } else {
+    throw new Error("Estructura de pdf-parse no reconocida tras el empaquetado.");
+  }
+
+  let data;
+  try {
+    data = await parseFunc(bufferData);
+  } catch (err) {
+    // Intento 2: Si protesta porque requiere 'new', lo instanciamos como clase
+    if (err.message.includes("without 'new'") || err instanceof TypeError) {
+      const instancia = new parseFunc(bufferData);
+      
+      if (instancia && typeof instancia.then === 'function') {
+        data = await instancia;
+      } else if (instancia && typeof instancia.parse === 'function') {
+        data = await instancia.parse();
+      } else {
+        data = instancia;
+      }
+    } else {
+      throw err;
+    }
+  }
+
+  if (data && typeof data.text === 'string') return data.text;
+  if (typeof data === 'string') return data;
+  return "";
 };
 
 const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLabel = '') => {
-  const regexSeccion = /\+\s*([A-ZÁÉÍÓÚÑ0-9º°.,\s]{4,60}?)\s*\+/g;
-  const marcas = [];
-  let match;
-  while ((match = regexSeccion.exec(textoPdf)) !== null) {
-    marcas.push({ titulo: match[1].trim(), fin: regexSeccion.lastIndex });
-  }
-  const secciones = marcas.length
-    ? marcas.map((m, i) => ({
-        seccion: m.titulo,
-        texto: textoPdf.slice(m.fin, i + 1 < marcas.length ? marcas[i + 1].fin - (marcas[i + 1].titulo.length + 2) : textoPdf.length),
-      }))
-    : [{ seccion: 'Novedades del día', texto: textoPdf }];
-
+  // 1. Limpiamos los saltos de línea rotos típicos de la extracción de PDFs
+  const textoLimpio = textoPdf.replace(/\s+/g, ' '); 
   const items = [];
-  secciones.forEach(({ seccion, texto }) => {
-    const partes = texto.split(/_{10,}/).map((p) => normalizarTexto(p)).filter((p) => p.length > 60);
-    partes.forEach((parte) => {
-      const lineas = parte.split('\n').map((l) => l.trim()).filter(Boolean);
-      const posibleTitulo = lineas.find((l) => l.length > 8 && l.length < 140) || lineas[0] || seccion;
-      items.push({
-        organismo: `Provincia de ${provinciaLabel} — ${seccion}`,
-        titulo: limpiarTituloPresentacion(posibleTitulo),
-        texto: recortarTexto(parte, 4000),
-        textoInicial: recortarTexto(parte, 1800),
-        fechaPublicacion: new Date().toLocaleDateString('es-AR'),
-        url: urlOrigen,
-      });
-    });
+  const textoMayus = textoLimpio.toUpperCase();
+  const coincidencias = [];
+
+  // 2. Escaneamos TODO el PDF (sin recortar nada) buscando las palabras clave
+  PALABRAS_CLAVES_PROVINCIALES.forEach(clave => {
+    const claveMayus = clave.toUpperCase();
+    let index = textoMayus.indexOf(claveMayus);
+    while (index !== -1) {
+      coincidencias.push({ clave: claveMayus, index });
+      // Buscamos si la misma palabra aparece más adelante
+      index = textoMayus.indexOf(claveMayus, index + claveMayus.length);
+    }
   });
+
+  // Si el PDF entero no tiene ninguna palabra clave, no devolvemos nada
+  if (coincidencias.length === 0) return items;
+
+  // 3. Agrupamos las coincidencias cercanas para no mandar texto duplicado a la IA
+  coincidencias.sort((a, b) => a.index - b.index);
+  const ventanas = [];
+  coincidencias.forEach(c => {
+     // Extraemos 1000 caracteres antes del hallazgo y 3500 después
+     const inicio = Math.max(0, c.index - 1000); 
+     const fin = Math.min(textoLimpio.length, c.index + 3500); 
+     
+     if (ventanas.length > 0 && inicio < ventanas[ventanas.length - 1].fin) {
+        // Si se superponen, unificamos la ventana
+        ventanas[ventanas.length - 1].fin = Math.max(ventanas[ventanas.length - 1].fin, fin);
+        if (!ventanas[ventanas.length - 1].clavePrincipal.includes(c.clave)) {
+            ventanas[ventanas.length - 1].clavePrincipal += ` / ${c.clave}`;
+        }
+     } else {
+        ventanas.push({ inicio, fin, clavePrincipal: c.clave });
+     }
+  });
+
+  // 4. Construimos los fragmentos garantizados con información útil
+  ventanas.forEach((v, i) => {
+     const fragmento = textoLimpio.substring(v.inicio, v.fin);
+     items.push({
+       organismo: `Boletín Oficial — ${provinciaLabel}`,
+       titulo: `Normativa vinculada a: ${v.clavePrincipal}`,
+       texto: fragmento,
+       textoInicial: fragmento.substring(0, 1800),
+       fechaPublicacion: new Date().toLocaleDateString('es-AR'),
+       url: urlOrigen
+     });
+  });
+
   return items;
 };
   
@@ -453,26 +523,61 @@ exports.handler = async (event) => {
       const { jurisdiccion, provinciasActivas, urlBoletin } = body;
       let links = [];
 
-      if (jurisdiccion === 'provincial') {
-        const fuentesProvincias = [
-          { nombre: 'Santa Fe', activo: provinciasActivas?.santaFe, urlBase: 'https://www.santafe.gob.ar/boletinoficial/', urlConsulta: 'https://www.santafe.gob.ar/boletinoficial/', filtro: (href) => /norma|boletin/i.test(href) },
-          { nombre: 'Entre Ríos', activo: provinciasActivas?.entreRios, urlBase: 'https://portal.entrerios.gov.ar', urlConsulta: 'https://portal.entrerios.gov.ar/gobernacion/imprenta/pf/consulta/7948', filtro: (href) => /descarga|pdf/i.test(href) }
-        ];
+    if (jurisdiccion === 'provincial') {
+        const fechasSemana = obtenerFechasSemana(); // Obtiene los días de Lunes a Hoy (Viernes max)
+        const promesasScraping = [];
 
-        for (const prov of fuentesProvincias) {
-          if (!prov.activo) continue;
-          try {
-            const html = await obtenerHtml(prov.urlConsulta);
-            const $ = cheerio.load(html);
-            $('a[href]').each((i, el) => {
-              const href = $(el).attr('href');
-              if (esLinkValido(href)) {
-                const fullUrl = resolverUrl(href, prov.urlBase);
-                if (fullUrl && prov.filtro(fullUrl) && !links.includes(fullUrl)) links.push(fullUrl);
-              }
-            });
-          } catch (e) { console.error(`Falla extrayendo ${prov.nombre}:`, e.message); }
-        }
+        fechasSemana.forEach(fechaObj => {
+          const dd = String(fechaObj.getDate()).padStart(2, '0');
+          const mm = String(fechaObj.getMonth() + 1).padStart(2, '0');
+          const yyyy = fechaObj.getFullYear();
+
+          // BÚSQUEDA SANTA FE: Estrictamente por URL de fecha
+          if (provinciasActivas?.santaFe) {
+            promesasScraping.push((async () => {
+              // Construimos la URL exacta con el patrón: YYYY/MM/BO[DD][MM][YYYY].pdf
+              const urlDirectaPdf = `https://www.santafe.gob.ar/boletinoficial/verPdf.php?archivo=recursos/boletines/pdf/${yyyy}/${mm}/BO${dd}${mm}${yyyy}.pdf`;
+              try {
+                // Hacemos un 'pizzazo' (HEAD) para ver si el PDF de este día ya está publicado
+                const resHead = await fetch(urlDirectaPdf, { method: 'HEAD', headers: DEFAULT_HEADERS });
+                if (resHead.ok && !links.includes(urlDirectaPdf)) {
+                   links.push(urlDirectaPdf);
+                }
+              } catch(e) { console.error(`[Santa Fe] Falla extrayendo ${dd}-${mm}:`, e.message); }
+            })());
+          }
+
+          // BÚSQUEDA ENTRE RÍOS: Estrictamente por parámetro de fecha
+          if (provinciasActivas?.entreRios) {
+            promesasScraping.push((async () => {
+              try {
+                // Forzamos al portal a devolver solo los resultados de este día iterado
+                const urlConsulta = `https://portal.entrerios.gov.ar/gobernacion/imprenta/pf/consulta/7948?fecha=${yyyy}-${mm}-${dd}`;
+                let html = await obtenerHtml(urlConsulta);
+                
+                // Fallback de ScrapingBee por si el firewall bloquea la petición
+                if (!html || html.includes('Access Denied')) {
+                   const sbUrl = `https://app.scrapingbee.com/api/v1/?api_key=${process.env.SCRAPINGBEE_API_KEY}&url=${encodeURIComponent(urlConsulta)}&render_js=false`;
+                   const resSb = await fetch(sbUrl);
+                   if (resSb.ok) html = await resSb.text();
+                }
+                
+                const $ = cheerio.load(html || '');
+                // Si la fecha tiene resultados, extraemos su PDF
+                $('a[href]').each((i, el) => {
+                  const href = $(el).attr('href');
+                  if (esLinkValido(href) && (/descarga/i.test(href) || href.endsWith('.pdf'))) {
+                    const fullUrl = resolverUrl(href, 'https://portal.entrerios.gov.ar');
+                    if (fullUrl && !links.includes(fullUrl)) links.push(fullUrl);
+                  }
+                });
+              } catch(e) { console.error(`[Entre Ríos] Falla extrayendo ${dd}-${mm}:`, e.message); }
+            })());
+          }
+        });
+
+        // Ejecutamos la búsqueda de todos los días de la semana en paralelo
+        await Promise.all(promesasScraping);
       } else {
         try {
           const html = await obtenerHtml(urlBoletin);
@@ -531,10 +636,15 @@ exports.handler = async (event) => {
             const itemsExtraidos = extraerNormasDePdfProvincial(textoPdf, targetUrl, provinciaLabel);
             itemsExtraidos.forEach((item) => {
               const textoMayus = `${item.titulo} ${item.texto}`.toUpperCase();
-              let debeOmitirse = false;
-              if (stateProc.palabrasClaves && stateProc.palabrasClaves.length > 0) {
-                 const contienePalabraClave = stateProc.palabrasClaves.some(clave => textoMayus.includes(clave.toUpperCase()));
-                 if (!contienePalabraClave) debeOmitirse = true;
+              let debeOmitirse = true; // Por defecto omitimos
+              
+              // Filtrado estricto: Debe coincidir con alguna palabra clave de la constante estática
+              const contienePalabraClave = PALABRAS_CLAVES_PROVINCIALES.some(clave => 
+                 textoMayus.includes(clave.toUpperCase())
+              );
+
+              if (contienePalabraClave) {
+                 debeOmitirse = false;
               }
 
               if (debeOmitirse) {
@@ -663,10 +773,11 @@ exports.handler = async (event) => {
           // FIX D: Encabezado para la sección provincial
           if (orgsProvinciales.length > 0) {
               cuerpoPdfHtml += `
-                <div style="margin: 40px 0 15px 0; text-align: center;">
-                  <h2 style="margin:0; font-size:16pt; text-transform:uppercase; color:#000; border-top:2px solid #000; border-bottom:2px solid #000; padding:10px 0;">Novedades Provinciales</h2>
-                </div>`;
-              for (const org of orgsProvinciales) cuerpoPdfHtml += await procesarOrganismo(org);
+                <h2 style="color: #0f172a; margin-top: 10px; border-bottom: 3px solid #334155; padding-bottom: 8px; font-size: 18px;">NORMATIVAS PROVINCIALES</h2>
+              `;
+              for (const org of orgsProvinciales) {
+                cuerpoPdfHtml += await procesarOrganismo(org);
+              }
           }
 
           if (cuerpoPdfHtml === '') cuerpoPdfHtml = fallbackEstructural.boletinCompleto;
