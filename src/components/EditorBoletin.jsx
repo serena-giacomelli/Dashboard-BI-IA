@@ -50,6 +50,7 @@ const EditorBoletin = ({ clientesDB }) => {
   const [itemsPorPagina, setItemsPorPagina] = useState(5);
   const [estadoGeneracion, setEstadoGeneracion] = useState('');
   const abortarGeneracion = useRef(false);
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
     const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
@@ -233,8 +234,8 @@ const generarConIA = async () => {
       return alert("Debes seleccionar al menos una fuente de boletines para generar el compilado.");
     }
     
-    // Reseteamos el estado de cancelación al iniciar
     abortarGeneracion.current = false; 
+    abortControllerRef.current = new AbortController();
     setGenerandoIA(true);
     const sessionId = Date.now().toString();
 
@@ -261,8 +262,9 @@ const generarConIA = async () => {
              const res = await fetch('/.netlify/functions/generarBoletinIA', {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({ action: 'extraer_links', jurisdiccion: 'nacional', urlBoletin })
-             });
+               body: JSON.stringify({ action: 'extraer_links', jurisdiccion: 'nacional', urlBoletin }),
+               signal: abortControllerRef.current.signal
+              });
              if (res.ok) {
                 const data = await res.json();
                 if (data.links) data.links.forEach(link => todosLosLinks.add(link));
@@ -283,7 +285,8 @@ const generarConIA = async () => {
                     action: 'extraer_links', 
                     jurisdiccion: 'provincial', 
                     provinciasActivas: { santaFe: incluirSantaFe, entreRios: incluirEntreRios }
-                })
+                }),
+                signal: abortControllerRef.current.signal
              });
              if (resProv.ok) {
                 const dataProv = await resProv.json();
@@ -315,6 +318,7 @@ const generarConIA = async () => {
             modoOrganismo,
             palabrasClaves: palabrasSeleccionadas
         }),
+        signal: abortControllerRef.current.signal 
       });
       if (!resIniciar.ok) throw new Error(`No se pudo iniciar la sesión.`);
       
@@ -352,6 +356,7 @@ const generarConIA = async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'resumir', sessionId }),
+        signal: abortControllerRef.current.signal
       });
       const dataFinal = await finalRes.json();
       if (!finalRes.ok) throw new Error(dataFinal.error || "Error en la fase final de la IA");
@@ -360,10 +365,9 @@ const generarConIA = async () => {
       setBoletinCompleto(dataFinal.boletinCompleto);
       setTabActivo('resumen');
       
-    } catch (error) {
-      if (error.message === "CANCELADO_POR_USUARIO") {
+} catch (error) {
+      if (error.name === 'AbortError' || error.message === "CANCELADO_POR_USUARIO") {
         console.log("Generación cancelada por el usuario.");
-        // No mostramos el alert feo, solo actualizamos el estado
       } else {
         console.error(error);
         alert("Error crítico durante la generación: " + error.message);
@@ -372,7 +376,6 @@ const generarConIA = async () => {
       setGenerandoIA(false);
       if (abortarGeneracion.current) {
         setEstadoGeneracion("Generación cancelada.");
-        // Borramos el texto después de 3 segundos para limpiar la UI
         setTimeout(() => setEstadoGeneracion(""), 3000); 
       } else {
         setEstadoGeneracion("");
@@ -494,6 +497,7 @@ const generarConIA = async () => {
     setBoletinSeleccionado(null);
   };
 
+  // === AQUÍ EMPIEZA LA INTERFAZ ===
   return (
     <div className="eb-container">
       <h2>Centro de Despacho de Boletines</h2>
@@ -510,7 +514,6 @@ const generarConIA = async () => {
 
       {mostrarFiltros && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
-            
             {/* TARJETA 1: FUENTES */}
             <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
               <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>1. Fuentes a Consultar</h4>
@@ -632,28 +635,35 @@ const generarConIA = async () => {
           style={{ width: '100%', padding: '12px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: generandoIA ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '15px', fontSize: '16px', letterSpacing: '0.5px' }}>
           {generandoIA ? estadoGeneracion : 'Generar compilado semanal'}
         </button>
-        {generandoIA && (
-            <button type="button"
-              onClick={() => abortarGeneracion.current = true}
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                transition: 'background 0.2s',
-                textAlign: 'center',
-                marginTop: '10px',
-              }}
-              onMouseOver={(e) => e.target.style.background = '#dc2626'}
-              onMouseOut={(e) => e.target.style.background = '#ef4444'}
-            >Cancelar
-            </button>
-          )}
+      {generandoIA && (
+        <button type="button"
+          onClick={() => {
+            abortarGeneracion.current = true;
+            setEstadoGeneracion("Cancelando generación..."); 
+            if (abortControllerRef.current) {
+              abortControllerRef.current.abort(); 
+            }
+          }}
+          style={{
+            width: '100%',
+            padding: '12px',
+            background: '#ef4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            transition: 'background 0.2s',
+            textAlign: 'center',
+            marginTop: '10px',
+          }}
+          onMouseOver={(e) => e.target.style.background = '#dc2626'}
+          onMouseOut={(e) => e.target.style.background = '#ef4444'}
+        >
+          Cancelar
+        </button>
+      )}
       </div>
 
       <form onSubmit={manejarEnvio} className="eb-form">
@@ -664,7 +674,7 @@ const generarConIA = async () => {
         <div className="eb-tabs-container">
           <div className="eb-tabs-header">
             <button type="button" onClick={() => setTabActivo('resumen')} className={`eb-tab-button ${tabActivo === 'resumen' ? 'eb-tab-button--active' : ''}`}>Resumen para el Email</button>
-            <button type="button" onClick={() => setTabActivo('completo')} disabled={!boletinCompleto} className={`eb-tab-button ${tabActivo === 'completo' ? 'eb-tab-button--active' : ''}`}>Detalle para el PDF</button>
+            <button type="button" onClick={() => setTabActivo('completo')} disabled={!boletinCompleto} className={`eb-tab-button ${tabActivo === 'completo' ? 'eb-tab-button--active' : ''} ${!boletinCompleto ? 'eb-tab-button--disabled' : ''}`}>Detalle para el PDF</button>
           </div>
           <div className="eb-tab-content">
             <div className={`eb-tab-panel ${tabActivo === 'resumen' ? '' : 'eb-tab-panel--hidden'}`}>
@@ -680,6 +690,105 @@ const generarConIA = async () => {
           {cargando ? `Enviando (${envioActual}/${destinatarios.length})...` : 'Enviar Boletines'}
         </button>
       </form>
+
+      {/* --- NUEVO CÓDIGO AÑADIDO: Modal de Destinatarios --- */}
+      {verDestinatariosModal && (
+        <div className="eb-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div className="eb-modal-box" style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="eb-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+              <div>
+                <h4 className="eb-modal-title" style={{ margin: '0 0 5px 0' }}>Lista de Destinatarios Activos</h4>
+                <p className="eb-modal-subtitle" style={{ margin: 0, fontSize: '12px', color: '#666' }}>Clientes que recibirán este boletín</p>
+              </div>
+              <button type="button" onClick={() => setVerDestinatariosModal(false)} className="eb-modal-close-btn" style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>&times;</button>
+            </div>
+
+            <div className="eb-modal-search-bar" style={{ marginBottom: '15px' }}>
+              <input 
+                type="text" 
+                value={busquedaDestinatario}
+                onChange={(e) => setBusquedaDestinatario(e.target.value)}
+                placeholder="Buscar por Empresa o Email..."
+                className="eb-input-busqueda"
+                style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}/>
+            </div>
+
+            <div className="eb-modal-list" style={{ flex: 1, overflowY: 'auto', marginBottom: '15px', border: '1px solid #eee', padding: '10px' }}>
+              {destinatariosFiltrados.length > 0 ? (
+                destinatariosFiltrados.map((cli) => (
+                  <div key={cli.id || cli.email} className="eb-destinatario-item" style={{ padding: '8px 0', borderBottom: '1px solid #eee', display: 'flex', flexDirection: 'column' }}>
+                    <span className="eb-destinatario-nombre" style={{ fontWeight: 'bold' }}>{cli.razonSocial}</span>
+                    <span className="eb-destinatario-email" style={{ fontSize: '12px', color: '#666' }}>{cli.email}</span>
+                  </div>))
+              ) : (
+                <div className="eb-empty-state" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>No se encontraron destinatarios activos.</div>)}
+            </div>
+
+            <div className="eb-modal-footer" style={{ textAlign: 'right' }}>
+              <button type="button" onClick={() => setVerDestinatariosModal(false)} className="eb-btn-entendido" style={{ padding: '8px 15px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>)}
+
+      {/* --- NUEVO CÓDIGO AÑADIDO: Sección de Historial de Boletines --- */}
+      {historial.length > 0 && (
+        <div className="eb-historial-section" style={{ marginTop: '40px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+          <div className="eb-historial-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3>Historial de Boletines</h3>
+            <button onClick={borrarHistorial} className="eb-btn-borrar-historial" style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: '4px', cursor: 'pointer' }}>Borrar Historial</button>
+          </div>
+
+          <div className="eb-historial-filtros" style={{ display: 'flex', gap: '10px', margin: '15px 0' }}>
+            <input 
+              type="text" 
+              placeholder="Filtrar historial por asunto..." 
+              value={filtroHistorial} 
+              onChange={(e) => { setFiltroHistorial(e.target.value); setPaginaActual(1); }} 
+              className="eb-input-filtro"
+              style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}/>
+            <select value={ordenHistorial} onChange={(e) => setOrdenHistorial(e.target.value)} className="eb-select-filtro" style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
+              <option value="recientes">Más recientes primero</option>
+              <option value="antiguos">Más antiguos primero</option>
+              <option value="alfa-asc">A-Z</option>
+              <option value="alfa-desc">Z-A</option>
+            </select>
+            <select value={itemsPorPagina} onChange={(e) => { setItemsPorPagina(Number(e.target.value)); setPaginaActual(1); }} className="eb-select-filtro" style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
+              <option value={5}>Ver 5</option>
+              <option value={10}>Ver 10</option>
+            </select>
+          </div>
+
+          <div className="eb-historial-list">
+            {historialPaginado.map((item) => (
+              <div key={item.id} onClick={() => setBoletinSeleccionado(item)} className="eb-historial-item" style={{ padding: '12px', border: '1px solid #e2e8f0', borderRadius: '6px', margin: '8px 0', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', transition: 'background 0.2s' }}>
+                <span style={{ fontWeight: '500', color: '#1e293b' }}>{item.asunto}</span>
+                <span className="eb-historial-item-fecha" style={{ fontSize: '12px', color: '#64748b' }}>{item.fecha}</span>
+              </div>))}
+          </div>
+
+          <div className="eb-paginacion-bar" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px', alignItems: 'center', fontSize: '13px', color: '#475569' }}>
+            <span>Mostrando página {paginaValida} de {totalPaginas || 1} ({historialOrdenado.length} resultados)</span>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <button disabled={paginaActual === 1} onClick={() => setPaginaActual(p => p - 1)} className="eb-btn-paginacion" style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', cursor: paginaActual === 1 ? 'not-allowed' : 'pointer' }}>Anterior</button>
+              <button disabled={paginaActual >= totalPaginas} onClick={() => setPaginaActual(p => p + 1)} className="eb-btn-paginacion" style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', cursor: paginaActual >= totalPaginas ? 'not-allowed' : 'pointer' }}>Siguiente</button>
+            </div>
+          </div>
+        </div>)}
+
+      {/* --- NUEVO CÓDIGO AÑADIDO: Vista previa de Boletín Seleccionado --- */}
+      {boletinSeleccionado && (
+        <div className="eb-modal-overlay-preview" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div className="eb-modal-box-preview" style={{ background: '#fff', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '800px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+              <h3 style={{ margin: '0 0 15px 0', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>{boletinSeleccionado.asunto}</h3>
+              <div dangerouslySetInnerHTML={{ __html: boletinSeleccionado.cuerpoHtml }} className="eb-preview-content" style={{ flex: 1, overflowY: 'auto', padding: '15px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8fafc' }} />
+              <div className="eb-preview-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                  <button onClick={() => setBoletinSeleccionado(null)} className="eb-btn-cerrar" style={{ padding: '8px 16px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer' }}>Cerrar</button>
+                  <button onClick={() => cargarEnEditor(boletinSeleccionado)} className="eb-btn-cargar-editor" style={{ padding: '8px 16px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cargar en Editor</button>
+              </div>
+          </div>
+        </div>)}
     </div>
   );
 };
