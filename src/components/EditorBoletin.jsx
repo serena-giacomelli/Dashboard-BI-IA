@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import html2pdf from 'html2pdf.js';
@@ -14,19 +14,30 @@ const ESTRUCTURA_ORGANISMOS_BORA = [
   { id: 'min_seguridad_justicia', label: 'Ministerios de Seguridad y Justicia', subtopicos: [{ id: 'seg_ascensos', label: 'Ascensos, Retiros y Movimientos de Fuerzas Federales' }, { id: 'seg_erratas', label: 'Fe de Erratas y Avisos Oficiales de Juzgados' }] }
 ];
 
+const LISTA_PALABRAS_CLAVES = [
+  'INGRESOS BRUTOS', 'GANADERÍA', 'INDUSTRIAS', 'INDUSTRIA FRIGORÍFICA',
+  'IMPUESTOS', 'PLANES DE PAGO', 'CODIGO FISCAL', 'LEY IMPOSITIVA',
+  'LEY TRIBUTARIA', 'ALICUOTAS'
+];
+
 const EditorBoletin = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
   const [boletinCompleto, setBoletinCompleto] = useState('');
   const [cargando, setCargando] = useState(false);
   const [generandoIA, setGenerandoIA] = useState(false);
-  const [jurisdiccion, setJurisdiccion] = useState('nacional');
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [organismosExcluidos, setOrganismosExcluidos] = useState([]);
   const [subtopicosExcluidos, setSubtopicosExcluidos] = useState([]);
   const [modoOrganismo, setModoOrganismo] = useState('excluir');
+  
+  // Fuentes Activas
+  const [incluirBora, setIncluirBora] = useState(true);
+  const [incluirSantaFe, setIncluirSantaFe] = useState(true);
+  const [incluirEntreRios, setIncluirEntreRios] = useState(true);
+  const [palabrasSeleccionadas, setPalabrasSeleccionadas] = useState(LISTA_PALABRAS_CLAVES);
+
   const [dropdownsAbiertos, setDropdownsAbiertos] = useState({});
-  const [logAuditoriaIA, setLogAuditoriaIA] = useState([]);
   const [envioActual, setEnvioActual] = useState(0);
   const [historial, setHistorial] = useState([]);
   const [boletinSeleccionado, setBoletinSeleccionado] = useState(null);
@@ -38,6 +49,7 @@ const EditorBoletin = ({ clientesDB }) => {
   const [paginaActual, setPaginaActual] = useState(1);
   const [itemsPorPagina, setItemsPorPagina] = useState(5);
   const [estadoGeneracion, setEstadoGeneracion] = useState('');
+  const abortarGeneracion = useRef(false);
 
   useEffect(() => {
     const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
@@ -49,6 +61,12 @@ const EditorBoletin = ({ clientesDB }) => {
     window.addEventListener('click', cerrarDesplegablesAfuera);
     return () => window.removeEventListener('click', cerrarDesplegablesAfuera);
   }, []);
+
+  const togglePalabra = (palabra) => {
+    setPalabrasSeleccionadas(prev => 
+      prev.includes(palabra) ? prev.filter(p => p !== palabra) : [...prev, palabra]
+    );
+  };
 
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
   const destinatariosFiltrados = destinatarios.filter(c =>
@@ -104,7 +122,13 @@ const EditorBoletin = ({ clientesDB }) => {
     const diaInicio = String(lunes.getDate()).padStart(2, '0');
     const diaFin = String(viernes.getDate()).padStart(2, '0');
     const anio = viernes.getFullYear();
-    return `NOVEDADES ${mesInicio} del ${diaInicio} AL ${diaFin} DE ${mesFin} ${anio}.pdf`;
+    
+    let etiquetaJur = '';
+    if (incluirBora && (incluirSantaFe || incluirEntreRios)) etiquetaJur = 'INTEGRALES';
+    else if (incluirBora) etiquetaJur = 'NACIONALES';
+    else etiquetaJur = 'PROVINCIALES';
+    
+    return `NOVEDADES ${etiquetaJur} ${mesInicio} del ${diaInicio} AL ${diaFin} DE ${mesFin} ${anio}.pdf`;
   };
 
   const obtenerFechasSemana = () => {
@@ -164,7 +188,8 @@ const EditorBoletin = ({ clientesDB }) => {
       .replace(/\r\n/g, '\n')
       .replace(/\\n/g, '\n')
       .replace(/^\s*BOLETIN SEMANAL\s*\n+/i, '')
-      .replace(/^\s*Boletin Semanal\s*\n+/i, '')
+      .replace(/^\s*COMPILADO PROVINCIAL\s*\n+/i, '')
+      .replace(/^\s*BOLETÍN INTEGRAL\s*\n+/i, '')
       .trim();
     if (!textoPlano) return '<p style="margin: 0; line-height: 1.6; color: #334155;">Sin contenido para mostrar.</p>';
     if (/<[a-z][\s\S]*>/i.test(textoPlano)) {
@@ -203,41 +228,15 @@ const EditorBoletin = ({ clientesDB }) => {
     return partes.join('');
   };
 
-  const compactarHtmlParaPdf = (contenido = '', maxSecciones = 5, maxParrafosPorBloque = 2) => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(`<div id="root">${contenido}</div>`, 'text/html');
-    const root = doc.getElementById('root');
-    if (!root) return contenido;
-    const titulo = root.querySelector('h2, h1');
-    const subtitulo = root.querySelector('p');
-    const secciones = Array.from(root.querySelectorAll('section, article'));
-    const piezas = [];
-    if (titulo) piezas.push(titulo.outerHTML);
-    if (subtitulo) piezas.push(subtitulo.outerHTML);
-    secciones.slice(0, maxSecciones).forEach((seccion) => {
-      const h = seccion.querySelector('h3, h4');
-      const bloques = Array.from(seccion.querySelectorAll('p, li')).slice(0, maxParrafosPorBloque);
-      const contenidoBloque = [h ? h.outerHTML : '']
-        .concat(bloques.map((nodo) => nodo.outerHTML))
-        .filter(Boolean)
-        .join('');
-      piezas.push(`<section style="margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">${contenidoBloque}</section>`);
-    });
-    return piezas.length > 0 ? piezas.join('') : contenido;
-  };
-
-  const generarConIA = async () => {
+const generarConIA = async () => {
+    if (!incluirBora && !incluirSantaFe && !incluirEntreRios) {
+      return alert("Debes seleccionar al menos una fuente de boletines para generar el compilado.");
+    }
+    
+    // Reseteamos el estado de cancelación al iniciar
+    abortarGeneracion.current = false; 
     setGenerandoIA(true);
-    setLogAuditoriaIA([]);
     const sessionId = Date.now().toString();
-
-    const formatearFechaVista = (fechaStr) => {
-      if (!fechaStr || fechaStr.length !== 8) return fechaStr;
-      const yyyy = fechaStr.slice(0, 4);
-      const mm = fechaStr.slice(4, 6);
-      const dd = fechaStr.slice(6, 8);
-      return `${dd}/${mm}/${yyyy}`;
-    };
 
     const etiquetasOrganismosExcluidos = ESTRUCTURA_ORGANISMOS_BORA
       .filter(o => organismosExcluidos.includes(o.id))
@@ -248,99 +247,147 @@ const EditorBoletin = ({ clientesDB }) => {
       .map(s => s.label);
       
     try {
-      setEstadoGeneracion("Calculando fechas y consultando fuentes...");
-      const fechas = obtenerFechasSemana();
+      setEstadoGeneracion("Calculando rutas y consultando fuentes...");
       let todosLosLinks = new Set();
-      for (const fecha of fechas) {
-        setEstadoGeneracion(`Consultando índice BORA del ${formatearFechaVista(fecha)}...`);
-        const urlBoletin = `https://www.boletinoficial.gob.ar/seccion/primera/${fecha}`;
-        try {
-          const res = await fetch('/.netlify/functions/generarBoletinIA', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'extraer_links', urlBoletin })
-          });
-          if (!res.ok) {
-            console.warn(`[Frontend] Falló extracción para ${fecha} (HTTP ${res.status}). Omitiendo día.`);
-            continue;
-          }
-          const data = await res.json();
-          if (data.links && data.links.length > 0) {
-            data.links.forEach(link => todosLosLinks.add(link));
-          }
-        } catch (e) {
-          console.error(`Error de conexión al extraer links para ${fecha}:`, e);
-        }
+
+      // EXTRACCION NACIONAL
+      if (incluirBora) {
+         const fechas = obtenerFechasSemana();
+         for (const fecha of fechas) {
+           if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
+           setEstadoGeneracion(`Consultando índice BORA del ${fecha.slice(6,8)}/${fecha.slice(4,6)}...`);
+           const urlBoletin = `https://www.boletinoficial.gob.ar/seccion/primera/${fecha}`;
+           try {
+             const res = await fetch('/.netlify/functions/generarBoletinIA', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ action: 'extraer_links', jurisdiccion: 'nacional', urlBoletin })
+             });
+             if (res.ok) {
+                const data = await res.json();
+                if (data.links) data.links.forEach(link => todosLosLinks.add(link));
+             }
+           } catch (e) { console.error(`Error BORA ${fecha}:`, e); }
+         }
       }
+
+      // EXTRACCION PROVINCIAL
+      if (incluirSantaFe || incluirEntreRios) {
+         if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
+         setEstadoGeneracion(`Consultando portales provinciales vigentes...`);
+         try {
+             const resProv = await fetch('/.netlify/functions/generarBoletinIA', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'extraer_links', 
+                    jurisdiccion: 'provincial', 
+                    provinciasActivas: { santaFe: incluirSantaFe, entreRios: incluirEntreRios }
+                })
+             });
+             if (resProv.ok) {
+                const dataProv = await resProv.json();
+                if (dataProv.links) dataProv.links.forEach(l => todosLosLinks.add(l));
+             }
+         } catch(e) { console.error("Error provincial:", e); }
+      }
+
       const listaLinks = Array.from(todosLosLinks);
       if (listaLinks.length === 0) {
-        alert("No se encontraron normativas en los días seleccionados. Probá otra fecha o revisá los filtros.");
+        alert("No se encontraron normativas en los portales seleccionados.");
         setGenerandoIA(false);
         setEstadoGeneracion("");
         return;
       }
-      setEstadoGeneracion(`Se encontraron aproximadamente ${listaLinks.length} avisos. Iniciando procesamiento...`);
-      setEstadoGeneracion("Iniciando procesamiento de textos...");
+
+      if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
+      setEstadoGeneracion(`Iniciando filtrado inteligente de ${listaLinks.length} enlaces detectados...`);
+      
       const resIniciar = await fetch('/.netlify/functions/generarBoletinIA', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'iniciar', sessionId, links: listaLinks, organismosExcluidos: etiquetasOrganismosExcluidos, subtopicosExcluidos: etiquetasSubtopicosExcluidos, modoOrganismo }),
+        body: JSON.stringify({ 
+            action: 'iniciar', 
+            sessionId, 
+            links: listaLinks, 
+            organismosExcluidos: etiquetasOrganismosExcluidos, 
+            subtopicosExcluidos: etiquetasSubtopicosExcluidos, 
+            modoOrganismo,
+            palabrasClaves: palabrasSeleccionadas
+        }),
       });
-      if (!resIniciar.ok) throw new Error(`No se pudo iniciar la sesión (HTTP ${resIniciar.status})`);
+      if (!resIniciar.ok) throw new Error(`No se pudo iniciar la sesión.`);
       
       let procesando = true;
-      let fallosSeguidos = 0;
       let iteracion = 0;
-      const MAX_ITERACIONES = listaLinks.length + 10;
+      const MAX_ITERACIONES = listaLinks.length + 5;
       
       while (procesando) {
+        if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO"); // Verifica en cada ciclo
         iteracion++;
-        if (iteracion > MAX_ITERACIONES) throw new Error("Se superó el límite de iteraciones de seguridad.");
+        if (iteracion > MAX_ITERACIONES) throw new Error("Límite de lectura de enlaces alcanzado.");
+        
         const res = await fetch('/.netlify/functions/generarBoletinIA', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'procesar_siguiente', sessionId }),
         });
+        
         if (!res.ok) {
-          fallosSeguidos++;
-          if (fallosSeguidos >= 3) throw new Error(`El backend falló repetidamente (HTTP ${res.status}).`);
-          await new Promise(r => setTimeout(r, 800));
+          await new Promise(r => setTimeout(r, 1000));
           continue;
         }
-        fallosSeguidos = 0;
         const data = await res.json();
         if (data.progress >= data.total) {
           procesando = false;
         } else {
-          setEstadoGeneracion(`Procesando normativa ${data.progress} de ${data.total}...`);
+          setEstadoGeneracion(`Extrayendo texto base: ${data.progress} de ${data.total}...`);
         }
       }
       
-      setEstadoGeneracion("Consultando a la IA para el resumen final (Groq)...");
+      if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
+      setEstadoGeneracion("Ensamblando Boletín Integral con IA en Lotes de Alta Velocidad...");
+      
       const finalRes = await fetch('/.netlify/functions/generarBoletinIA', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'resumir', sessionId }),
       });
       const dataFinal = await finalRes.json();
-      if (!finalRes.ok) throw new Error(dataFinal.error || "Error en la fase final de compilación");
+      if (!finalRes.ok) throw new Error(dataFinal.error || "Error en la fase final de la IA");
       
       setCuerpoHtml(dataFinal.resumenEmail);
       setBoletinCompleto(dataFinal.boletinCompleto);
       setTabActivo('resumen');
-      if (dataFinal.fallidos?.length) setLogAuditoriaIA(dataFinal.fallidos);
       
     } catch (error) {
-      console.error(error);
-      alert("Error crítico durante la generación: " + error.message);
+      if (error.message === "CANCELADO_POR_USUARIO") {
+        console.log("Generación cancelada por el usuario.");
+        // No mostramos el alert feo, solo actualizamos el estado
+      } else {
+        console.error(error);
+        alert("Error crítico durante la generación: " + error.message);
+      }
     } finally {
       setGenerandoIA(false);
-      setEstadoGeneracion("");
+      if (abortarGeneracion.current) {
+        setEstadoGeneracion("Generación cancelada.");
+        // Borramos el texto después de 3 segundos para limpiar la UI
+        setTimeout(() => setEstadoGeneracion(""), 3000); 
+      } else {
+        setEstadoGeneracion("");
+      }
     }
   };
 
   const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
+    
+    let etiquetaJur = '';
+    if (incluirBora && (incluirSantaFe || incluirEntreRios)) etiquetaJur = 'INTEGRAL';
+    else if (incluirBora) etiquetaJur = 'NACIONAL';
+    else etiquetaJur = 'PROVINCIAL';
+
     if (paraPdf) {
       return `
         <div style="font-family: Arial, Helvetica, sans-serif; color: #333333; padding: 10px;">
@@ -353,7 +400,7 @@ const EditorBoletin = ({ clientesDB }) => {
 
           <div style="text-align: center; margin-bottom: 25px;">
             <img src="${logoSeleccionado}" width="160" style="display: inline-block; margin-bottom: 15px;" />
-            <h1 style="margin: 0 0 5px 0; font-size: 16pt; color: #000000; font-weight: bold;">BOLETÍN DE NOVEDADES</h1>
+            <h1 style="margin: 0 0 5px 0; font-size: 16pt; color: #000000; font-weight: bold;">BOLETÍN DE NOVEDADES ${etiquetaJur}</h1>
             <h2 style="margin: 0; font-size: 12pt; color: #333333; font-weight: normal;">Semana del ${obtenerRangoSemana()}</h2>
           </div>
           
@@ -402,16 +449,12 @@ const EditorBoletin = ({ clientesDB }) => {
       for (const cliente of destinatarios) {
         setEnvioActual(prev => prev + 1);
         const htmlEmail = generarTemplateEmpresa(cuerpoHtml, cliente, false);
-        // Reemplaza las dos líneas anteriores por esta única línea:
         const htmlPdf = generarTemplateEmpresa(boletinCompleto || cuerpoHtml, cliente, true);
         const opcionesPdf = { 
               margin: [10, 10, 10, 10], 
               filename: obtenerNombreArchivoPdf(),
-              // Subimos la calidad de imagen al 98%
               image: { type: 'jpeg', quality: 0.98 }, 
-              // Restauramos la escala a 1 para que el texto sea completamente nítido
               html2canvas: { scale: 1, useCORS: true, letterRendering: true, scrollY: 0, windowWidth: 1000 }, 
-              // Mantenemos compress en true para optimizar el peso sin perder calidad visual
               jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }, 
               pagebreak: { mode: ['css', 'legacy'] } 
             };
@@ -454,153 +497,174 @@ const EditorBoletin = ({ clientesDB }) => {
   return (
     <div className="eb-container">
       <h2>Centro de Despacho de Boletines</h2>
-      <div className="eb-ia-section" style={{ background: '#f8fafc', padding: '12px 18px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>Compilado Semanal</span>
-            <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                <input type="radio" checked={jurisdiccion === 'nacional'} onChange={() => setJurisdiccion('nacional')} style={{ marginRight: '4px' }} />
-                Nacional (BORA)
-              </label>
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                <input type="radio" checked={jurisdiccion === 'provincial'} onChange={() => setJurisdiccion('provincial')} style={{ marginRight: '4px' }} />
-                Provincial
-              </label>
-            </div>
-          </div>
+      
+      <div className="eb-ia-section" style={{ background: '#f8fafc', padding: '16px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: mostrarFiltros ? '15px' : '0' }}>
+          <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#1e293b' }}>Configuración de Extracción Integral</span>
           <button type="button"
             onClick={() => setMostrarFiltros(!mostrarFiltros)}
-            style={{ background: '#ffffff', border: '1px solid #cbd5e1', padding: '5px 12px', borderRadius: '5px', fontSize: '12px', color: '#334155', cursor: 'pointer', fontWeight: '500', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-            {mostrarFiltros ? 'Ocultar Filtros / Provincias' : 'Configurar Inclusiones y Exclusiones'}
+            style={{ background: '#ffffff', border: '1px solid #cbd5e1', padding: '6px 14px', borderRadius: '5px', fontSize: '13px', color: '#334155', cursor: 'pointer', fontWeight: '500', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            {mostrarFiltros ? 'Ocultar Filtros' : 'Mostrar Filtros y Fuentes'}
           </button>
         </div>
 
-        {/* --- LÓGICA VISUAL: MUESTRA PROVINCIAS SOLO SI ESTÁ EN "PROVINCIAL" --- */}
-        {mostrarFiltros && jurisdiccion === 'provincial' && (
-          <div style={{ marginTop: '15px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
-            <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
-              Seleccioná qué boletines provinciales querés incluir en el reporte:
-            </p>
-            <div style={{ display: 'flex', gap: '20px', fontSize: '12px', color: '#334155' }}>
-                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <input type="checkbox" checked={incluirSantaFe} onChange={(e) => setIncluirSantaFe(e.target.checked)} />
-                  Boletín Oficial - Santa Fe
+      {mostrarFiltros && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+            
+            {/* TARJETA 1: FUENTES */}
+            <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>1. Fuentes a Consultar</h4>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: incluirBora ? '#eff6ff' : '#f8fafc', border: incluirBora ? '1px solid #bfdbfe' : '1px solid #e2e8f0', borderRadius: '6px', transition: 'all 0.2s' }}>
+                  <input type="checkbox" checked={incluirBora} onChange={(e) => setIncluirBora(e.target.checked)} style={{ accentColor: '#2563eb', width: '16px', height: '16px' }} />
+                  <span style={{ fontSize: '13px', fontWeight: incluirBora ? '600' : '500', color: incluirBora ? '#1e3a8a' : '#475569' }}>Nación (BORA)</span>
                 </label>
-                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <input type="checkbox" checked={incluirEntreRios} onChange={(e) => setIncluirEntreRios(e.target.checked)} />
-                  Boletín Oficial - Entre Ríos
+                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: incluirSantaFe ? '#eff6ff' : '#f8fafc', border: incluirSantaFe ? '1px solid #bfdbfe' : '1px solid #e2e8f0', borderRadius: '6px', transition: 'all 0.2s' }}>
+                  <input type="checkbox" checked={incluirSantaFe} onChange={(e) => setIncluirSantaFe(e.target.checked)} style={{ accentColor: '#2563eb', width: '16px', height: '16px' }} />
+                  <span style={{ fontSize: '13px', fontWeight: incluirSantaFe ? '600' : '500', color: incluirSantaFe ? '#1e3a8a' : '#475569' }}>Santa Fe</span>
                 </label>
+                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px', background: incluirEntreRios ? '#eff6ff' : '#f8fafc', border: incluirEntreRios ? '1px solid #bfdbfe' : '1px solid #e2e8f0', borderRadius: '6px', transition: 'all 0.2s' }}>
+                  <input type="checkbox" checked={incluirEntreRios} onChange={(e) => setIncluirEntreRios(e.target.checked)} style={{ accentColor: '#2563eb', width: '16px', height: '16px' }} />
+                  <span style={{ fontSize: '13px', fontWeight: incluirEntreRios ? '600' : '500', color: incluirEntreRios ? '#1e3a8a' : '#475569' }}>Entre Ríos</span>
+                </label>
+              </div>
             </div>
+
+            {/* TARJETA 2: PROVINCIALES (Píldoras) */}
+            {(incluirSantaFe || incluirEntreRios) && (
+              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <h4 style={{ margin: 0, fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>2. Filtros Provinciales</h4>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Solo se incluyen normas con estos términos</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {LISTA_PALABRAS_CLAVES.map(palabra => {
+                    const activo = palabrasSeleccionadas.includes(palabra);
+                    return (
+                      <button
+                        type="button"
+                        key={palabra}
+                        onClick={() => togglePalabra(palabra)}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '20px',
+                          border: activo ? '1px solid #3b82f6' : '1px solid #cbd5e1',
+                          background: activo ? '#eff6ff' : '#f8fafc',
+                          color: activo ? '#1d4ed8' : '#475569',
+                          fontSize: '11px',
+                          fontWeight: activo ? '600' : '500',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {activo && <span style={{ fontSize: '10px' }}>✓</span>}
+                        {palabra}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* TARJETA 3: NACIONAL */}
+            {incluirBora && (
+              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+                   <h4 style={{ margin: 0, fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>3. Exclusiones Nacionales (BORA)</h4>
+                   <div style={{ display: 'flex', gap: '12px', fontSize: '12px', background: '#f8fafc', padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                      <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: modoOrganismo === 'excluir' ? '600' : '400', color: modoOrganismo === 'excluir' ? '#0f172a' : '#64748b' }}>
+                        <input type="radio" checked={modoOrganismo === 'excluir'} onChange={() => setModoOrganismo('excluir')} style={{ accentColor: '#2563eb' }} /> 
+                        Excluir marcados
+                      </label>
+                      <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: modoOrganismo === 'incluir' ? '600' : '400', color: modoOrganismo === 'incluir' ? '#0f172a' : '#64748b' }}>
+                        <input type="radio" checked={modoOrganismo === 'incluir'} onChange={() => setModoOrganismo('incluir')} style={{ accentColor: '#2563eb' }} /> 
+                        Incluir solo marcados
+                      </label>
+                   </div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '10px' }}>
+                  {ESTRUCTURA_ORGANISMOS_BORA.map(org => {
+                    const estaOrgExcluido = organismosExcluidos.includes(org.id);
+                    const isOpen = !!dropdownsAbiertos[org.id];
+                    let textoDesplegable = modoOrganismo === 'incluir' ? 'Se incluirá solo si está marcado' : 'Todos los temas incluidos';
+                    if (modoOrganismo === 'excluir' && estaOrgExcluido) textoDesplegable = "Organismo omitido";
+                    return (
+                      <div key={org.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#334155' }}>{org.label}</span>
+                          <label style={{ fontSize: '11px', color: '#ef4444', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <input type="checkbox" checked={estaOrgExcluido} onChange={() => manejarToggleOrganismo(org.id)} style={{ accentColor: '#ef4444' }}/>
+                            {modoOrganismo === 'incluir' ? 'Incluir' : 'Excluir'}
+                          </label>
+                        </div>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                          <button type="button" disabled={modoOrganismo === 'excluir' && estaOrgExcluido} onClick={(e) => toggleDropdown(e, org.id)} style={{ width: '100%', padding: '6px 10px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '4px', textAlign: 'left', fontSize: '11px', color: '#475569', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>{textoDesplegable}</span>
+                            <span style={{ fontSize: '9px', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
+                          </button>
+                          {isOpen && !(modoOrganismo === 'excluir' && estaOrgExcluido) && (
+                            <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#ffffff', border: '1px solid #94a3b8', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '160px', overflowY: 'auto', marginTop: '4px' }}>
+                              {org.subtopicos.map(sub => (
+                                <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', cursor: 'pointer', fontSize: '11px', borderBottom: '1px solid #f1f5f9', color: '#334155' }}>
+                                  <input type="checkbox" checked={subtopicosExcluidos.includes(sub.id)} onChange={() => manejarToggleSubtopico(sub.id)} style={{ accentColor: '#ef4444' }} />
+                                  <span>Omitir: {sub.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* --- LÓGICA VISUAL: MUESTRA FILTROS BORA SOLO SI ESTÁ EN "NACIONAL" --- */}
-        {mostrarFiltros && jurisdiccion === 'nacional' && (
-          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
-            <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '600', color: '#475569' }}>
-              Seleccioná qué organismos o tópicos específicos querés que la IA ignore por completo:
-            </p>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '12px', flexWrap: 'wrap' }}>
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <input type="radio" checked={modoOrganismo === 'excluir'} onChange={() => setModoOrganismo('excluir')} />
-                Excluir marcados
-              </label>
-              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <input type="radio" checked={modoOrganismo === 'incluir'} onChange={() => setModoOrganismo('incluir')} />
-                Incluir solo marcados
-              </label>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '8px' }}>
-              {ESTRUCTURA_ORGANISMOS_BORA.map(org => {
-                const estaOrgExcluido = organismosExcluidos.includes(org.id);
-                const subIds = org.subtopicos.map(s => s.id);
-                const cantidadOmitidos = subtopicosExcluidos.filter(id => subIds.includes(id)).length;
-                const isOpen = !!dropdownsAbiertos[org.id];
-                let textoDesplegable = modoOrganismo === 'incluir' ? 'Se incluirá solo si está marcado' : 'Todos los temas incluidos';
-                if (modoOrganismo === 'excluir' && estaOrgExcluido) textoDesplegable = "Organismo omitido por completo";
-                else if (cantidadOmitidos > 0) textoDesplegable = `${cantidadOmitidos} tema${cantidadOmitidos > 1 ? 's' : ''} a omitir`;
-                return (
-                  <div key={org.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#334155', textDecoration: modoOrganismo === 'excluir' && estaOrgExcluido ? 'line-through' : 'none', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                        {org.label}
-                      </span>
-                      <label style={{ fontSize: '11px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '3px', cursor: 'pointer', fontWeight: '500' }}>
-                        <input
-                          type="checkbox"
-                          checked={estaOrgExcluido}
-                          onChange={() => manejarToggleOrganismo(org.id)} />
-                        {modoOrganismo === 'incluir' ? 'Incluir' : 'Excluir'}
-                      </label>
-                    </div>
-                    <div style={{ position: 'relative', width: '100%' }}>
-                      <button type="button"
-                        disabled={modoOrganismo === 'excluir' && estaOrgExcluido}
-                        onClick={(e) => toggleDropdown(e, org.id)}
-                        style={{ width: '100%', padding: '5px 8px', background: (modoOrganismo === 'excluir' && estaOrgExcluido) ? '#f8fafc' : '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', textAlign: 'left', fontSize: '11px', color: (modoOrganismo === 'excluir' && estaOrgExcluido) ? '#cbd5e1' : '#64748b', cursor: (modoOrganismo === 'excluir' && estaOrgExcluido) ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>{textoDesplegable}</span>
-                        <span style={{ fontSize: '9px', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▼</span>
-                      </button>
-                      {isOpen && !(modoOrganismo === 'excluir' && estaOrgExcluido) && (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '4px', boxShadow: '0 4px 10px rgba(0,0,0,0.08)', zIndex: 100, marginTop: '2px', maxHeight: '140px', overflowY: 'auto', padding: '4px 0' }}>
-                          {org.subtopicos.map(sub => {
-                            const estaSubOmitido = subtopicosExcluidos.includes(sub.id);
-                            return (
-                              <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '11px', backgroundColor: estaSubOmitido ? '#fffbeb' : 'transparent' }}>
-                                <input type="checkbox"
-                                  checked={estaSubOmitido}
-                                  onChange={() => manejarToggleSubtopico(sub.id)} />
-                                <span style={{ color: estaSubOmitido ? '#b45309' : '#475569' }}>Omitir: {sub.label}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
         <button type="button"
           onClick={generarConIA}
           disabled={generandoIA}
-          className="eb-btn-generar-ia"
-          style={{ width: '100%', padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: generandoIA ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '12px', fontSize: '13px' }}>
-          {generandoIA ? estadoGeneracion : 'Generar Compilado de la Semana (Retroactivo)'}
+          style={{ width: '100%', padding: '12px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: generandoIA ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '15px', fontSize: '16px', letterSpacing: '0.5px' }}>
+          {generandoIA ? estadoGeneracion : 'Generar compilado semanal'}
         </button>
+        {generandoIA && (
+            <button type="button"
+              onClick={() => abortarGeneracion.current = true}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                transition: 'background 0.2s',
+                textAlign: 'center',
+                marginTop: '10px',
+              }}
+              onMouseOver={(e) => e.target.style.background = '#dc2626'}
+              onMouseOut={(e) => e.target.style.background = '#ef4444'}
+            >Cancelar
+            </button>
+          )}
       </div>
 
       <form onSubmit={manejarEnvio} className="eb-form">
-        <input type="text"
-          value={asunto}
-          onChange={(e) => setAsunto(e.target.value)}
-          placeholder="Asunto del boletín..."
-          className="eb-input-asunto" />
+        <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Asunto del boletín..." className="eb-input-asunto" />
         <div className="eb-destinatarios-bar">
-          <button type="button"
-            onClick={() => { setBusquedaDestinatario(''); setVerDestinatariosModal(true); }}
-            className="eb-btn-destinatarios">
-            Destinatarios actuales ({destinatarios.length})
-          </button>
+          <button type="button" onClick={() => setVerDestinatariosModal(true)} className="eb-btn-destinatarios">Destinatarios actuales ({destinatarios.length})</button>
         </div>
         <div className="eb-tabs-container">
           <div className="eb-tabs-header">
-            <button type="button"
-              onClick={() => setTabActivo('resumen')}
-              className={`eb-tab-button ${tabActivo === 'resumen' ? 'eb-tab-button--active' : ''}`}>
-              Resumen para el Email
-            </button>
-            <button type="button"
-              onClick={() => setTabActivo('completo')}
-              disabled={!boletinCompleto}
-              className={`eb-tab-button ${tabActivo === 'completo' ? 'eb-tab-button--active' : ''} ${!boletinCompleto ? 'eb-tab-button--disabled' : ''}`}>
-              Detalle para el PDF {!boletinCompleto && '(Generá con IA primero)'}
-            </button>
+            <button type="button" onClick={() => setTabActivo('resumen')} className={`eb-tab-button ${tabActivo === 'resumen' ? 'eb-tab-button--active' : ''}`}>Resumen para el Email</button>
+            <button type="button" onClick={() => setTabActivo('completo')} disabled={!boletinCompleto} className={`eb-tab-button ${tabActivo === 'completo' ? 'eb-tab-button--active' : ''}`}>Detalle para el PDF</button>
           </div>
           <div className="eb-tab-content">
             <div className={`eb-tab-panel ${tabActivo === 'resumen' ? '' : 'eb-tab-panel--hidden'}`}>
@@ -616,155 +680,6 @@ const EditorBoletin = ({ clientesDB }) => {
           {cargando ? `Enviando (${envioActual}/${destinatarios.length})...` : 'Enviar Boletines'}
         </button>
       </form>
-
-      {verDestinatariosModal && (
-        <div className="eb-modal-overlay">
-          <div className="eb-modal-box">
-            <div className="eb-modal-header">
-              <div>
-                <h4 className="eb-modal-title">Lista de Destinatarios Activos</h4>
-                <p className="eb-modal-subtitle">Clientes que recibirán este boletín</p>
-              </div>
-              <button type="button" onClick={() => setVerDestinatariosModal(false)} className="eb-modal-close-btn">&times;</button>
-            </div>
-            <div className="eb-modal-search-bar">
-              <input type="text"
-                value={busquedaDestinatario}
-                onChange={(e) => setBusquedaDestinatario(e.target.value)}
-                placeholder="Buscar por Empresa o Email..."
-                className="eb-input-busqueda" />
-            </div>
-            <div className="eb-modal-list">
-              {destinatariosFiltrados.length > 0 ? (
-                destinatariosFiltrados.map((cli) => (
-                  <div key={cli.id || cli.email} className="eb-destinatario-item">
-                    <span className="eb-destinatario-nombre">{cli.razonSocial}</span>
-                    <span className="eb-destinatario-email">{cli.email}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="eb-empty-state">No se encontraron destinatarios activos.</div>
-              )}
-            </div>
-            <div className="eb-modal-footer">
-              <button type="button" onClick={() => setVerDestinatariosModal(false)} className="eb-btn-entendido">Entendido</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {historial.length > 0 && (
-        <div className="eb-historial-section">
-          <div className="eb-historial-header">
-            <h3 className="eb-historial-title">Historial de Boletines Enviados</h3>
-            <button type="button" onClick={borrarHistorial} className="eb-btn-borrar-historial">Borrar Historial</button>
-          </div>
-          <div className="eb-historial-filtros">
-            <div className="eb-filtro-input-wrapper">
-              <input type="text"
-                value={filtroHistorial}
-                onChange={(e) => {
-                  setFiltroHistorial(e.target.value);
-                  setPaginaActual(1);
-                }}
-                placeholder="Filtrar historial por asunto..."
-                className="eb-input-filtro" />
-            </div>
-            <div className="eb-orden-controls">
-              <label className="eb-orden-label">Ordenar por:</label>
-              <select value={ordenHistorial}
-                onChange={(e) => {
-                  setOrdenHistorial(e.target.value);
-                  setPaginaActual(1);
-                }}
-                className="eb-select-orden">
-                <option value="recientes">Más recientes primero</option>
-                <option value="antiguos">Más antiguos primero</option>
-                <option value="alfa-asc">Asunto (A-Z)</option>
-                <option value="alfa-desc">Asunto (Z-A)</option>
-              </select>
-              <select value={itemsPorPagina}
-                onChange={(e) => {
-                  setItemsPorPagina(Number(e.target.value));
-                  setPaginaActual(1);
-                }} className="eb-select-items-pagina">
-                <option value={5}>Ver 5</option>
-                <option value={10}>Ver 10</option>
-                <option value={20}>Ver 20</option>
-              </select>
-            </div>
-          </div>
-          <div className="eb-historial-list">
-            {historialPaginado.length > 0 ? (
-              historialPaginado.map((item, index) => (
-                <div key={item.id}
-                  onClick={() => setBoletinSeleccionado(item)}
-                  className={`eb-historial-item ${index === historialPaginado.length - 1 ? 'eb-historial-item--last' : ''}`}>
-                  <span className="eb-historial-item-asunto">{item.asunto}</span>
-                  <span className="eb-historial-item-fecha">{item.fecha}</span>
-                </div>
-              ))
-            ) : (
-              <div className="eb-historial-empty">No se encontraron boletines en el historial.</div>
-            )}
-          </div>
-          {totalPaginas > 1 && (
-            <div className="eb-paginacion-bar">
-              <span className="eb-paginacion-info">
-                Mostrando página <strong>{paginaValida}</strong> de <strong>{totalPaginas}</strong> ({historialFiltrado.length} resultados)
-              </span>
-              <div className="eb-paginacion-buttons">
-                <button type="button"
-                  disabled={paginaValida === 1}
-                  onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
-                  className={`eb-btn-paginacion ${paginaValida === 1 ? 'eb-btn-paginacion--disabled' : ''}`}>Anterior</button>
-                <button type="button"
-                  disabled={paginaValida === totalPaginas}
-                  onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
-                  className={`eb-btn-paginacion ${paginaValida === totalPaginas ? 'eb-btn-paginacion--disabled' : ''}`}>Siguiente</button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {boletinSeleccionado && (
-        <div className="eb-modal-overlay eb-modal-overlay--detail">
-          <div className="eb-modal-box eb-modal-box--large">
-            <div className="eb-modal-header eb-modal-header--detail">
-              <div className="eb-modal-title-wrapper">
-                <h3 className="eb-modal-detail-title">{boletinSeleccionado.asunto}</h3>
-                <span className="eb-modal-detail-fecha">Enviado el: {boletinSeleccionado.fecha}</span>
-                {boletinSeleccionado.clientes && boletinSeleccionado.clientes.length > 0 && (
-                  <div className="eb-modal-detail-destinatarios">
-                    <strong className="eb-modal-detail-destinatarios-label">Destinatarios en ese momento:</strong>
-                    <div className="eb-chips-container">
-                      {boletinSeleccionado.clientes.map((cli, idx) => (<span key={idx} className="eb-chip">{cli}</span>))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <button type="button" onClick={() => setBoletinSeleccionado(null)} className="eb-modal-close-btn--large">&times;</button>
-            </div>
-            <div className="eb-modal-detail-body">
-              <div className="eb-content-card">
-                <h5 className="eb-content-card-title--email">Cuerpo del Email Enviado:</h5>
-                <div dangerouslySetInnerHTML={{ __html: boletinSeleccionado.cuerpoHtml }} />
-              </div>
-              {boletinSeleccionado.boletinCompleto && (
-                <div className="eb-content-card">
-                  <h5 className="eb-content-card-title--pdf">Contenido del PDF Adjunto:</h5>
-                  <div dangerouslySetInnerHTML={{ __html: boletinSeleccionado.boletinCompleto }} />
-                </div>
-              )}
-            </div>
-            <div className="eb-modal-detail-footer">
-              <button type="button" onClick={() => setBoletinSeleccionado(null)} className="eb-btn-cerrar">Cerrar</button>
-              <button type="button" onClick={() => cargarEnEditor(boletinSeleccionado)} className="eb-btn-cargar-editor">Cargar en Editor</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

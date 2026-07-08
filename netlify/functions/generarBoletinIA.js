@@ -5,6 +5,7 @@ const DEFAULT_HEADERS = {
   'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
   'accept-language': 'es-AR,es;q=0.9,en;q=0.8',
 };
+const pdfParse = require('pdf-parse');
 
 const ORGANISMO_ALIASES = {
   'Ministerio de Economía': ['Economía', 'Min. de Economía', 'Ministro de Economía', 'MEC'],
@@ -32,9 +33,17 @@ const SUBTOPICO_ALIASES = {
   'Fe de Erratas y Avisos Oficiales de Juzgados': ['fe de erratas', 'errata', 'erratas', 'juzgado', 'juzgados', 'aviso oficial', 'avisos oficiales'],
 };
 
+const PALABRAS_CLAVES_PROVINCIALES = [
+  'INGRESOS BRUTOS', 'GANADERÍA', 'INDUSTRIAS', 'INDUSTRIA FRIGORÍFICA',
+  'IMPUESTOS', 'PLANES DE PAGO', 'CODIGO FISCAL', 'LEY IMPOSITIVA',
+  'LEY TRIBUTARIA', 'ALICUOTAS'
+];
+
 const normalizarTexto = (texto = '') => {return texto.replace(/[ \t]+/g, ' ').replace(/\n\s*\n/g, '\n').trim();};
 const normalizarComparacion = (texto = '') => normalizarTexto(texto).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 const recortarTexto = (texto = '', max = 5000) => normalizarTexto(texto).slice(0, max);
+const escapeHtmlSeguro = (texto = '') => String(texto).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const chunkArray = (arr, size) => Array.from({ length: Math.ceil(arr.length / size) }, (v, i) => arr.slice(i * size, i * size + size));
 
 const buscarCoincidencia = (texto = '', filtros = []) => {
   const base = normalizarComparacion(texto);
@@ -81,6 +90,22 @@ const limpiarTituloPresentacion = (titulo = '') => titulo
   .replace(/\bResoluciones?\s+Generales?\b/i, 'Resolución General')
   .replace(/\bAprobación\.?$/i, '')
   .trim();
+
+const esLinkValido = (href) => {
+  if (!href) return false;
+  const invalido = ['mailto:', 'tel:', '#', 'javascript:', 'javascript:void(0)'];
+  return !invalido.some(prefijo => href.toLowerCase().startsWith(prefijo));
+};
+
+const resolverUrl = (href, base) => {
+  try {
+    return new URL(href, base).toString();
+  } catch (e) {
+    return null;
+  }
+};
+
+const esUrlPdf = (url = '') => /\.pdf(\?|$)/i.test(url) || /verpdf\.php/i.test(url);
 
 const construirHtmlListado = (items = [], titulo, subtitulo, opciones = {}) => {
   const maxItems = opciones.maxItems ?? items.length;
@@ -171,7 +196,7 @@ const construirHtmlFactualFallback = (items = [], titulo, subtitulo) => {
     
     return `
       <div style="margin-bottom: 25px; page-break-inside: avoid;">
-        <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">${organismo}</h3>
+        <h3 class="organismo-titulo" style="margin: 0 0 10px 0; font-size: 15px; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; font-weight: 700; text-transform: uppercase;">${organismo}</h3>
         <ul style="margin: 0; padding-left: 20px; list-style-type: square;">${bloques}</ul>
       </div>`;  
   }).join('');
@@ -189,9 +214,10 @@ return {
   };
 };
 
+// ⚡ MODIFICACIÓN CRÍTICA 1: Manejo robusto del JSON y reducción de delays
 const invocarGroqConReintentos = async (payload) => {
-  const maxIntentos = 4;
-  let baseDelay = 2000; // 2 segundos iniciales
+  const maxIntentos = 3;
+  let baseDelay = 500; // Reducido drásticamente para evitar Timeout de Netlify
 
   for (let intento = 1; intento <= maxIntentos; intento++) {
     try {
@@ -208,82 +234,77 @@ const invocarGroqConReintentos = async (payload) => {
         const data = await response.json();
         if (data.choices?.[0]?.message?.content) {
           try {
-            return JSON.parse(data.choices[0].message.content);
+            let content = data.choices[0].message.content.trim();
+            // EXTRACCIÓN ROBUSTA: Buscar solo el bloque JSON, ignorando texto inicial o markdown
+            const match = content.match(/\{[\s\S]*\}/);
+            if (match) content = match[0];
+            return JSON.parse(content);
           } catch (jsonError) {
             console.warn(`Intento ${intento}: Error parseando JSON de la IA. Formato inválido.`);
             if (intento === maxIntentos) throw new Error("JSON malformado persistente");
           }
         }
       } else if (response.status === 429) {
-        // Rate limit detectado. Buscar cabecera Retry-After o aplicar exponencial.
         const retryAfter = response.headers.get('Retry-After');
         const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : baseDelay * Math.pow(2, intento - 1);
-        console.warn(`[Rate Limit] Intento ${intento}/${maxIntentos} falló. Esperando ${waitTime}ms...`);
-        await new Promise((resolve) => setTimeout(resolve, waitTime + 500)); // Buffer de 500ms
+        await new Promise((resolve) => setTimeout(resolve, waitTime + 500));
         continue;
-      } else {
-        console.warn(`Groq respondió con HTTP ${response.status}`);
       }
     } catch (networkError) {
       console.warn(`Error de red en intento ${intento}: ${networkError.message}`);
     }
-    
-    // Si no es 429, aplicamos espera exponencial general antes de reintentar
     if (intento < maxIntentos) {
       await new Promise((resolve) => setTimeout(resolve, baseDelay * intento));
     }
   }
-  
   throw new Error('Fallback crítico: No se pudo obtener respuesta válida de Groq.');
 };
 
-const invocarGroqResumenEmail = async (textoBase, titulo, subtitulo) => {
+// ⚡ MODIFICACIÓN CRÍTICA 2: Cambio de modelo a llama3-8b (Extremadamente más rápido, evita timeouts)
+const invocarGroqLoteNormas = async (lote) => {
+  const compactos = lote.map((item, idx) => `ID: ${idx}\nNORMA: ${item.titulo}\nEnlace: ${item.url}\nContenido: ${item.texto.substring(0, 1200)}`).join('\n---\n');
+  const payload = {
+    model: 'openai/gpt-oss-20b', 
+    temperature: 0.1,
+    reasoning_effort: 'low',
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system',
+        content: [
+          'Sos un editor legal senior corporativo.',
+          'Tu tarea es resumir un lote de normas en un JSON estricto.',
+          'REGLA: Céntrate en la parte operativa ("RESUELVE", "DECRETA", "DISPONE", "SANCIONA").',
+          'Estructura requerida: {"normas": [{"titulo": "...", "resumen": "...", "url": "..."}]}',
+          'El resumen debe ser MUY ESPECÍFICO (montos, plazos, números de expediente/resolución concretos) y ocupar como MÁXIMO 3 renglones (aprox. 35-40 palabras). Nada de generalidades tipo "se establecen disposiciones".',
+          'NO digas "no se proporcionan detalles". DEVOLVÉ SOLO EL JSON, sin texto extra ni markdown.'
+        ].join('\n')
+      },
+      { role: 'user', content: `Analizá y devolvé el JSON para las siguientes normas:\n\n${compactos}` }
+    ]
+  };
+  
+  const respuesta = await invocarGroqConReintentos(payload);
+  return respuesta.normas || [];
+};
+
+const invocarGroqResumenEmail = async (textoBase) => {
   const payload = {
     model: 'openai/gpt-oss-120b',
     temperature: 0.3,
+    reasoning_effort: 'medium',
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system',
         content: [
           'Sos un editor senior de una consultora legal.',
-          'Tu objetivo es redactar un párrafo introductorio (3-4 líneas) que resuma los 2 temas más críticos del Boletín Oficial, redactado de forma profesional y persuasiva.',
-          'Finalizá con una invitación clara: "Le sugerimos revisar el PDF adjunto para el detalle completo de las normativas".',
-          'El resumen debe ser breve, directo y generar interés profesional.',
-          'Devolvé JSON: {"resumenEmail":"html"}'
+          'Tu objetivo es redactar UN SOLO PÁRRAFO introductorio (3-4 líneas) que resuma los temas más críticos de este Boletín Oficial, de forma profesional y persuasiva.',
+          'Finalizá con esta invitación clara: "Le sugerimos revisar el PDF adjunto para el detalle completo de las normativas".',
+          'El resumen debe ser breve y directo.',
+          'DEVOLVÉ SOLO EL JSON: {"resumenEmail":"<p>tu párrafo html aquí</p>"}'
         ].join(' ')
       },
-      { role: 'user', content: `Analizá estos temas y redactá la invitación:\n${textoBase.slice(0, 2000)}` }
+      { role: 'user', content: `Temas destacados a resumir:\n${textoBase.slice(0, 2500)}` }
     ],  
-  };
-  return invocarGroqConReintentos(payload);
-};
-
-const invocarGroqBoletinCompleto = async (itemsCompactos, titulo, subtitulo) => {
-  const payload = {
-    model: 'openai/gpt-oss-120b',
-    temperature: 0.1, 
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system',
-        content: [
-          'Sos un editor legal senior. Tu tarea es resumir normas del Boletín Oficial.',
-          'REGLA DE ORO: Si encuentras palabras como "RESUELVE", "DECRETA" o "DISPONE", ignora el resto del texto y céntrate en la parte operativa.',
-          'Copia ESTRICTAMENTE este formato:',
-          '1. Agrupá por Organismo usando: <h3 class="organismo-titulo" style="...">NOMBRE DEL ORGANISMO</h3>',
-          '2. Estructura:',
-          '   <div style="...">',
-          '     <p style="text-transform: uppercase;">{{NORMA_EXACTA}}</p>',
-          '     <p><b>Asunto:</b> Breve título.</p>',
-          '     <p><b>Resumen:</b> Máximo 3 oraciones explicando el impacto, montos o alícuotas. NO digas "no se proporcionan detalles". Si el texto es técnico, resúmelo en lenguaje corporativo claro.</p>',
-          '     <p><a href="{{ENLACE}}">{{ENLACE}}</a></p>',
-          '   </div>',
-          '3. Devolvé JSON: {"boletinCompleto":"html"}'
-        ].join('\n'),      
-      },
-      { role: 'user',
-        content: `Items factuales a sintetizar y agrupar:\n${itemsCompactos}`,  
-      }, 
-    ],
   };
   return invocarGroqConReintentos(payload);
 };
@@ -295,10 +316,66 @@ const obtenerHtml = async (url) => {
   }
   return response.text();
 };
+
+
+const obtenerPdfTexto = async (url) => {
+  const response = await fetch(url, { headers: DEFAULT_HEADERS });
+  if (!response.ok) throw new Error(`No se pudo obtener PDF ${url} (HTTP ${response.status})`);
+  const arrayBuffer = await response.arrayBuffer();
+  const data = await pdfParse(Buffer.from(arrayBuffer));
+  return data.text;
+};
+
+const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLabel = '') => {
+  const regexSeccion = /\+\s*([A-ZÁÉÍÓÚÑ0-9º°.,\s]{4,60}?)\s*\+/g;
+  const marcas = [];
+  let match;
+  while ((match = regexSeccion.exec(textoPdf)) !== null) {
+    marcas.push({ titulo: match[1].trim(), fin: regexSeccion.lastIndex });
+  }
+  const secciones = marcas.length
+    ? marcas.map((m, i) => ({
+        seccion: m.titulo,
+        texto: textoPdf.slice(m.fin, i + 1 < marcas.length ? marcas[i + 1].fin - (marcas[i + 1].titulo.length + 2) : textoPdf.length),
+      }))
+    : [{ seccion: 'Novedades del día', texto: textoPdf }];
+
+  const items = [];
+  secciones.forEach(({ seccion, texto }) => {
+    const partes = texto.split(/_{10,}/).map((p) => normalizarTexto(p)).filter((p) => p.length > 60);
+    partes.forEach((parte) => {
+      const lineas = parte.split('\n').map((l) => l.trim()).filter(Boolean);
+      const posibleTitulo = lineas.find((l) => l.length > 8 && l.length < 140) || lineas[0] || seccion;
+      items.push({
+        organismo: `Provincia de ${provinciaLabel} — ${seccion}`,
+        titulo: limpiarTituloPresentacion(posibleTitulo),
+        texto: recortarTexto(parte, 4000),
+        textoInicial: recortarTexto(parte, 1800),
+        fechaPublicacion: new Date().toLocaleDateString('es-AR'),
+        url: urlOrigen,
+      });
+    });
+  });
+  return items;
+};
   
-const extraerDatosDetalle = (html, url = '') => {
+const extraerDatosDetalle = (html, url = '', jurisdiccion = 'nacional') => {
   const $ = cheerio.load(html);
   $('style, script, noscript, svg, link, meta, head').remove();
+
+  const esProvincial = url.includes('santafe.gob.ar') || url.includes('entrerios.gov.ar');
+
+  if (esProvincial) {
+     let textoCompleto = normalizarTexto($('body').text()).replace(/[ \t]+/g, ' ');
+     return {
+       organismo: url.includes('santafe') ? 'Boletín Oficial - Provincia de Santa Fe' : 'Boletín Oficial - Provincia de Entre Ríos',
+       titulo: 'Normativa Provincial',
+       texto: recortarTexto(textoCompleto, 8000),
+       textoInicial: recortarTexto(textoCompleto, 2000),
+       fechaPublicacion: new Date().toLocaleDateString('es-AR')
+     };
+  }
+
   const encabezado = $('h1').first().text().trim() || 'Organismo no especificado';
   let textoCompleto = normalizarTexto($('body').text())
     .replace(/table\s*\{[\s\S]*?\}/gi, '')
@@ -365,10 +442,6 @@ const extraerDatosDetalle = (html, url = '') => {
   };
 };
 
-// ==========================================
-// --- HANDLER PRINCIPAL ---
-// ==========================================
-
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
 
@@ -377,23 +450,46 @@ exports.handler = async (event) => {
     const { action, sessionId } = body;
 
     if (action === 'extraer_links') {
-      const { urlBoletin } = body;
-      const html = await obtenerHtml(urlBoletin);
-      const $ = cheerio.load(html);
-      const links = [];
-      $('a[href*="/detalleAviso/primera/"]').each((i, el) => {
-        const href = $(el).attr('href');
-        if (href) {
-          const fullUrl = new URL(href, BOLETIN_BASE_URL).toString();
-          links.push(fullUrl);        
-        }      
-      });
-      return { statusCode: 200, body: JSON.stringify({ links: [...new Set(links)] }) };    
+      const { jurisdiccion, provinciasActivas, urlBoletin } = body;
+      let links = [];
+
+      if (jurisdiccion === 'provincial') {
+        const fuentesProvincias = [
+          { nombre: 'Santa Fe', activo: provinciasActivas?.santaFe, urlBase: 'https://www.santafe.gob.ar/boletinoficial/', urlConsulta: 'https://www.santafe.gob.ar/boletinoficial/', filtro: (href) => /norma|boletin/i.test(href) },
+          { nombre: 'Entre Ríos', activo: provinciasActivas?.entreRios, urlBase: 'https://portal.entrerios.gov.ar', urlConsulta: 'https://portal.entrerios.gov.ar/gobernacion/imprenta/pf/consulta/7948', filtro: (href) => /descarga|pdf/i.test(href) }
+        ];
+
+        for (const prov of fuentesProvincias) {
+          if (!prov.activo) continue;
+          try {
+            const html = await obtenerHtml(prov.urlConsulta);
+            const $ = cheerio.load(html);
+            $('a[href]').each((i, el) => {
+              const href = $(el).attr('href');
+              if (esLinkValido(href)) {
+                const fullUrl = resolverUrl(href, prov.urlBase);
+                if (fullUrl && prov.filtro(fullUrl) && !links.includes(fullUrl)) links.push(fullUrl);
+              }
+            });
+          } catch (e) { console.error(`Falla extrayendo ${prov.nombre}:`, e.message); }
+        }
+      } else {
+        try {
+          const html = await obtenerHtml(urlBoletin);
+          const $ = cheerio.load(html);
+          $('a[href*="/detalleAviso/primera/"]').each((i, el) => {
+            const href = $(el).attr('href');
+            if (esLinkValido(href)) {
+              const fullUrl = resolverUrl(href, BOLETIN_BASE_URL);
+              if (fullUrl && !links.includes(fullUrl)) links.push(fullUrl);
+            }
+          });
+        } catch (e) { console.error('Error extrayendo BORA:', e.message); }
+      }
+      return { statusCode: 200, body: JSON.stringify({ links: [...new Set(links)] }) };
     }
     
-    if (!sessionId) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Falta sessionId" }) };    
-    }
+    if (!sessionId) return { statusCode: 400, body: JSON.stringify({ error: "Falta sessionId" }) };
     
     switch (action) {
       case 'iniciar':
@@ -406,43 +502,85 @@ exports.handler = async (event) => {
           organismosExcluidos: expandirFiltrosConAlias(body.organismosExcluidos || [], ORGANISMO_ALIASES),
           subtopicosExcluidos: expandirFiltrosConAlias(body.subtopicosExcluidos || [], SUBTOPICO_ALIASES),
           modoOrganismo: body.modoOrganismo || 'excluir',
+          palabrasClaves: body.palabrasClaves || []
         };
         return { statusCode: 200, body: JSON.stringify({ status: 'ok' }) };
         
       case 'procesar_siguiente':
         const stateProc = sesiones[sessionId];
-        if (!stateProc) return { statusCode: 400, body: JSON.stringify({ error: "Sesión no encontrada (el servidor se reinició)" }) };
-        
-        if (!stateProc.links || stateProc.links.length === 0) {
-          return { statusCode: 200, body: JSON.stringify({ progress: 1, total: 1, omitidos: 0 }) };
-        }
+        if (!stateProc) return { statusCode: 400, body: JSON.stringify({ error: "Sesión no encontrada" }) };
+        if (!stateProc.links || stateProc.links.length === 0) return { statusCode: 200, body: JSON.stringify({ progress: 1, total: 1 }) };
 
         while (stateProc.index < stateProc.links.length) {
           const targetUrl = stateProc.links[stateProc.index];
-          const htmlDetalle = await obtenerHtml(targetUrl);
+          const esProvincialUrl = targetUrl.includes('santafe.gob.ar') || targetUrl.includes('entrerios.gov.ar');
+          
+          // FIX C: Lógica bifurcada (Si es PDF provincial, lo parsea y desglosa en partes)
+          if (esProvincialUrl && esUrlPdf(targetUrl)) {
+            const provinciaLabel = targetUrl.includes('santafe') ? 'Santa Fe' : 'Entre Ríos';
+            let textoPdf = '';
+            try {
+              textoPdf = await obtenerPdfTexto(targetUrl);
+            } catch (e) {
+              console.warn(`Error PDF provincial (${targetUrl}):`, e);
+              stateProc.omitidos.push({ url: targetUrl });
+              stateProc.index += 1;
+              continue;
+            }
+
+            const itemsExtraidos = extraerNormasDePdfProvincial(textoPdf, targetUrl, provinciaLabel);
+            itemsExtraidos.forEach((item) => {
+              const textoMayus = `${item.titulo} ${item.texto}`.toUpperCase();
+              let debeOmitirse = false;
+              if (stateProc.palabrasClaves && stateProc.palabrasClaves.length > 0) {
+                 const contienePalabraClave = stateProc.palabrasClaves.some(clave => textoMayus.includes(clave.toUpperCase()));
+                 if (!contienePalabraClave) debeOmitirse = true;
+              }
+
+              if (debeOmitirse) {
+                stateProc.omitidos.push({ url: item.url }); 
+              } else {
+                stateProc.textos.push({ ...item, esProvincial: true });
+              }
+            });
+            stateProc.index += 1;
+            return { statusCode: 200, body: JSON.stringify({ progress: stateProc.index, total: stateProc.links.length }) };
+          }
+
+          // Lógica Normal (Páginas HTML - Principalmente BORA)
+          let htmlDetalle = '';
+          try {
+             htmlDetalle = await obtenerHtml(targetUrl);
+          } catch (e) {
+             console.warn(`Error HTML (${targetUrl}):`, e);
+             stateProc.omitidos.push({ url: targetUrl });
+             stateProc.index += 1;
+             continue;
+          }
+
           const { organismo, titulo, texto, textoInicial, fechaPublicacion } = extraerDatosDetalle(htmlDetalle, targetUrl);
+          
+          let debeOmitirse = false;
           const organismoCoincide = buscarCoincidencia(organismo, stateProc.organismosExcluidos);
           const organismoPermitido = stateProc.modoOrganismo === 'incluir' ? organismoCoincide : !organismoCoincide;
-          const textoSubtopico = `${titulo} ${textoInicial}`;
-          const subtopicoOmitido = buscarCoincidencia(textoSubtopico, stateProc.subtopicosExcluidos);
+          const subtopicoOmitido = buscarCoincidencia(`${titulo} ${textoInicial}`, stateProc.subtopicosExcluidos);
+          if (!organismoPermitido || subtopicoOmitido) debeOmitirse = true;
+
           stateProc.index += 1;
-          if (!organismoPermitido || subtopicoOmitido) {
-            stateProc.omitidos.push({ url: targetUrl, organismo, titulo, fechaPublicacion });
+          
+          if (debeOmitirse) {
+            stateProc.omitidos.push({ url: targetUrl });
             continue;
           }
-          stateProc.textos.push({ titulo, organismo, texto, fechaPublicacion, url: targetUrl });
-          return { statusCode: 200, body: JSON.stringify({ progress: stateProc.index, total: stateProc.links.length, omitidos: stateProc.omitidos.length }) };
+          
+          stateProc.textos.push({ titulo, organismo, texto, fechaPublicacion, url: targetUrl, esProvincial: false });
+          return { statusCode: 200, body: JSON.stringify({ progress: stateProc.index, total: stateProc.links.length }) };
         }
-        return { statusCode: 200, body: JSON.stringify({ progress: stateProc.index, total: stateProc.links.length, omitidos: stateProc.omitidos.length }) };
+        return { statusCode: 200, body: JSON.stringify({ progress: stateProc.index, total: stateProc.links.length }) };
         
       case 'resumir':
-          const stateResum = sesiones[sessionId]; // Usamos 'state' para que coincida con todo el resto
+          const stateResum = sesiones[sessionId]; 
           if (!stateResum) return { statusCode: 400, body: JSON.stringify({ error: "Sesión expirada" }) };
-
-          stateResum.textos = stateResum.textos.filter(item => {
-            const organismoCoincide = buscarCoincidencia(item.organismo, stateResum.organismosExcluidos);
-            return stateResum.modoOrganismo === 'incluir' ? organismoCoincide : !organismoCoincide;
-          });
 
           let textosLimpios = stateResum.textos.map(item => ({
             ...item,
@@ -459,60 +597,92 @@ exports.handler = async (event) => {
             return true;
           });
 
+          const tieneProvinciales = stateResum.textos.some(t => t.esProvincial);
+          const tieneNacionales = stateResum.textos.some(t => !t.esProvincial);
+          
+          let tituloBase = 'BOLETÍN SEMANAL';
+          if (tieneProvinciales && tieneNacionales) tituloBase = 'BOLETÍN INTEGRAL';
+          else if (tieneProvinciales) tituloBase = 'COMPILADO PROVINCIAL';
+
           const rango = stateResum.textos.length
             ? `${stateResum.textos[0].fechaPublicacion || ''} - ${stateResum.textos[stateResum.textos.length - 1].fechaPublicacion || ''}`.replace(/^[\s-]+|[\s-]+$/g, '')
             : '';
-          const tituloBase = 'BOLETIN SEMANAL';
           const subtituloBase = rango ? `Período: ${rango}` : 'Compilado generado desde fuentes oficiales';
 
-          const fallbackEstructural = construirHtmlFactualFallback(stateResum.textos, tituloBase, subtituloBase);
-          const textosParaIA = stateResum.textos.slice(0, 15);
+          const agrupados = stateResum.textos.reduce((acc, item) => {
+            const org = item.organismo || 'Otros Organismos';
+            if (!acc[org]) acc[org] = [];
+            acc[org].push(item);
+            return acc;
+          }, {});
 
-          const itemsCompactosParaGroq = textosParaIA.map((item) => {
-            const textoLimpio = item.texto.replace(/\n+/g, '\n').trim();
-            const regexAccion = /\b(RESUELVE|DECRETA|DISPONE|SANCIONA|ACUERDA|ARTICULO 1|ARTICULO PRIMERO)\b/i;
-            const indexAccion = textoLimpio.search(regexAccion);
-            const inicio = indexAccion !== -1 ? indexAccion : 0;
-            const textoUtil = textoLimpio.substring(inicio, inicio + 1200);
-
-            return `Organismo: ${item.organismo}\nNORMA: ${item.titulo}\nEnlace: ${item.url || ''}\nContenido: ${textoUtil}\n---`;
-          }).join('\n');
-
-          let cuerpoEmailHtml = '';
           let cuerpoPdfHtml = '';
+          const fallbackEstructural = construirHtmlFactualFallback(stateResum.textos, tituloBase, subtituloBase);
 
-          try {
-            const resultadoEmail = await invocarGroqResumenEmail(itemsCompactosParaGroq, tituloBase, subtituloBase);
-            cuerpoEmailHtml = resultadoEmail?.resumenEmail || resultadoEmail;
-          } catch (errorIA) {
-            console.warn('IA falló para el email, usando Plan B:', errorIA);
-            cuerpoEmailHtml = fallbackEstructural.resumenEmail;
-          }
+          const procesarOrganismo = async (org) => {
+              let htmlOrg = `<h3 class="organismo-titulo" style="margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #000000; padding-bottom: 5px;">${org}</h3>`;
+              const items = agrupados[org];
+              const lotes = chunkArray(items, 4); 
 
-          try {
-            const resultadoPdf = await invocarGroqBoletinCompleto(itemsCompactosParaGroq, tituloBase, subtituloBase);
-            cuerpoPdfHtml = resultadoPdf?.boletinCompleto || resultadoPdf;
-          } catch (errorIA) {
-            console.warn('IA falló para el PDF, usando Plan B:', errorIA);
-            cuerpoPdfHtml = fallbackEstructural.boletinCompleto;
-          }
+              const promesasLotes = lotes.map(async (lote) => {
+                  let bloqueHtml = '';
+                  try {
+                      const normasJson = await invocarGroqLoteNormas(lote);
+                      normasJson.forEach((norma, idx) => {
+                          const urlOriginal = lote[idx]?.url || '#';
+                          bloqueHtml += `
+                            <div style="margin-bottom: 20px;">
+                              <p style="text-transform: uppercase; margin: 0 0 5px 0;"><b>${escapeHtmlSeguro(norma.titulo || lote[idx].titulo)}</b></p>
+                              <p style="margin: 0 0 5px 0; color: #333333; line-height: 1.5;"><b>Resumen:</b> ${escapeHtmlSeguro(norma.resumen || 'Sin resumen detallado disponible.')}</p>
+                              <p style="margin: 0;"><a href="${urlOriginal}" style="color: #2563eb; text-decoration: none;">${urlOriginal}</a></p>
+                            </div>
+                          `;
+                      });
+                  } catch (errorLote) {
+                      console.error(`Error en lote de ${org}:`, errorLote);
+                      lote.forEach(item => {
+                          bloqueHtml += `<div style="margin-bottom: 20px;"><p style="text-transform: uppercase; margin: 0 0 5px 0;"><b>${item.titulo}</b></p><p style="margin: 0;"><a href="${item.url}" style="color: #2563eb; text-decoration: none;">Ver Norma</a></p></div>`;
+                      });
+                  }
+                  return bloqueHtml;
+              });
 
-          if (cuerpoEmailHtml) cuerpoEmailHtml = acotarHtmlResumenEmail(cuerpoEmailHtml);
-
-          const resultadoFinal = {
-            resumenEmail: cuerpoEmailHtml,
-            boletinCompleto: cuerpoPdfHtml,
+              const htmlLotesResueltos = await Promise.all(promesasLotes);
+              htmlOrg += htmlLotesResueltos.join('');
+              return htmlOrg;
           };
 
-          if (resultadoFinal.resumenEmail && typeof resultadoFinal.resumenEmail === 'string') {
-            resultadoFinal.resumenEmail = resultadoFinal.resumenEmail.replace(
-              '<div style="font-family: Arial, Helvetica, sans-serif; color: #111827;">',
-              '<div style="font-family: Arial, Helvetica, sans-serif; color: #111827; font-size: 13px; line-height: 1.6;">'
-            );
+          const orgsProvinciales = Object.keys(agrupados).filter(o => /santa fe|entre r[ií]os|provincia/i.test(o));
+          const orgsNacionales = Object.keys(agrupados).filter(o => !orgsProvinciales.includes(o));
+
+          if (orgsNacionales.length > 0) {
+              if (tieneProvinciales && tieneNacionales) cuerpoPdfHtml += `<h2 style="color: #0f172a; margin-top: 10px; border-bottom: 3px solid #334155; padding-bottom: 8px; font-size: 18px;">NORMATIVAS NACIONALES (BORA)</h2>`;
+              for (const org of orgsNacionales) cuerpoPdfHtml += await procesarOrganismo(org);
+          }
+          
+          // FIX D: Encabezado para la sección provincial
+          if (orgsProvinciales.length > 0) {
+              cuerpoPdfHtml += `
+                <div style="margin: 40px 0 15px 0; text-align: center;">
+                  <h2 style="margin:0; font-size:16pt; text-transform:uppercase; color:#000; border-top:2px solid #000; border-bottom:2px solid #000; padding:10px 0;">Novedades Provinciales</h2>
+                </div>`;
+              for (const org of orgsProvinciales) cuerpoPdfHtml += await procesarOrganismo(org);
+          }
+
+          if (cuerpoPdfHtml === '') cuerpoPdfHtml = fallbackEstructural.boletinCompleto;
+
+          const topItems = stateResum.textos.slice(0, 4).map(i => `NORMA: ${i.titulo} - ${i.texto.substring(0, 300)}`).join('\n');
+          let cuerpoEmailHtml = '';
+          try {
+             const resEmail = await invocarGroqResumenEmail(topItems);
+             cuerpoEmailHtml = resEmail?.resumenEmail || '';
+          } catch (e) { 
+             console.error("Fallo IA Email, usando fallback");
+             cuerpoEmailHtml = fallbackEstructural.resumenEmail; 
           }
 
           delete sesiones[sessionId];
-          return { statusCode: 200, body: JSON.stringify(resultadoFinal) };
+          return { statusCode: 200, body: JSON.stringify({ resumenEmail: cuerpoEmailHtml, boletinCompleto: cuerpoPdfHtml }) };
 
       default:
         return { statusCode: 400, body: JSON.stringify({ error: "Acción desconocida" }) };    
