@@ -27,7 +27,7 @@ const EditorNovedades = ({ clientesDB }) => {
     const historialGuardado = JSON.parse(localStorage.getItem('historial_novedades') || '[]');
     setHistorial(historialGuardado);}, []);
 
-  const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
+  const destinatarios = clientesDB?.filter(c => c.enviarNovedades === true) || [];
   const destinatariosFiltrados = destinatarios.filter(c => 
     c.razonSocial?.toLowerCase().includes(busquedaDestinatario.toLowerCase()) ||
     c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase()));
@@ -52,7 +52,7 @@ const EditorNovedades = ({ clientesDB }) => {
     if (!puntosClave.trim()) return alert("Por favor, ingresa los puntos clave de la novedad.");
     setGenerandoIA(true);
     try {
-      const response = await fetch('/.netlify/functions/generarBoletinIA', {
+      const response = await fetch('/.netlify/functions/generarNovedadIA', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ puntosClave })
@@ -146,7 +146,7 @@ const EditorNovedades = ({ clientesDB }) => {
         const pdfBase64Uri = await html2pdf().set(opcionesPdf).from(htmlPdf).outputPdf('datauristring');
         const pdfBase64Limpio = pdfBase64Uri.split('base64,')[1];
         
-        await fetch('/.netlify/functions/enviarBoletin', {
+        await fetch('/.netlify/functions/enviarNovedad', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
