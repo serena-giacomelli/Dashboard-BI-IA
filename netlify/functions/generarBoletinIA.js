@@ -839,7 +839,8 @@ exports.handler = async (event) => {
           // FIX D: Encabezado para la sección provincial
           if (orgsProvinciales.length > 0) {
               cuerpoPdfHtml += `
-                <h2 style="color: #0f172a; margin-top: 10px; border-bottom: 3px solid #334155; padding-bottom: 8px; font-size: 18px;">NORMATIVAS PROVINCIALES</h2>
+                <h2 style="color: #0f172a; margin-top: 10px; border-bottom: 3px solid #334155; padding-bottom: 8px; font-size: 18px;">NORMATIVAS PROVINCIALES
+                </h2>
               `;
               for (const org of orgsProvinciales) {
                 cuerpoPdfHtml += await procesarOrganismo(org);
