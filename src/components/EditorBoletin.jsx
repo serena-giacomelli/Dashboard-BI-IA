@@ -30,13 +30,10 @@ const EditorBoletin = ({ clientesDB }) => {
   const [organismosExcluidos, setOrganismosExcluidos] = useState([]);
   const [subtopicosExcluidos, setSubtopicosExcluidos] = useState([]);
   const [modoOrganismo, setModoOrganismo] = useState('excluir');
-  
-  // Fuentes Activas
   const [incluirBora, setIncluirBora] = useState(true);
   const [incluirSantaFe, setIncluirSantaFe] = useState(true);
   const [incluirEntreRios, setIncluirEntreRios] = useState(true);
   const [palabrasSeleccionadas, setPalabrasSeleccionadas] = useState(LISTA_PALABRAS_CLAVES);
-
   const [dropdownsAbiertos, setDropdownsAbiertos] = useState({});
   const [envioActual, setEnvioActual] = useState(0);
   const [historial, setHistorial] = useState([]);
@@ -148,6 +145,8 @@ const EditorBoletin = ({ clientesDB }) => {
     }
     return fechas;
   };
+
+  
 
   const manejarToggleOrganismo = (orgId) => {
     if (organismosExcluidos.includes(orgId)) {
