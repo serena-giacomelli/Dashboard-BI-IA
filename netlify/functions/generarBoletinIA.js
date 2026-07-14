@@ -96,7 +96,6 @@ const extraerFechaPublicacion = (texto = '', url = '') => {
   return fechas;
 };
 
-
 const tomarFragmentos = (texto = '', cantidad = 4) => {
   return texto.split('\n')
     .map(linea => linea.trim())
@@ -235,10 +234,9 @@ return {
   };
 };
 
-// ⚡ MODIFICACIÓN CRÍTICA 1: Manejo robusto del JSON y reducción de delays
 const invocarGroqConReintentos = async (payload) => {
   const maxIntentos = 3;
-  let baseDelay = 500; // Reducido drásticamente para evitar Timeout de Netlify
+  let baseDelay = 500;
 
   for (let intento = 1; intento <= maxIntentos; intento++) {
     try {
@@ -256,7 +254,6 @@ const invocarGroqConReintentos = async (payload) => {
         if (data.choices?.[0]?.message?.content) {
           try {
             let content = data.choices[0].message.content.trim();
-            // EXTRACCIÓN ROBUSTA: Buscar solo el bloque JSON, ignorando texto inicial o markdown
             const match = content.match(/\{[\s\S]*\}/);
             if (match) content = match[0];
             return JSON.parse(content);
@@ -281,9 +278,7 @@ const invocarGroqConReintentos = async (payload) => {
   throw new Error('Fallback crítico: No se pudo obtener respuesta válida de Groq.');
 };
 
-// ⚡ MODIFICACIÓN CRÍTICA 2: Cambio de modelo a llama3-8b (Extremadamente más rápido, evita timeouts)
 const invocarGroqLoteNormas = async (lote) => {
-  // Ajustamos el tamaño del texto dinámicamente: las normativas provinciales requieren más contexto para ser analizadas.
   const compactos = lote.map((item, idx) => `ID: ${idx}\nNORMA: ${item.titulo}\nEnlace: ${item.url}\nContenido: ${item.texto.substring(0, item.esProvincial ? 2500 : 1200)}`).join('\n---\n');
   const payload = {
     model: 'openai/gpt-oss-20b', 
@@ -359,7 +354,6 @@ const obtenerPdfTexto = async (url) => {
     return "";
   }
 
-  // 2. INTENTO PRIMARIO: Extracción local con pdf2json (Garantiza lectura de todas las páginas)
   console.log(`[PDF2JSON] Intentando extracción local completa para: ${url}`);
   
   let textoExtraido = "";
@@ -382,7 +376,7 @@ const obtenerPdfTexto = async (url) => {
 
     if (textoExtraido.trim().length > 100) {
       console.log(`[PDF2JSON] Extracción exitosa. Caracteres: ${textoExtraido.length}`);
-      return textoExtraido; // Al salir por acá, evitamos consumir recursos del OCR
+      return textoExtraido;
     } else {
       console.log(`[PDF2JSON] Texto muy corto. Posible PDF protegido o imagen. Pasando al OCR...`);
     }
@@ -390,7 +384,6 @@ const obtenerPdfTexto = async (url) => {
     console.warn(`[PDF2JSON] Fallo crítico: ${localError.message}. Intentando OCR...`);
   }
 
-  // 3. FALLBACK: OCR externo (Se mantiene por si en el futuro suben un PDF escaneado)
   try {
     console.log(`[OCR] Iniciando extracción externa (base64) como respaldo...`);
     const apiKey = process.env.OCR_SPACE_KEY || 'helloworld';
@@ -433,21 +426,19 @@ const obtenerPdfTexto = async (url) => {
 };
 
 const extraerFechaDeUrlProvincial = (url = '') => {
-  let m = url.match(/BO(\d{2})(\d{2})(\d{4})\.pdf/i); // Santa Fe: BOddmmyyyy.pdf
+  let m = url.match(/BO(\d{2})(\d{2})(\d{4})\.pdf/i); 
   if (m) return `${m[1]}/${m[2]}/${m[3]}`;
-  m = url.match(/(\d{2})-(\d{2})-(\d{2})\.pdf/); // Entre Ríos: dd-mm-yy.pdf
+  m = url.match(/(\d{2})-(\d{2})-(\d{2})\.pdf/); 
   if (m) return `${m[1]}/${m[2]}/20${m[3]}`;
   return new Date().toLocaleDateString('es-AR');
 };
 
 const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLabel = '') => {
-  // 1. Limpiamos los saltos de línea rotos típicos de la extracción de PDFs
   const textoLimpio = textoPdf.replace(/\s+/g, ' '); 
   const items = [];
   const textoMayus = textoLimpio.toUpperCase();
   const coincidencias = [];
 
-  // 2. Escaneamos TODO el PDF (sin recortar nada) buscando las palabras clave
   PALABRAS_CLAVES_PROVINCIALES.forEach(clave => {
     const claveMayus = clave.toUpperCase();
     let index = textoMayus.indexOf(claveMayus);
@@ -458,19 +449,15 @@ const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLa
     }
   });
 
-  // Si el PDF entero no tiene ninguna palabra clave, no devolvemos nada
   if (coincidencias.length === 0) return items;
 
-  // 3. Agrupamos las coincidencias cercanas para no mandar texto duplicado a la IA
   coincidencias.sort((a, b) => a.index - b.index);
   const ventanas = [];
   coincidencias.forEach(c => {
-     // Acercamos el índice de inicio para que la normativa real ingrese limpia dentro de los límites del chunk del LLM
      const inicio = Math.max(0, c.index - 300); 
      const fin = Math.min(textoLimpio.length, c.index + 3500); 
      
      if (ventanas.length > 0 && inicio < ventanas[ventanas.length - 1].fin) {
-        // Si se superponen, unificamos la ventana
         ventanas[ventanas.length - 1].fin = Math.max(ventanas[ventanas.length - 1].fin, fin);
         if (!ventanas[ventanas.length - 1].clavePrincipal.includes(c.clave)) {
             ventanas[ventanas.length - 1].clavePrincipal += ` / ${c.clave}`;
@@ -480,7 +467,6 @@ const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLa
      }
   });
 
-  // 4. Construimos los fragmentos garantizados con información útil
   const fechaPublicacion = extraerFechaDeUrlProvincial(urlOrigen);
   ventanas.forEach((v, i) => {
      const fragmento = textoLimpio.substring(v.inicio, v.fin);
@@ -599,13 +585,6 @@ exports.handler = async (event) => {
           const dd = String(fechaObj.getDate()).padStart(2, '0');
           const mm = String(fechaObj.getMonth() + 1).padStart(2, '0');
           const yyyy = fechaObj.getFullYear();
-
-          // BÚSQUEDA SANTA FE
-          // FIX: el patrón de URL es correcto (verificado contra el sitio real), pero el chequeo
-          // previo por HEAD fallaba: verPdf.php es un script dinámico (no un archivo estático) y
-          // muchos de estos endpoints PHP basados en readfile() no responden bien a HEAD aunque
-          // el archivo exista y el GET funcione perfecto. Se agrega el link directo y se deja que
-          // 'procesar_siguiente' descarte con gracia los días sin boletín publicado (ya lo hace).
           if (provinciasActivas?.santaFe) {
             const urlDirectaPdf = `https://www.santafe.gob.ar/boletinoficial/verPdf.php?archivo=recursos/boletines/pdf/${yyyy}/${mm}/BO${dd}${mm}${yyyy}.pdf`;
             if (!links.includes(urlDirectaPdf)) {
@@ -613,17 +592,14 @@ exports.handler = async (event) => {
             }
           }
 
-          // BÚSQUEDA ENTRE RÍOS
           if (provinciasActivas?.entreRios) {
             promesasScraping.push((async () => {
               const mesNombre = NOMBRES_MESES[fechaObj.getMonth()];
               const yy = String(yyyy).slice(-2);
               
-              // Construimos el patrón exacto: YYYY/Mes/dd-mm-aa.pdf
               const urlDirectaPdfER = `https://www.entrerios.gov.ar/boletin/calendario/Boletin/${yyyy}/${mesNombre}/${dd}-${mm}-${yy}.pdf`;
               
               try {
-                // Usamos GET para bypass de firewalls institucionales
                 const res = await fetch(urlDirectaPdfER, { method: 'GET', headers: DEFAULT_HEADERS });
                 
                 if (res.ok && !links.includes(urlDirectaPdfER)) {
@@ -639,7 +615,6 @@ exports.handler = async (event) => {
           }
         });
 
-        // Ejecutamos la búsqueda de todos los días de la semana en paralelo
         await Promise.all(promesasScraping);
       } else {
         try {
@@ -683,7 +658,6 @@ exports.handler = async (event) => {
           const targetUrl = stateProc.links[stateProc.index];
           const esProvincialUrl = targetUrl.includes('santafe.gob.ar') || targetUrl.includes('entrerios.gov.ar');
           
-          // FIX C: Lógica bifurcada (Si es PDF provincial, lo parsea y desglosa en partes)
           if (esProvincialUrl && esUrlPdf(targetUrl)) {
                     const provinciaLabel = targetUrl.includes('santafe') ? 'Santa Fe' : 'Entre Ríos';
                     let textoPdf = '';
@@ -744,7 +718,6 @@ exports.handler = async (event) => {
             continue;
           }
           
-          // Aseguramos que la bandera `esProvincial` se guarde de forma correcta cuando se trata de una página HTML provincial
           stateProc.textos.push({ titulo, organismo, texto, fechaPublicacion, url: targetUrl, esProvincial: esProvincialUrl });
           return { statusCode: 200, body: JSON.stringify({ progress: stateProc.index, total: stateProc.links.length }) };
         }
@@ -836,7 +809,6 @@ exports.handler = async (event) => {
               for (const org of orgsNacionales) cuerpoPdfHtml += await procesarOrganismo(org);
           }
           
-          // FIX D: Encabezado para la sección provincial
           if (orgsProvinciales.length > 0) {
               cuerpoPdfHtml += `
                 <h2 style="color: #0f172a; margin-top: 10px; border-bottom: 3px solid #334155; padding-bottom: 8px; font-size: 18px;">NORMATIVAS PROVINCIALES

@@ -3,9 +3,8 @@ import styles from '../styles/ExportModal.module.css';
 
 function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
   const [selected, setSelected] = useState([]);
-  const MAX_COLUMNS = 15; // Límite de seguridad para PDF
+  const MAX_COLUMNS = 15;
 
-  // Al abrir el modal, pre-seleccionar todas las columnas
   useEffect(() => {
     if (isOpen) {
       setSelected(columns.map((col) => col.key));}

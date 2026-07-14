@@ -1,5 +1,3 @@
-/* ExportModal.module.css */
-
 .overlay {
   position: fixed;
   inset: 0;
@@ -33,7 +31,6 @@
   to   { transform: translateY(0);    opacity: 1; }
 }
 
-/* ── Header ── */
 .header {
   display: flex;
   align-items: center;
@@ -96,7 +93,6 @@
   margin: 0;
 }
 
-/* ── Select all row ── */
 .selectAllRow {
   display: flex;
   align-items: center;
@@ -111,7 +107,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Column grid ── */
 .columnGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -121,7 +116,6 @@
   flex: 1;
 }
 
-/* ── Checkbox item ── */
 .checkItem {
   display: flex;
   align-items: center;
@@ -151,7 +145,6 @@
   line-height: 1.3;
 }
 
-/* ── Footer ── */
 .footer {
   display: flex;
   justify-content: flex-end;

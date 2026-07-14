@@ -61,12 +61,12 @@
 .panel-desplegable {
   position: absolute;
   top: 130%;
-  right: -10px; /* Ajustado para que caiga prolijo */
+  right: -10px;
   width: 320px;
   background-color: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); /* Sombra suave solo al desplegar */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
   z-index: 1000;
   overflow: hidden;
 }
@@ -99,7 +99,6 @@
   text-decoration: underline;
 }
 
-/* --- Lista de Alertas --- */
 .lista-notificaciones {
   max-height: 280px;
   overflow-y: auto;

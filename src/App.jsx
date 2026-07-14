@@ -21,11 +21,8 @@ function App() {
     <div className={styles.shell}>
       <Sidebar />
       <main className={styles.content}>
-        
-        {/* 💡 ACÁ VA EL HEADER: Queda fijo en la parte superior del área de contenido */}
-        <Header />
+          <Header />
 
-        {/* Podés envolver las rutas en un div con padding si sentís que queda muy pegado al header */}
         <div style={{ padding: '24px' }}>
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

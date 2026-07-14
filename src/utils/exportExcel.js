@@ -2,8 +2,6 @@ import ExcelJS from 'exceljs';
 import { STATE_STYLES, BUDGET_STATE_STYLES, FAT_STYLES, getDueDateStyle, COMPANY_CONFIG } from '../styles/reportTheme';
 import { LOGO_CIFAS_BASE64 } from '../utils/assets.js';
 
-// ── Helpers de formato ────────────────────────────────────────────────────────
-
 function formatDate(value) {
   if (!value) return '-';
   return new Intl.DateTimeFormat('es-AR').format(new Date(`${value}T00:00:00`));
@@ -39,8 +37,6 @@ function downloadBlob(blob, fileName) {
   window.URL.revokeObjectURL(url);
 }
 
-// ── Estilos constantes ────────────────────────────────────────────────────────
-
 const HEADER_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
 const HEADER_FONT = { bold: true, size: 11, color: { argb: 'FF16324F' } };
 const TITLE_FILL   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF16324F' } };
@@ -54,15 +50,11 @@ const THIN_BORDER = {
 };
 const ALT_ROW_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
 
-// ── Ordenamiento por fecha según reporte ─────────────────────────────────────
-
 const DATE_COLUMN_BY_REPORT = {
   servicios:       'fechaInicio',
   tramites:     'fechaVtoRegistro',
   vencimientos: 'vencimiento',
 };
-
-// ── Función principal ─────────────────────────────────────────────────────────
 
 export async function exportToExcel({ reportConfig, filteredRows, filterSummary, selectedColumnKeys, reportId }) {
   const workbook = new ExcelJS.Workbook();
@@ -76,7 +68,6 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
   const colCount = exportColumns.length;
   const now = new Intl.DateTimeFormat('es-AR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
 
-  // ── Ordenar filas por fecha si aplica ──
   const sortKey = DATE_COLUMN_BY_REPORT[reportId];
   const sortedRows = sortKey
     ? [...filteredRows].sort((a, b) => {
@@ -86,14 +77,11 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
       })
     : filteredRows;
 
-  // ── Filas reservadas para el logo (filas 1 a 4) ──
   sheet.addRow([]); sheet.getRow(1).height = 20;
   sheet.addRow([]); sheet.getRow(2).height = 20;
   sheet.addRow([]); sheet.getRow(3).height = 20;
   sheet.addRow([]); sheet.getRow(4).height = 20;
 
-  // ── Logo ──
-  // CAMBIO AQUÍ: Se usa LOGO_CIFAS_BASE64 en lugar de COMPANY_CONFIG.logo
   if (LOGO_CIFAS_BASE64) {
     try {
       const logoId = workbook.addImage({ base64: LOGO_CIFAS_BASE64, extension: 'png' });
@@ -105,29 +93,24 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
     } catch (e) { console.warn('Logo error:', e); }
   }
 
-  // ── Nombre empresa y título ──
   sheet.getCell('C2').value = COMPANY_CONFIG.name;
   sheet.getCell('C2').font = { bold: true, size: 14, color: { argb: 'FF16324F' } };
   sheet.getCell('C2').alignment = { vertical: 'middle' };
-
   sheet.getCell('C3').value = `Informe: ${reportConfig.label}`;
   sheet.getCell('C3').font = { size: 12, color: { argb: 'FF16324F' } };
   sheet.getCell('C3').alignment = { vertical: 'middle' };
 
-  // ── Línea divisoria azul ──
-  sheet.addRow([]); // fila 5
+  sheet.addRow([]);
   sheet.getRow(5).height = 6;
   for (let col = 1; col <= colCount; col++) {
     sheet.getRow(5).getCell(col).fill = TITLE_FILL;
   }
 
-  // ── Metadatos ──
   sheet.addRow([`Generado: ${now}    |    Registros: ${sortedRows.length}`]);
   sheet.mergeCells(6, 1, 6, colCount);
   sheet.getCell('A6').font = META_FONT;
   sheet.getRow(6).height = 20;
 
-  // ── Filtros ──
   let currentRow = 7;
   filterSummary.forEach(({ label, value }) => {
     sheet.addRow([`${label}: ${value}`]);
@@ -137,11 +120,9 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
     currentRow++;
   });
 
-  // ── Fila vacía separadora ──
   sheet.addRow([]);
   currentRow++;
 
-  // ── Encabezados de tabla ──
   const headerRowIndex = currentRow;
   const headerRow = sheet.addRow(exportColumns.map((col) => col.label));
   headerRow.height = 25;
@@ -153,14 +134,11 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
   });
   currentRow++;
 
-  // ── AutoFilter ──
   const lastCol = colIndexToLetter(colCount);
   sheet.autoFilter = `A${headerRowIndex}:${lastCol}${headerRowIndex + sortedRows.length}`;
 
-  // ── Fila congelada ──
   sheet.views = [{ state: 'frozen', ySplit: headerRowIndex }];
 
-  // ── Filas de datos ──
   sortedRows.forEach((row, rowIndex) => {
     const values = exportColumns.map((col) => getCellValue(row, col.key));
     const dataRow = sheet.addRow(values);
@@ -183,13 +161,11 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
         cell.font = { size: 10, color: { argb: STATE_STYLES[cellValue].text }, bold: false };
       }
 
-      // Estilo Estado de presupuesto
       if (colKey === 'estadoPresupuesto' && BUDGET_STATE_STYLES[cellValue]) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BUDGET_STATE_STYLES[cellValue].bg } };
         cell.font = { size: 10, color: { argb: BUDGET_STATE_STYLES[cellValue].text }, bold: false };
       }
 
-      // Estilo Vencimiento / Fecha
       if (['vencimiento', 'fechaVto', 'fechaFin', 'fechaVtoRegistro'].includes(colKey) && cellValue && cellValue !== '-') {
         const style = getDueDateStyle(row[colKey]);
         if (style) {
@@ -198,7 +174,6 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
         }
       }
 
-      // Estilo para estados de engorde
       if (colKey === 'estado' && FAT_STYLES[cellValue]) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: FAT_STYLES[cellValue].bg } };
         cell.font = { size: 10, color: { argb: FAT_STYLES[cellValue].text }, bold: false };
@@ -206,7 +181,6 @@ export async function exportToExcel({ reportConfig, filteredRows, filterSummary,
     });
   });
 
-  // ── Ancho de columnas ──
   exportColumns.forEach((_col, index) => {
     sheet.getColumn(index + 1).width = 25;
   });

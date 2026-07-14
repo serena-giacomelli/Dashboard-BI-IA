@@ -477,7 +477,6 @@
   cursor: pointer;
   font-weight: 500;}
 
-  /* Contenedor principal de secciones */
 .eb-card {
     background: white;
     border: 1px solid #e2e8f0;
@@ -487,7 +486,6 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* Título interno de cada sección */
 .eb-card-title {
     font-size: 14px;
     font-weight: 600;
@@ -497,7 +495,6 @@
     padding-bottom: 8px;
 }
 
-/* Grilla para que las palabras clave queden ordenadas */
 .eb-keyword-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -505,7 +502,6 @@
     margin-top: 10px;
 }
 
-/* Estilo para cada item de palabra clave */
 .eb-keyword-item {
     background: #f8fafc;
     padding: 6px 10px;

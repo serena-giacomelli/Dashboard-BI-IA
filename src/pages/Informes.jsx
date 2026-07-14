@@ -11,7 +11,6 @@ import { PDF_THEME } from '../styles/Pdftheme.js';
 
 import '../styles/Global.css';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
   value,
   label: config.label,
@@ -99,7 +98,6 @@ function buildFilterSummary(reportConfig, filters) {
   }));
 }
 
-// ── Componente Principal ──────────────────────────────────────────────────────
 function Informes() {
   const navigate = useNavigate();
   const [reportId, setReportId] = useState('servicios');
@@ -243,7 +241,6 @@ function Informes() {
 
       <div className="cifas-layout-split">
         
-        {/* PANEL IZQUIERDO: CONFIGURACIÓN DE FILTROS */}
         <section className="cifas-card">
           <p className="cifas-card__titulo">Parámetros del reporte</p>
           <h2 className="cifas-card__main-name">{reportConfig.label}</h2>
@@ -264,7 +261,6 @@ function Informes() {
             </select>
           </label>
 
-          {/* Renderizado dinámico de filtros */}
           <div>
             {reportConfig.filters.map((filter) => {
               if (filter.type === 'date') {
@@ -332,7 +328,6 @@ function Informes() {
           </div>
         </section>
 
-        {/* PANEL DERECHO: VISTA PREVIA DE TABLA */}
         <section className="cifas-card">
           <p className="cifas-card__titulo">Vista previa en tiempo real</p>
           <h2 className="cifas-card__main-name">Resultados filtrados</h2>

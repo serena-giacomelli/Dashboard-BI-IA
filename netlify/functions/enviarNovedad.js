@@ -1,28 +1,20 @@
-const obtenerNombreArchivoPdf = () => {
+const obtenerNombreArchivoPdfNovedad = () => {
   const hoy = new Date();
-  const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
-  const lunes = new Date(hoy);
-  lunes.setDate(hoy.getDate() - (diaSemana - 1));
-  const viernes = new Date(lunes);
-  viernes.setDate(lunes.getDate() + 4);
-
   const meses = [
-    'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
+    'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
     'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
   ];
-  
-  const mesInicio = meses[lunes.getMonth()];
-  const mesFin = meses[viernes.getMonth()];
-  const diaInicio = String(lunes.getDate()).padStart(2, '0');
-  const diaFin = String(viernes.getDate()).padStart(2, '0');
-  const anio = viernes.getFullYear();
 
-  return `NOVEDADES ${mesInicio} del ${diaInicio} AL ${diaFin} DE ${mesFin} ${anio}.pdf`;
+  const dia = String(hoy.getDate()).padStart(2, '0');
+  const mes = meses[hoy.getMonth()];
+  const anio = hoy.getFullYear();
+
+  return `NOVEDAD DIARIA ${dia} DE ${mes} ${anio}.pdf`;
 };
 
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: JSON.stringify({ error: "Método no permitido" }) };  
+    return { statusCode: 405, body: JSON.stringify({ error: "Método no permitido" }) };
   }
 
   try {
@@ -30,21 +22,21 @@ exports.handler = async (event, context) => {
     const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey) {
-      return { statusCode: 500, body: JSON.stringify({ error: "Falta configurar la API KEY en Netlify" }) };    
+      return { statusCode: 500, body: JSON.stringify({ error: "Falta configurar la API KEY en Netlify" }) };
     }
 
     const emailPayload = {
-      from: "Prototipo Boletines <onboarding@resend.dev>",
-      to: "sere22giacomelli@gmail.com", 
+      from: "Prototipo Novedades <onboarding@resend.dev>",
+      to: "sere22giacomelli@gmail.com",
       subject: asunto,
-      html: cuerpoHtml, 
+      html: cuerpoHtml,
       attachments: []
     };
 
     if (adjuntoPdf) {
       emailPayload.attachments.push({
-        filename: obtenerNombreArchivoPdf(),
-        content: adjuntoPdf 
+        filename: filename || obtenerNombreArchivoPdfNovedad(),
+        content: adjuntoPdf
       });
     }
 
@@ -69,7 +61,7 @@ exports.handler = async (event, context) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true, message: "¡Boletín enviado!", id: data.id })
+      body: JSON.stringify({ success: true, message: "¡Novedad enviada!", id: data.id })
     };
   } catch (error) {
     console.error("Error en la función:", error);

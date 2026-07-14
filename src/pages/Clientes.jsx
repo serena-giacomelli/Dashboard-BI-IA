@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { actividadesArca } from '../data/mockDB.js';
+import { actividadesArca, actividadesRuca, actividadesSenasa } from '../data/mockDB.js';
 import '../styles/Clientes.css';
 
 const Clientes = ({ clientes, setClientes, serviciosData }) => {
@@ -7,23 +7,45 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     if (!act) return '';
     if (typeof act === 'object') {
       const cod = act.codigo || act.id || act.actividadArca || act.actividad || '';
-      return String(cod).split(' — ')[0].trim();}
-    return String(act).split(' — ')[0].trim();};
+      return String(cod).split(' — ')[0].trim();
+    }
+    return String(act).split(' — ')[0].trim();
+  };
 
-  const getNombreActividad = (codigo) => {
+  const getNombreActividadArca = (codigo) => {
     const limpia = String(codigo).split(' — ')[0].trim();
     const actividad = actividadesArca.find(a => String(a.codigo) === limpia);
-    return actividad ? actividad.nombre : limpia;};
+    return actividad ? actividad.nombre : limpia;
+  };
+
+  const getNombreActividadRuca = (codigo) => {
+    const limpia = String(codigo).split(' — ')[0].trim();
+    const actividad = actividadesRuca.find(a => String(a.codigo) === limpia);
+    return actividad ? actividad.nombre : limpia;
+  };
+
+  const getNombreActividadSenasa = (codigo) => {
+    const limpia = String(codigo).split(' — ')[0].trim();
+    const actividad = actividadesSenasa.find(a => String(a.codigo) === limpia);
+    return actividad ? actividad.nombre : limpia;
+  };
 
   const obtenerActividadDeServicio = (s) => {
     if (!s) return null;
-    let actVal = s.actividadArca || s.actividadesArca || s.actividades || s.actividad;
     
+    if (s.actividadesCliente && s.actividadesCliente.arca) {
+      return s.actividadesCliente.arca;
+    }
+
+    let actVal = s.actividadArca || s.actividadesArca || s.actividades || s.actividad;
     if (!actVal && serviciosData) {
       const srvInfo = serviciosData.find(sd => sd.servicio === s.servicio);
       if (srvInfo) {
-        actVal = srvInfo.actividadesArca || srvInfo.actividadArca || srvInfo.actividades || srvInfo.actividad;}}
-    return actVal;};
+        actVal = srvInfo.actividadesArca || srvInfo.actividadArca || srvInfo.actividades || srvInfo.actividad;
+      }
+    }
+    return actVal;
+  };
 
   const estadosServicios = [
     "1. Pendiente de asignacion",
@@ -37,7 +59,8 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     "9. Observada",
     "10. Finalizada",
     "11. Finalizada. no corresponde facturar",
-    "12. Anualidad"];
+    "12. Anualidad"
+  ];
 
   const [clienteEditando, setClienteEditando] = useState(null);
   const [formData, setFormData] = useState(null);
@@ -58,27 +81,34 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
   const filtroEstadosRef = useRef(null);
 
   useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (filtroEstadosRef.current && !filtroEstadosRef.current.contains(event.target)) {
-      setMostrarFiltroEstados(false);}};
-      document.addEventListener('mousedown', handleClickOutside);
-  return () => {document.removeEventListener('mousedown', handleClickOutside);};}, []);
+    const handleClickOutside = (event) => {
+      if (filtroEstadosRef.current && !filtroEstadosRef.current.contains(event.target)) {
+        setMostrarFiltroEstados(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => { document.removeEventListener('mousedown', handleClickOutside); };
+  }, []);
 
   const actividadesUnicas = Array.from(new Set(
     clientes.flatMap(cliente => {
       const actividadesDeServicios = (cliente.servicios || []).flatMap(servicio => {
         const acts = obtenerActividadDeServicio(servicio);
-        return Array.isArray(acts) ? acts : (acts ? [acts] : []);});
+        return Array.isArray(acts) ? acts : (acts ? [acts] : []);
+      });
       const actividadesDirectas = cliente.actividades || [];
       return [...actividadesDirectas, ...actividadesDeServicios];
-    }).map(act => obtenerCodigoActividad(act)).filter(Boolean)));
+    }).map(act => obtenerCodigoActividad(act)).filter(Boolean)
+  ));
 
   const manejarOrden = (campo) => {
     if (ordenarPor === campo) {
       setOrdenDireccion(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setOrdenarPor(campo);
-      setOrdenDireccion('asc');}};
+      setOrdenDireccion('asc');
+    }
+  };
 
   const clientesFiltrados = clientes
     .filter(cliente => {
@@ -86,16 +116,18 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
         cliente.razonSocial.toLowerCase().includes(filtroTexto.toLowerCase()) ||
         String(cliente.cuit || '').includes(filtroTexto);
       const cumpleEstado =
-        filtroGlobalEstados.length === 0 || (cliente.servicios || []).some( s => 
-        filtroGlobalEstados.includes(s.estado));
+        filtroGlobalEstados.length === 0 || (cliente.servicios || []).some(s =>
+          filtroGlobalEstados.includes(s.estado));
 
-      const cumpleActividad = !filtroGlobalActividad || 
+      const cumpleActividad = !filtroGlobalActividad ||
         (cliente.servicios || []).some(s => {
           const acts = obtenerActividadDeServicio(s);
           const actsArray = Array.isArray(acts) ? acts : (acts ? [acts] : []);
-          return actsArray.some(act => obtenerCodigoActividad(act) === filtroGlobalActividad);});
+          return actsArray.some(act => obtenerCodigoActividad(act) === filtroGlobalActividad);
+        });
 
-      return cumpleTexto && cumpleEstado && cumpleActividad;})
+      return cumpleTexto && cumpleEstado && cumpleActividad;
+    })
     .sort((a, b) => {
       let valA = a[ordenarPor];
       let valB = b[ordenarPor];
@@ -107,57 +139,70 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
       } else {
         valA = valA || 0;
         valB = valB || 0;
-        return ordenDireccion === 'asc' ? valA - valB : valB - valA;}});
+        return ordenDireccion === 'asc' ? valA - valB : valB - valA;
+      }
+    });
 
-  const getActividadesDeFichaActual = () => {
-    const lista = [];
-    if (!formData) return lista;
+  const getActividadesMulticapa = () => {
+    const listaArca = new Set();
+    const listaRuca = new Set();
+    const listaSenasa = new Set();
 
-    (formData.actividades || []).forEach(act => {
-      const cod = obtenerCodigoActividad(act);
-      if (cod) {
-        lista.push({ codigo: cod, nombre: getNombreActividad(cod) });}});
+    if (!formData) return { arca: [], ruca: [], senasa: [] };
 
     (formData.servicios || []).forEach(s => {
-      const acts = obtenerActividadDeServicio(s);
-      const actsArray = Array.isArray(acts) ? acts : (acts ? [acts] : []);
-      actsArray.forEach(act => {
-        const cod = obtenerCodigoActividad(act);
-        if (cod) {
-          lista.push({ codigo: cod, nombre: getNombreActividad(cod) });}});});
+      if (s.actividadesCliente) {
+        (s.actividadesCliente.arca || []).forEach(cod => listaArca.add(cod));
+        (s.actividadesCliente.ruca || []).forEach(cod => listaRuca.add(cod));
+        (s.actividadesCliente.senasa || []).forEach(cod => listaSenasa.add(cod));
+      } else {
+        const acts = obtenerActividadDeServicio(s);
+        const actsArray = Array.isArray(acts) ? acts : (acts ? [acts] : []);
+        actsArray.forEach(act => {
+          const cod = obtenerCodigoActividad(act);
+          if (cod) listaArca.add(cod);
+        });
+      }
+    });
 
-    const vistas = new Set();
-    return lista.filter(item => {
-      const clave = `${item.codigo}`;
-      if (vistas.has(clave)) return false;
-      vistas.add(clave);
-      return true;});};
+    return {
+      arca: Array.from(listaArca).map(cod => ({ codigo: cod, nombre: getNombreActividadArca(cod) })),
+      ruca: Array.from(listaRuca).map(cod => ({ codigo: cod, nombre: getNombreActividadRuca(cod) })),
+      senasa: Array.from(listaSenasa).map(cod => ({ codigo: cod, nombre: getNombreActividadSenasa(cod) }))
+    };
+  };
 
   const limpiarFiltrosInternosServicios = () => {
     setFiltroSrvNombre('');
     setFiltroSrvEstado('');
-    setFiltroSrvActividad('');};
+    setFiltroSrvActividad('');
+  };
 
   const limpiarTodosLosFiltrosGlobales = () => {
     setFiltroTexto('');
-    setFiltroGlobalEstados([]);    
-    setFiltroGlobalActividad('');};
+    setFiltroGlobalEstados([]);
+    setFiltroGlobalActividad('');
+  };
 
   const toggleEstadoGlobal = (estado) => {
-  setFiltroGlobalEstados(prev =>
-    prev.includes(estado)
-      ? prev.filter(e => e !== estado)
-      : [...prev, estado]);};
+    setFiltroGlobalEstados(prev =>
+      prev.includes(estado)
+        ? prev.filter(e => e !== estado)
+        : [...prev, estado]);
+  };
 
   const cambiarSubTabServicios = (tab) => {
     setSubTabServicios(tab);
-    limpiarFiltrosInternosServicios();};
+    limpiarFiltrosInternosServicios();
+  };
 
   const toggleBoletin = (id) => {
-    setClientes(clientes.map(c => c.id === id ? { ...c, enviarBoletin: !c.enviarBoletin } : c));};
+    setClientes(clientes.map(c => c.id === id ? { ...c, enviarBoletin: !c.enviarBoletin } : c));
+  };
 
   const toggleNovedades = (id) => {
-  setClientes(clientes.map(c =>c.id === id ? { ...c, enviarNovedades: !c.enviarNovedades } : c));};
+    setClientes(clientes.map(c => c.id === id ? { ...c, enviarNovedades: !c.enviarNovedades } : c));
+  };
 
   const manejarEdicion = (cliente) => {
     setClienteEditando(cliente.id);
@@ -178,64 +223,51 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
       contactos: cliente.contactos || [],
       historia: cliente.historia || [],
       servicios: cliente.servicios || [],
-      actividades: cliente.actividades || []});
+      actividades: cliente.actividades || []
+    });
     setTabActiva('Actividades');
     setSubTabServicios('activos');
-    limpiarFiltrosInternosServicios();};
+    limpiarFiltrosInternosServicios();
+  };
 
   const manejarCambio = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });};
-
-  const manejarSeleccionServicio = (servicio) => {
-    const servicioInfo = serviciosData?.find(s => s.servicio === servicio);
-    let actAsignada = '';
-    
-    if (servicioInfo) {
-      const posibles = servicioInfo.actividadesArca || servicioInfo.actividadArca || servicioInfo.actividades || servicioInfo.actividad;
-      if (Array.isArray(posibles)) {
-        actAsignada = posibles[0] || '';
-      } else {
-        actAsignada = posibles || '';}}
-
-    setNuevoServicio({
-      ...nuevoServicio,
-      servicio,
-      actividadArca: actAsignada});};
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+  };
 
   const agregarContacto = () => {
     if (!nuevoContacto.nombre && !nuevoContacto.apellido) return;
     setFormData({ ...formData, contactos: [...formData.contactos, nuevoContacto] });
-    setNuevoContacto({ nombre: '', apellido: '', telefono: '', interno: '', celular: '', mail: '', cargo: 'TITULAR', obs: '' });};
+    setNuevoContacto({ nombre: '', apellido: '', telefono: '', interno: '', celular: '', mail: '', cargo: 'TITULAR', obs: '' });
+  };
 
   const agregarHistoria = () => {
     if (!nuevaHistoria.descripcion) return;
     setFormData({ ...formData, historia: [...formData.historia, nuevaHistoria] });
-    setNuevaHistoria({ descripcion: '', fecha: '18/03/2026', tipo: 'Historia' });};
-
-  const agregarServicio = () => {
-    if (!nuevoServicio.servicio) return;
-    setFormData({ ...formData, servicios: [...formData.servicios, nuevoServicio] });
-    setNuevoServicio({ servicio: '', estado: '1. Pendiente de asignacion', fechaInicio: '16/06/2026', actividadArca: '' });};
+    setNuevaHistoria({ descripcion: '', fecha: '18/03/2026', tipo: 'Historia' });
+  };
 
   const guardarCambios = (e) => {
     e.preventDefault();
     setClientes(clientes.map(c => c.id === formData.id ? formData : c));
     setClienteEditando(null);
     setFormData(null);
-    limpiarFiltrosInternosServicios();};
+    limpiarFiltrosInternosServicios();
+  };
 
   const todosFiltradosMarcados = clientesFiltrados.length > 0 && clientesFiltrados.every(c => c.enviarBoletin);
   const todosFiltradosNovedades = clientesFiltrados.length > 0 && clientesFiltrados.every(c => c.enviarNovedades);
   const toggleTodosFiltrados = () => {
     const nuevoEstado = !todosFiltradosMarcados;
     const idsVisibles = clientesFiltrados.map(c => c.id);
-    setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarBoletin: nuevoEstado } : c));};
+    setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarBoletin: nuevoEstado } : c));
+  };
 
   const toggleTodosFiltradosNovedades = () => {
     const nuevoEstado = !todosFiltradosNovedades;
     const idsVisibles = clientesFiltrados.map(c => c.id);
-    setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarNovedades: nuevoEstado } : c));};
+    setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarNovedades: nuevoEstado } : c));
+  };
 
   const getBadgeServicioClass = (estado) => {
     if (!estado) return 'badge-servicio badge-servicio--default';
@@ -247,25 +279,26 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     if (est.includes('demorada') || est.includes('observada')) return 'badge-servicio badge-servicio--alerta';
     if (est.includes('finalizada')) return 'badge-servicio badge-servicio--finalizada';
     if (est.includes('anualidad')) return 'badge-servicio badge-servicio--anualidad';
-    return 'badge-servicio badge-servicio--default';};
+    return 'badge-servicio badge-servicio--default';
+  };
 
   const serviciosSegunSubTab = (formData?.servicios || [])
     .filter(s => {
-      const esHistorico = s.estado === "10. Finalizada" || s.estado === "11. Finalizada. no corresponds facturar";
+      const esHistorico = s.estado === "10. Finalizada" || s.estado === "11. Finalizada. no corresponde facturar";
       return subTabServicios === 'historico' ? esHistorico : !esHistorico;
     })
     .filter(s => {
       const cumpleNombre = !filtroSrvNombre || s.servicio.toLowerCase().includes(filtroSrvNombre.toLowerCase());
       const cumpleEstado = !filtroSrvEstado || s.estado === filtroSrvEstado;
-      
+
       let cumpleActividad = !filtroSrvActividad;
       if (filtroSrvActividad) {
         const acts = obtenerActividadDeServicio(s);
         const actsArray = Array.isArray(acts) ? acts : (acts ? [acts] : []);
-        cumpleActividad = actsArray.some(act => obtenerCodigoActividad(act) === filtroSrvActividad);}
-      return cumpleNombre && cumpleEstado && cumpleActividad;});
-
-  const actividadesFichaActual = getActividadesDeFichaActual();
+        cumpleActividad = actsArray.some(act => obtenerCodigoActividad(act) === filtroSrvActividad);
+      }
+      return cumpleNombre && cumpleEstado && cumpleActividad;
+    });
 
   return (
     <div className="clientes-wrapper">
@@ -274,7 +307,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
           <div className="clientes-header">
             <h2>Directorio de Clientes</h2>
           </div>
-          
+
           <div className="filtros-toolbar" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div className="filtros-toolbar__main-row" style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
               <div className="search-bar-container" style={{ flex: 2, minWidth: '300px', margin: 0 }}>
@@ -283,32 +316,32 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                   placeholder="Buscar por Razón Social o CUIT..."
                   value={filtroTexto}
                   onChange={(e) => setFiltroTexto(e.target.value)}
-                  className="search-bar-input"/>
+                  className="search-bar-input" />
               </div>
 
               <div ref={filtroEstadosRef}
-                style={{flex: 1, minWidth: '240px', position: 'relative'}}>                
+                style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
                 <button type="button" onClick={() =>
-                    setMostrarFiltroEstados(!mostrarFiltroEstados)}
+                  setMostrarFiltroEstados(!mostrarFiltroEstados)}
                   className="form-input form-input--white"
-                  style={{height: '40px', width: '100%',textAlign: 'left', cursor: 'pointer'}}>
+                  style={{ height: '40px', width: '100%', textAlign: 'left', cursor: 'pointer' }}>
                   {filtroGlobalEstados.length === 0
                     ? 'Todos los Estados'
                     : `${filtroGlobalEstados.length} estado(s) seleccionado(s)`}
                 </button>
 
                 {mostrarFiltroEstados && (
-                  <div style={{position: 'absolute', top: '45px', left: 0, right: 0, background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', padding: '10px', zIndex: 1000, maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+                  <div style={{ position: 'absolute', top: '45px', left: 0, right: 0, background: '#fff', border: '1px solid #d1d5db', borderRadius: '8px', padding: '10px', zIndex: 1000, maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
                   >
                     {estadosServicios.map((estado) => (
                       <label
                         key={estado}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0',  cursor: 'pointer'}}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', cursor: 'pointer' }}
                       >
                         <input
                           type="checkbox"
                           checked={filtroGlobalEstados.includes(estado)}
-                          onChange={() => toggleEstadoGlobal(estado)}/>
+                          onChange={() => toggleEstadoGlobal(estado)} />
                         {estado}
                       </label>))}
                   </div>)}
@@ -323,7 +356,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                   <option value="">Todas las Actividades ARCA</option>
                   {actividadesUnicas.map(codigo => (
                     <option key={codigo} value={codigo}>
-                      [{codigo}] {getNombreActividad(codigo)}
+                      [{codigo}] {getNombreActividadArca(codigo)}
                     </option>))}
                 </select>
               </div>
@@ -331,10 +364,10 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
 
             <div className="filtros-toolbar__stats" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                {( filtroTexto || filtroGlobalEstados.length > 0 || filtroGlobalActividad) && (
+                {(filtroTexto || filtroGlobalEstados.length > 0 || filtroGlobalActividad) && (
                   <button type="button" onClick={limpiarTodosLosFiltrosGlobales} className="btn-clear-inline" style={{ marginRight: '15px' }}>
                     Limpiar Filtros
-                  </button>                )}
+                  </button>)}
                 <span className="results-count"><b>{clientesFiltrados.length}</b> {clientesFiltrados.length === 1 ? 'resultado' : 'resultados'}</span>
               </div>
             </div>
@@ -346,49 +379,51 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                 <thead>
                   <tr>
                     <th onClick={() => manejarOrden('razonSocial')}>
-                          Razón Social
-                        </th>
-                        <th>CUIT</th>
-                        <th>Servicios Registrados</th>
-                        <th className="th-center" style={{ userSelect: 'none' }}>
-                          <label
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '6px',
-                              cursor: 'pointer',
-                              margin: 0                            }}>
-                            <input
-                              type="checkbox"
-                              checked={todosFiltradosMarcados}
-                              onChange={toggleTodosFiltrados}
-                              disabled={clientesFiltrados.length === 0}/>
-                            <span>Boletín</span>
-                          </label>
-                        </th>
-                        <th className="th-center" style={{ userSelect: 'none' }}>
-                          <label
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '6px',
-                              cursor: 'pointer',
-                              margin: 0}}>
-                            <input
-                              type="checkbox"
-                              checked={todosFiltradosNovedades}
-                              onChange={toggleTodosFiltradosNovedades}
-                              disabled={clientesFiltrados.length === 0}/>
-                            <span>Novedades</span>
-                          </label>
-                        </th>
-                        <th onClick={() => manejarOrden('saldo')} className="th-right">
-                          Saldo
-                        </th>
-                        <th className="th-center">
-                          Acciones</th>
+                      Razón Social
+                    </th>
+                    <th>CUIT</th>
+                    <th>Servicios Registrados</th>
+                    <th className="th-center" style={{ userSelect: 'none' }}>
+                      <label
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                          margin: 0
+                        }}>
+                        <input
+                          type="checkbox"
+                          checked={todosFiltradosMarcados}
+                          onChange={toggleTodosFiltrados}
+                          disabled={clientesFiltrados.length === 0} />
+                        <span>Boletín</span>
+                      </label>
+                    </th>
+                    <th className="th-center" style={{ userSelect: 'none' }}>
+                      <label
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                          margin: 0
+                        }}>
+                        <input
+                          type="checkbox"
+                          checked={todosFiltradosNovedades}
+                          onChange={toggleTodosFiltradosNovedades}
+                          disabled={clientesFiltrados.length === 0} />
+                        <span>Novedades</span>
+                      </label>
+                    </th>
+                    <th onClick={() => manejarOrden('saldo')} className="th-right">
+                      Saldo
+                    </th>
+                    <th className="th-center">
+                      Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -407,13 +442,13 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                         ) : <span className="sin-servicios">Sin servicios</span>}
                       </td>
                       <td className="td-center">
-                        <input type="checkbox" checked={cliente.enviarBoletin || false} onChange={() => toggleBoletin(cliente.id)} className="checkbox-boletin"/>
+                        <input type="checkbox" checked={cliente.enviarBoletin || false} onChange={() => toggleBoletin(cliente.id)} className="checkbox-boletin" />
                       </td>
                       <td className="td-center">
-                          <input type="checkbox" checked={cliente.enviarNovedades || false}
-                            onChange={() => toggleNovedades(cliente.id)} className="checkbox-boletin"
-                          />
-                        </td>
+                        <input type="checkbox" checked={cliente.enviarNovedades || false}
+                          onChange={() => toggleNovedades(cliente.id)} className="checkbox-boletin"
+                        />
+                      </td>
                       <td className={`td-right ${cliente.saldo < 0 ? 'td-right--negativo' : 'td-right--positivo'}`}>
                         ${cliente.saldo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                       </td>
@@ -481,7 +516,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="ficha-tabs-panel">
             <div className="ficha-tabs__nav">
               {['Contactos', 'Direcciones', 'Historia', 'Actividades', 'Presupuestos', 'Establecimientos', 'Vencimientos', 'Servicios'].map((tab) => (
@@ -492,7 +527,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                   className={`ficha-tab-btn ${tabActiva === tab ? 'ficha-tab-btn--activa' : ''}`}>
                   {tab}
                 </button>))}
-            </div>            
+            </div>
             <div className="ficha-tabs__contenido">
               {tabActiva === 'Contactos' && (
                 <div>
@@ -508,7 +543,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                           type="text"
                           value={nuevoContacto[item.k]}
                           onChange={(e) => setNuevoContacto({ ...nuevoContacto, [item.k]: e.target.value })}
-                          className="form-input"/>
+                          className="form-input" />
                       </div>))}
                   </div>
                   <div className="contactos-grid-bottom">
@@ -529,7 +564,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                         type="text"
                         value={nuevoContacto.obs}
                         onChange={(e) => setNuevoContacto({ ...nuevoContacto, obs: e.target.value })}
-                        className="form-input"/>
+                        className="form-input" />
                     </div>
                     <button type="button" onClick={agregarContacto} className="btn-agregar">Agregar</button>
                   </div>
@@ -573,8 +608,8 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
               {tabActiva === 'Historia' && (
                 <div>
                   <div className="historia-grid">
-                    <input type="text" value={nuevaHistoria.descripcion} onChange={(e) => setNuevaHistoria({ ...nuevaHistoria, descripcion: e.target.value })} className="form-input" placeholder="Descripción..."/>
-                    <input type="text" value={nuevaHistoria.fecha} onChange={(e) => setNuevaHistoria({ ...nuevaHistoria, fecha: e.target.value })} className="form-input"/>
+                    <input type="text" value={nuevaHistoria.descripcion} onChange={(e) => setNuevaHistoria({ ...nuevaHistoria, descripcion: e.target.value })} className="form-input" placeholder="Descripción..." />
+                    <input type="text" value={nuevaHistoria.fecha} onChange={(e) => setNuevaHistoria({ ...nuevaHistoria, fecha: e.target.value })} className="form-input" />
                     <select value={nuevaHistoria.tipo} onChange={(e) => setNuevaHistoria({ ...nuevaHistoria, tipo: e.target.value })} className="form-input form-input--white">
                       <option>Historia</option><option>Llamada</option><option>Reunión</option>
                     </select>
@@ -592,40 +627,70 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                       </tbody>
                     </table>)}
                 </div>)}
+                {tabActiva === 'Actividades' && (() => {
+                  const listaArca = formData.servicios.flatMap(s => s.actividadesCliente?.arca || []);
+                  const listaRuca = formData.servicios.flatMap(s => s.actividadesCliente?.ruca || []);
+                  const listaSenasa = formData.servicios.flatMap(s => s.actividadesCliente?.senasa || []);
+                  const maxFilas = Math.max(listaArca.length, listaRuca.length, listaSenasa.length);
+                  const filas = Array.from({ length: maxFilas });
 
-              {tabActiva === 'Actividades' && (
-                <div className="actividades-tab-panel">
-                  <table className="tabla-actividades">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '120px' }}>Código</th>
-                        <th>Actividad</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {actividadesFichaActual.length > 0 ? (
-                        actividadesFichaActual.map((act, i) => (
-                          <tr key={i}>
-                            <td style={{ fontWeight: '600', color: '#1e293b' }}>
-                              {act.codigo}
-                            </td>
-                            <td className="td-actividad" style={{ fontSize: '13px', color: '#334155' }}>
-                              {act.nombre}
-                            </td>
-                          </tr>))) : (
-                        <tr>
-                          <td colSpan="3" style={{ textAlign: 'center', color: '#64748b', padding: '15px' }}>
-                            No hay actividades registradas directas ni vinculadas a servicios activos.
-                          </td>
-                        </tr>)}
-                    </tbody>
-                  </table>
-                </div>)}
+                  return (
+                    <div className="actividades-tabla-container" style={{ padding: '10px' }}>
+                      <table className="tabla-actividades-comparativa" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '2px solid #e2e8f0', background: '#f8fafc' }}>
+                            <th style={{ padding: '12px', width: '33%' }}>ARCA</th>
+                            <th style={{ padding: '12px', width: '33%' }}>RUCA</th>
+                            <th style={{ padding: '12px', width: '33%' }}>SENASA</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {maxFilas === 0 ? (
+                            <tr>
+                              <td colSpan="3" style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
+                                No hay actividades asignadas.
+                              </td>
+                            </tr>
+                          ) : (
+                            filas.map((_, i) => (
+                              <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={{ padding: '10px', fontSize: '13px' }}>
+                                  {listaArca[i] ? (
+                                    <div>
+                                      <strong>{listaArca[i]}</strong><br/>
+                                      <span style={{ color: '#475569' }}>{getNombreActividadArca(listaArca[i])}</span>
+                                    </div>
+                                  ) : '-'}
+                                </td>
+                                <td style={{ padding: '10px', fontSize: '13px', borderLeft: '1px solid #f1f5f9' }}>
+                                  {listaRuca[i] ? (
+                                    <div>
+                                      <strong>{listaRuca[i]}</strong><br/>
+                                      <span style={{ color: '#475569' }}>{getNombreActividadRuca(listaRuca[i])}</span>
+                                    </div>
+                                  ) : '-'}
+                                </td>
+                                <td style={{ padding: '10px', fontSize: '13px', borderLeft: '1px solid #f1f5f9' }}>
+                                  {listaSenasa[i] ? (
+                                    <div>
+                                      <strong>{listaSenasa[i]}</strong><br/>
+                                      <span style={{ color: '#475569' }}>{getNombreActividadSenasa(listaSenasa[i])}</span>
+                                    </div>
+                                  ) : '-'}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
 
               {tabActiva === 'Presupuestos' && <p style={{ fontSize: '13px', color: '#64748b', padding: '10px' }}>Módulo Presupuestos vinculado al ID del cliente.</p>}
               {tabActiva === 'Establecimientos' && <p style={{ fontSize: '13px', color: '#64748b', padding: '10px' }}>Listado de plantas, locales y números RUCA/RNE asignados.</p>}
               {tabActiva === 'Vencimientos' && <p style={{ fontSize: '13px', color: '#dc2626', fontWeight: 'bold', padding: '10px' }}>Próximo vencimiento de tasa: 30/06/2026</p>}
-              
+
               {tabActiva === 'Servicios' && (
                 <div>
                   <div className="servicios-subtabs" style={{ display: 'flex', gap: '10px', marginBottom: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
@@ -652,7 +717,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                         value={filtroSrvNombre}
                         onChange={(e) => setFiltroSrvNombre(e.target.value)}
                         className="form-input"
-                        style={{ background: '#fff', margin: 0 }}/>
+                        style={{ background: '#fff', margin: 0 }} />
                     </div>
                     <div style={{ minWidth: '180px' }}>
                       <select
@@ -660,12 +725,20 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                         onChange={(e) => setFiltroSrvEstado(e.target.value)}
                         className="form-input form-input--white"
                         style={{ margin: 0 }}>
-                        <option value="">Todos los finalizados</option>
+                        
+                        <option value="">
+                          {subTabServicios === 'historico' ? "Todos los finalizados" : "Todos los activos"}
+                        </option>
                         {estadosServicios
                           .filter(est => subTabServicios === 'historico' 
-                            ? (est === "10. Finalizada" || est === "11. Finalizada. no corresponds facturar")
-                            : (est !== "10. Finalizada" && est !== "11. Finalizada. no corresponds facturar"))
-                          .map(est => <option key={est} value={est}>{est}</option>)}
+                            ? (est === "10. Finalizada" || est === "11. Finalizada. no corresponde facturar") 
+                            : (est !== "10. Finalizada" && est !== "11. Finalizada. no corresponde facturar"))
+                          .map(est => (
+                            <option key={est} value={est}>
+                              {est}
+                            </option>
+                          ))
+                        }
                       </select>
                     </div>
                     <div style={{ minWidth: '220px' }}>
@@ -673,11 +746,11 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                         value={filtroSrvActividad}
                         onChange={(e) => setFiltroSrvActividad(e.target.value)}
                         className="form-input form-input--white"
-                        style={{ margin: 0 }}                               >
-                        <option value="">Todas las actividades</option>
+                        style={{ margin: 0 }}>
+                        <option value="">Todas las actividades ARCA</option>
                         {actividadesUnicas.map(codigo => (
                           <option key={codigo} value={codigo}>
-                            [{codigo}] {getNombreActividad(codigo)}
+                            [{codigo}] {getNombreActividadArca(codigo)}
                           </option>))}
                       </select>
                     </div>
@@ -688,25 +761,11 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                   </div>
                   <table className="tabla-servicios">
                     <thead>
-                      <tr><th>Servicio</th><th>Estado</th><th>Actividad ARCA Asignada</th></tr>
+                      <tr><th>Servicio</th><th>Estado</th><th>Actividades Asignadas (ARCA / RUCA / SENASA)</th></tr>
                     </thead>
                     <tbody>
                       {serviciosSegunSubTab.length > 0 ? (
-                        serviciosSegunSubTab.map((s, i) => {
-                          const actVal = obtenerActividadDeServicio(s);
-                          let textoActividad = 'N/A';
-                          if (actVal) {
-                            const transformarActividad = (act) => {
-                              if (!act) return '';
-                              const cod = obtenerCodigoActividad(act);
-                              if (!cod) return typeof act === 'object' ? (act.nombre || '') : String(act);
-                              const nombre = getNombreActividad(cod);
-                              return nombre !== cod ? `[${cod}] ${nombre}` : cod;};
-                            if (Array.isArray(actVal)) {
-                              textoActividad = actVal.map(transformarActividad).filter(Boolean).join(', ');
-                            } else {
-                              textoActividad = transformarActividad(actVal);}}              
-                          return (
+                        serviciosSegunSubTab.map((s, i) => (
                             <tr key={i}>
                               <td style={{ fontWeight: '500' }}>{s.servicio}</td>
                               <td>
@@ -715,9 +774,20 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                                 </span>
                               </td>
                               <td style={{ fontSize: '12px', color: '#334155' }}>
-                                {textoActividad === 'N/A' ? <span className="td-na" style={{ color: '#94a3b8' }}>N/A</span> : textoActividad}
+                                {s.actividadesCliente ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {s.actividadesCliente.arca?.length > 0 && <div><strong>ARCA:</strong> {s.actividadesCliente.arca.join(', ')}</div>}
+                                    {s.actividadesCliente.ruca?.length > 0 && <div><strong>RUCA:</strong> {s.actividadesCliente.ruca.join(', ')}</div>}
+                                    {s.actividadesCliente.senasa?.length > 0 && <div><strong>SENASA:</strong> {s.actividadesCliente.senasa.join(', ')}</div>}
+                                    {!s.actividadesCliente.arca?.length && !s.actividadesCliente.ruca?.length && !s.actividadesCliente.senasa?.length && <span style={{ color: '#94a3b8' }}>Sin asignaciones</span>}
+                                  </div>
+                                ) : (
+                                  <span className="td-na" style={{ color: '#94a3b8' }}>N/A (Formato antiguo)</span>
+                                )}
                               </td>
-                            </tr>);})) : (
+                            </tr>
+                          ))
+                        ) : (
                         <tr>
                           <td colSpan="3" style={{ textAlign: 'center', color: '#64748b', fontSize: '13px', padding: '15px' }}>
                             No se encontraron servicios que coincidan con los filtros locales.
@@ -735,6 +805,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
             <button type="submit" className="btn-guardar">Guardar Cambios</button>
           </div>
         </form>)}
-    </div>);};
+    </div>);
+};
 
 export default Clientes;

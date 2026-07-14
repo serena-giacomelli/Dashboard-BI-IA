@@ -10,6 +10,8 @@ const EditorNovedades = ({ clientesDB }) => {
   const [cuerpoHtml, setCuerpoHtml] = useState('');
   const [boletinCompleto, setBoletinCompleto] = useState('');
   const [puntosClave, setPuntosClave] = useState(''); 
+  const [buscarEnInternet, setBuscarEnInternet] = useState(true);
+  const [fuentesGeneradas, setFuentesGeneradas] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [generandoIA, setGenerandoIA] = useState(false);
   const [envioActual, setEnvioActual] = useState(0); 
@@ -21,7 +23,8 @@ const EditorNovedades = ({ clientesDB }) => {
   const [filtroHistorial, setFiltroHistorial] = useState('');
   const [ordenHistorial, setOrdenHistorial] = useState('recientes'); 
   const [paginaActual, setPaginaActual] = useState(1);
-  const [itemsPorPagina, setItemsPorPagina] = useState(5); 
+  const [itemsPorPagina, setItemsPorPagina] = useState(5);
+  const [etapaIA, setEtapaIA] = useState(''); 
 
   useEffect(() => {
     const historialGuardado = JSON.parse(localStorage.getItem('historial_novedades') || '[]');
@@ -48,55 +51,92 @@ const EditorNovedades = ({ clientesDB }) => {
   const indiceInicial = (paginaValida - 1) * itemsPorPagina;
   const historialPaginado = historialOrdenado.slice(indiceInicial, indiceInicial + itemsPorPagina);
 
-  const generarConIA = async () => {
-    if (!puntosClave.trim()) return alert("Por favor, ingresa los puntos clave de la novedad.");
-    setGenerandoIA(true);
-    try {
-      const response = await fetch('/.netlify/functions/generarNovedadIA', {
+const generarConIA = async () => {
+  if (!puntosClave.trim()) return alert("Por favor, ingresa los puntos clave de la novedad.");
+  setGenerandoIA(true);
+  setFuentesGeneradas([]);
+
+  try {
+    let investigacion = '';
+    let fuentes = [];
+
+    if (buscarEnInternet) {
+      setEtapaIA('Buscando información actualizada en internet...');
+      const resInvestigar = await fetch('/.netlify/functions/generarNovedadIA', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ puntosClave })
+        body: JSON.stringify({ action: 'investigar', puntosClave })
       });
-      const data = await response.json();
-      if (data.resumenEmail && data.boletinCompleto) {
-        setCuerpoHtml(data.resumenEmail);
-        setBoletinCompleto(data.boletinCompleto);
-        setTabActivo('resumen');
+      const dataInvestigar = await resInvestigar.json();
+      if (resInvestigar.ok) {
+        investigacion = dataInvestigar.investigacion || '';
+        fuentes = dataInvestigar.fuentes || [];
       } else {
-        throw new Error("Respuesta incompleta de IA");
+        console.warn('Falló la búsqueda web, se redacta sin investigación:', dataInvestigar.error);
       }
-    } catch (error) {
-      alert("Error al conectar con la IA: " + error.message);
-    } finally {
-      setGenerandoIA(false);}};
+    }
+
+    setEtapaIA('Redactando la novedad...');
+    const resRedactar = await fetch('/.netlify/functions/generarNovedadIA', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'redactar', puntosClave, investigacion, fuentes })
+    });
+    const dataRedactar = await resRedactar.json();
+
+    if (dataRedactar.resumenEmail && dataRedactar.boletinCompleto) {
+      setCuerpoHtml(dataRedactar.resumenEmail);
+      setBoletinCompleto(dataRedactar.boletinCompleto);
+      setFuentesGeneradas(dataRedactar.fuentes || []);
+      setTabActivo('resumen');
+    } else {
+      throw new Error(dataRedactar.error || "Respuesta incompleta de IA");
+    }
+  } catch (error) {
+    alert("Error al conectar con la IA: " + error.message);
+  } finally {
+    setGenerandoIA(false);
+    setEtapaIA('');
+  }
+};
 
   const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
     const fechaHoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-    if (paraPdf) {
-      return `
-        <div style="font-family: Arial, Helvetica, sans-serif; max-width: 580px; margin: 0 auto; padding: 10px; background: #ffffff;">
-          <style>
-            .evitar-corte p, .evitar-corte li, .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte strong {
-              page-break-inside: avoid !important;
-              break-inside: avoid !important;}
-          </style>
-          <div style="text-align: center; margin-bottom: 20px;">
-            <img src="${logoSeleccionado}" width="154" style="display: inline-block;" />
-          </div>
-          <div style="text-align: center; margin-bottom: 25px;">
-            <h1 style="margin: 0; font-size: 22px; color: #333; font-weight: bold;">NOVEDADES DIARIAS</h1>
-            <h2 style="margin: 5px 0 0 0; font-size: 15px; color: #666; font-weight: normal;">FECHA: ${fechaHoy}</h2>
-          </div>
-          <div class="evitar-corte" style="background-color: #E2E2E2; padding: 30px; border-radius: 8px;">
-            <p style="margin-top: 0; font-size: 15px;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-            <div style="line-height: 1.6; font-size: 14px; color: #111; word-wrap: break-word; overflow-wrap: break-word;">
-              ${contenido}
+      if (paraPdf) {
+        return `
+          <div style="font-family: Arial, Helvetica, sans-serif; width: 100%; max-width: 700px; margin: 0 auto; padding: 0 8px; background: #ffffff; box-sizing: border-box;">
+            <style>
+              .evitar-corte p, .evitar-corte li, .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte h4, .evitar-corte strong {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+              }
+              .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte h4 {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+              }
+              .evitar-corte ul, .evitar-corte ol {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+              }
+            </style>
+            <div style="text-align: center; margin-bottom: 20px;">
+              <img src="${logoSeleccionado}" width="154" style="display: inline-block;" />
             </div>
-            <p style="margin-bottom: 0; margin-top: 25px; font-size: 15px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
-          </div>
-        </div>`;}
+            <div style="text-align: center; margin-bottom: 25px;">
+              <h1 style="margin: 0; font-size: 22px; color: #333; font-weight: bold;">NOVEDADES DIARIAS</h1>
+              <h2 style="margin: 5px 0 0 0; font-size: 15px; color: #666; font-weight: normal;">FECHA: ${fechaHoy}</h2>
+            </div>
+            <div class="evitar-corte" style="padding: 0 4px; box-sizing: border-box;">
+              <p style="margin-top: 0; font-size: 15px;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
+              <div style="line-height: 1.6; font-size: 14px; color: #111; word-wrap: break-word; overflow-wrap: break-word;">
+                ${contenido}
+              </div>
+              <p style="margin-bottom: 0; margin-top: 25px; font-size: 15px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
+            </div>
+          </div>`;
+      }
 
     const tablaCore = `
       <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
@@ -172,6 +212,7 @@ const EditorNovedades = ({ clientesDB }) => {
       setAsunto('');
       setCuerpoHtml('');
       setBoletinCompleto('');
+      setFuentesGeneradas([]);
     } catch (error) {
       alert(`❌ Error: ${error.message}`);
     } finally {
@@ -199,9 +240,32 @@ const EditorNovedades = ({ clientesDB }) => {
           onChange={(e) => setPuntosClave(e.target.value)} 
           placeholder="Escribí aquí: capacitaciones, charlas, congresos..." 
           className="en-ia-textarea"/>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '10px 0', fontSize: '13px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={buscarEnInternet}
+            onChange={(e) => setBuscarEnInternet(e.target.checked)}
+          />
+          Buscar información actualizada en internet antes de redactar
+        </label>
+
         <button type="button" onClick={generarConIA} disabled={generandoIA} className="en-btn-generar-ia">
-            {generandoIA ? 'Procesando...' : 'Generar Formato Dual'}
+            {generandoIA ? etapaIA || 'Procesando...' : 'Generar Formato Dual'}
         </button>
+
+        {fuentesGeneradas.length > 0 && (
+          <div style={{ marginTop: '12px', fontSize: '12px', background: '#f8fafc', padding: '10px', borderRadius: '6px' }}>
+            <strong>Fuentes consultadas:</strong>
+            <ul style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
+              {fuentesGeneradas.map((f, i) => (
+                <li key={i}>
+                  <a href={f.url} target="_blank" rel="noopener noreferrer">{f.titulo || f.url}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <form onSubmit={manejarEnvio} className="en-form">

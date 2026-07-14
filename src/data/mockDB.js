@@ -3,19 +3,29 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 export const actividadesArca = [
-  { codigo: '011111', nombre: 'Cultivo de arroz' },
-  { codigo: '011112', nombre: 'Cultivo de trigo' },
-  { codigo: '011121', nombre: 'Cultivo de maíz' },
-  { codigo: '011211', nombre: 'Cultivo de soja' },
-  { codigo: '011291', nombre: 'Cultivo de girasol' },
-  { codigo: '011400', nombre: 'Cultivo de tabaco' },
-  { codigo: '011501', nombre: 'Cultivo de algodón' },
-  { codigo: '016119', nombre: 'Servicios de apoyo agrícolas n.c.p.' },
-  { codigo: '749009', nombre: 'Actividades profesionales, científicas y técnicas n.c.p.' },
-  { codigo: '101011', nombre: 'Matanza de ganado bovino' },
-  { codigo: '711003', nombre: 'Servicios de arquitectura e ingeniería' },
-  { codigo: '522020', nombre: 'Servicios de almacenamiento y depósito en cámaras frigoríficas' },
-  { codigo: '461032', nombre: 'Operaciones de intermediación de carne excepto consignatario directo (Incluye matarifes abastecedores de carne, etc.)' }
+  { codigo: '011111', nombre: 'Cultivo de arroz', vinculos: { ruca: ['RU-02'], senasa: ['SE-100', 'SE-101'] } },
+  { codigo: '011112', nombre: 'Cultivo de trigo', vinculos: { ruca: [], senasa: [] } },
+  { codigo: '011121', nombre: 'Cultivo de maíz', vinculos: { ruca: [], senasa: [] } },
+  { codigo: '011211', nombre: 'Cultivo de soja', vinculos: { ruca: [], senasa: [] } },
+  { codigo: '011291', nombre: 'Cultivo de girasol', vinculos: { ruca: [], senasa: [] } },
+  { codigo: '011400', nombre: 'Cultivo de tabaco', vinculos: { ruca: [], senasa: [] } },
+  { codigo: '011501', nombre: 'Cultivo de algodón', vinculos: { ruca: [], senasa: [] } },
+  { codigo: '016119', nombre: 'Servicios de apoyo agrícolas n.c.p.', vinculos: { ruca: ['RU-02'], senasa: ['SE-100', 'SE-101'] } },
+  { codigo: '749009', nombre: 'Actividades profesionales, científicas y técnicas n.c.p.', vinculos: { ruca: ['RU-01'], senasa: ['SE-100', 'SE-101'] } },
+  { codigo: '101011', nombre: 'Matanza de ganado bovino', vinculos: { ruca: [], senasa: [] } },
+  { codigo: '711003', nombre: 'Servicios de arquitectura e ingeniería', vinculos: { ruca: ['RU-01'], senasa: ['SE-100', 'SE-101'] } },
+  { codigo: '522020', nombre: 'Servicios de almacenamiento y depósito en cámaras frigoríficas', vinculos: { ruca: [], senasa: [] } },
+  { codigo: '461032', nombre: 'Operaciones de intermediación de carne excepto consignatario directo (Incluye matarifes abastecedores de carne, etc.)', vinculos: { ruca: [], senasa: [] } }
+];
+
+export const actividadesRuca = [
+  { codigo: 'RU-01', nombre: 'Acopiador - Consignatario' },
+  { codigo: 'RU-02', nombre: 'Matarife Abastecedor' }
+];
+
+export const actividadesSenasa = [
+  { codigo: 'SE-100', nombre: 'Establecimiento Faenador' },
+  { codigo: 'SE-101', nombre: 'Planta de Elaboración' }
 ];
 
 export const allColumnsByReport = {
@@ -817,7 +827,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 34 Km 5',
         obsInternas: '',
-        actividadesArca: ['016119', '749009']
+        actividadesCliente: {
+        arca: ['101011', '011111'],
+        ruca: ['RU-02'],
+        senasa: [] 
+    }
       },
       { 
         idServicio: 'T-018',
@@ -837,7 +851,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 34 Km 5',
         obsInternas: '',
-        actividadesArca: ['749009']
+        actividadesCliente: {
+          arca: ['749009'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -882,7 +900,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 21 Km 7',
         obsInternas: 'Servicio suspendido por deuda',
-        actividadesArca: ['711003']
+        actividadesCliente: {
+          arca: ['711003'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -927,7 +949,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 9 Km 302',
         obsInternas: '',
-        actividadesArca: ['016119', '749009']
+        actividadesCliente: {
+          arca: ['016119', '749009'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       },
       { 
         idServicio: 'T-004',
@@ -947,7 +973,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 9 Km 302',
         obsInternas: '',
-        actividadesArca: ['749009', '711003']
+        actividadesCliente: {
+          arca: ['749009', '711003'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -988,7 +1018,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 33 Km 742',
         obsInternas: 'Pendiente documentación',
-        actividadesArca: ['711003', '101011']
+        actividadesCliente: {
+          arca: ['711003', '101011'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1031,7 +1065,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta A012 Km 11',
         obsInternas: '',
-        actividadesArca: ['749009']
+        actividadesCliente: {
+          arca: ['749009'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       },
       {
         idServicio: 'T-019',
@@ -1051,7 +1089,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta A012 Km 11',
         obsInternas: '',
-        actividadesArca: ['749009', '711003']
+        actividadesCliente: {
+          arca: ['749009', '711003'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1092,7 +1134,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Parque Industrial Oeste',
         obsInternas: '',
-        actividadesArca: ['101011', '711003']
+        actividadesCliente: {
+          arca: ['101011', '711003'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1135,7 +1181,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 11 Km 345',
         obsInternas: '',
-        actividadesArca: ['855900', '749009']
+        actividadesCliente: {
+          arca: ['855900', '749009'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       },
       {
         idServicio: 'T-020',
@@ -1155,7 +1205,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 11 Km 345',
         obsInternas: 'Revisión técnica de túneles',
-        actividadesArca: ['711003', '101011']
+        actividadesCliente: {
+          arca: ['711003', '101011'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1220,7 +1274,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Puerto General San Martín',
         obsInternas: '',
-        actividadesArca: ['749009']
+       actividadesCliente: {
+        arca: ['101011', '011111'],
+        ruca: ['RU-02'],
+        senasa: [] // Puede no tener SENASA aunque su actividad ARCA lo sugiera
+      },
       },
       {
         idServicio: 'T-021',
@@ -1240,7 +1298,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Puerto General San Martín',
         obsInternas: 'Presupuesto elevado para el cliente',
-        actividadesArca: ['711003']
+        actividadesCliente: {
+          arca: ['711003'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1281,7 +1343,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 18 Km 22',
         obsInternas: '',
-        actividadesArca: ['016119', '749009']
+        actividadesCliente: {
+          arca: ['016119', '749009'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1322,7 +1388,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Zona Industrial Norte',
         obsInternas: '',
-        actividadesArca: ['711003']
+        actividadesCliente: {
+          arca: ['711003'],
+          senasa: ['SE-100', 'SE-101'],
+          ruca: ['RU-01']
+        }
       }
     ]
   },
@@ -1365,7 +1435,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta 8 Km 365',
         obsInternas: '',
-        actividadesArca: ['749009']
+        actividadesCliente: {
+          arca: ['749009'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1406,7 +1480,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Ruta AO12 Km 15',
         obsInternas: '',
-        actividadesArca: ['749009', '711003']
+       actividadesCliente: {
+          arca: ['101011', '011111'],
+          ruca: ['RU-02'],
+          senasa: [] // Puede no tener SENASA aunque su actividad ARCA lo sugiera
+    },
       }
     ]
   },
@@ -1451,7 +1529,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Terminal Portuaria Sur',
         obsInternas: '',
-        actividadesArca: ['016119', '749009']
+        actividadesCliente: {
+          arca: ['016119', '749009'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       },
       {
         idServicio: 'T-022',
@@ -1471,7 +1553,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Terminal Portuaria Sur',
         obsInternas: '',
-        actividadesArca: ['855900', '749009']
+        actividadesCliente: {
+          arca: ['855900', '749009'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1512,7 +1598,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Parque Industrial Alvear',
         obsInternas: '',
-        actividadesArca: ['711003', '101011']
+        actividadesCliente: {
+          arca: ['711003', '101011'],
+          ruca: ['RU-01'],
+          senasa: ['SE-100', 'SE-101']
+        }
       }
     ]
   },
@@ -1553,7 +1643,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Zona Rural Norte',
         obsInternas: '',
-        actividadesArca: ['855900', '749009']
+        actividadesCliente: {
+          arca: ['855900', '749009'],
+          ruca: [],
+          senasa: []
+        }
       }
     ]
   },
@@ -1596,7 +1690,11 @@ export const clientesData = [
         directorTecnico: 'N/A',
         establecimiento: 'Puerto Norte',
         obsInternas: '',
-        actividadesArca: ['749009']
+        actividadesCliente: {
+          arca: ['749009'],
+          ruca: ['RU-01'],
+          senasa: []
+        }
       }
     ]
   }

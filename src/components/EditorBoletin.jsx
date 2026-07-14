@@ -272,7 +272,6 @@ const generarConIA = async () => {
          }
       }
 
-      // EXTRACCION PROVINCIAL
       if (incluirSantaFe || incluirEntreRios) {
          if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
          setEstadoGeneracion(`Consultando portales provinciales vigentes...`);
@@ -496,7 +495,6 @@ const generarConIA = async () => {
     setBoletinSeleccionado(null);
   };
 
-  // === AQUÍ EMPIEZA LA INTERFAZ ===
   return (
     <div className="eb-container">
       <h2>Centro de Despacho de Boletines</h2>
@@ -532,7 +530,6 @@ const generarConIA = async () => {
               </div>
             </div>
 
-            {/* TARJETA 2: PROVINCIALES (Píldoras) */}
             {(incluirSantaFe || incluirEntreRios) && (
               <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
@@ -571,7 +568,6 @@ const generarConIA = async () => {
               </div>
             )}
 
-            {/* TARJETA 3: NACIONAL */}
             {incluirBora && (
               <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
@@ -690,7 +686,6 @@ const generarConIA = async () => {
         </button>
       </form>
 
-      {/* --- NUEVO CÓDIGO AÑADIDO: Modal de Destinatarios --- */}
       {verDestinatariosModal && (
         <div className="eb-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div className="eb-modal-box" style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
@@ -731,7 +726,6 @@ const generarConIA = async () => {
           </div>
         </div>)}
 
-      {/* --- NUEVO CÓDIGO AÑADIDO: Sección de Historial de Boletines --- */}
       {historial.length > 0 && (
         <div className="eb-historial-section" style={{ marginTop: '40px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
           <div className="eb-historial-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -776,7 +770,6 @@ const generarConIA = async () => {
           </div>
         </div>)}
 
-      {/* --- NUEVO CÓDIGO AÑADIDO: Vista previa de Boletín Seleccionado --- */}
       {boletinSeleccionado && (
         <div className="eb-modal-overlay-preview" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div className="eb-modal-box-preview" style={{ background: '#fff', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '800px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
