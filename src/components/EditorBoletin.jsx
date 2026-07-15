@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import html2pdf from 'html2pdf.js';
+import { supabase } from '../utils/supabase';
 import { LOGO_CIFAS_BASE64, LOGO_CIFAS_URL } from '../utils/assets.js';
+
 import '../styles/EditorBoletin.css';
 
 const ESTRUCTURA_ORGANISMOS_BORA = [
@@ -49,9 +51,28 @@ const EditorBoletin = ({ clientesDB }) => {
   const abortarGeneracion = useRef(false);
   const abortControllerRef = useRef(null);
 
+  // --- LÓGICA SUPABASE: CARGAR HISTORIAL ---
   useEffect(() => {
-    const historialGuardado = JSON.parse(localStorage.getItem('historial_boletines') || '[]');
-    setHistorial(historialGuardado);
+    async function cargarHistorial() {
+      const { data, error } = await supabase
+        .from('historial_boletines')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (!error && data) {
+        // Transformamos de snake_case a camelCase para React
+        const historialFormateado = data.map(item => ({
+          id: item.id,
+          fecha: item.fecha,
+          asunto: item.asunto,
+          cuerpoHtml: item.cuerpo_html,
+          boletinCompleto: item.boletin_completo,
+          clientes: item.clientes
+        }));
+        setHistorial(historialFormateado);
+      }
+    }
+    cargarHistorial();
   }, []);
 
   useEffect(() => {
@@ -109,7 +130,7 @@ const EditorBoletin = ({ clientesDB }) => {
     lunes.setDate(hoy.getDate() - (diaSemana - 1));
     const viernes = new Date(lunes);
     viernes.setDate(lunes.getDate() + 4);
-
+    
     const meses = [
       'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
       'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
@@ -135,6 +156,7 @@ const EditorBoletin = ({ clientesDB }) => {
     const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
     const lunes = new Date(hoy);
     lunes.setDate(hoy.getDate() - (diaSemana - 1));
+
     for (let i = 0; i < Math.min(diaSemana, 5); i++) {
       const fechaIteracion = new Date(lunes);
       fechaIteracion.setDate(lunes.getDate() + i);
@@ -145,8 +167,6 @@ const EditorBoletin = ({ clientesDB }) => {
     }
     return fechas;
   };
-
-  
 
   const manejarToggleOrganismo = (orgId) => {
     if (organismosExcluidos.includes(orgId)) {
@@ -191,19 +211,24 @@ const EditorBoletin = ({ clientesDB }) => {
       .replace(/^\s*COMPILADO PROVINCIAL\s*\n+/i, '')
       .replace(/^\s*BOLETÍN INTEGRAL\s*\n+/i, '')
       .trim();
+
     if (!textoPlano) return '<p style="margin: 0; line-height: 1.6; color: #334155;">Sin contenido para mostrar.</p>';
+
     if (/<[a-z][\s\S]*>/i.test(textoPlano)) {
       return textoPlano;
     }
+
     const lineas = textoPlano.split('\n').map((linea) => linea.trim()).filter(Boolean);
     const partes = [];
     let listaAbierta = false;
+
     const cerrarLista = () => {
       if (listaAbierta) {
         partes.push('</ul>');
         listaAbierta = false;
       }
     };
+
     lineas.forEach((linea) => {
       if (/^#{1,3}\s+/.test(linea)) {
         cerrarLista();
@@ -213,22 +238,25 @@ const EditorBoletin = ({ clientesDB }) => {
         partes.push(`<h${Math.min(nivel + 1, 4)} style="margin: 18px 0 8px 0; font-size: ${tamanio}; color: #0f172a; line-height: 1.25;">${texto}</h${Math.min(nivel + 1, 4)}>`);
         return;
       }
-      if (/^[-*•]\s+/.test(linea)) {
+
+      if (/^[-* ]\s+/.test(linea)) {
         if (!listaAbierta) {
           partes.push('<ul style="margin: 10px 0 14px 0; padding-left: 20px;">');
           listaAbierta = true;
         }
-        partes.push(`<li style="margin: 0 0 8px 0; line-height: 1.55; color: #334155;">${escapeHtml(linea.replace(/^[-*•]\s+/, ''))}</li>`);
+        partes.push(`<li style="margin: 0 0 8px 0; line-height: 1.55; color: #334155;">${escapeHtml(linea.replace(/^[-* ]\s+/, ''))}</li>`);
         return;
       }
+
       cerrarLista();
       partes.push(`<p style="margin: 0 0 12px 0; line-height: 1.65; color: #334155;">${escapeHtml(linea)}</p>`);
     });
+
     cerrarLista();
     return partes.join('');
   };
 
-const generarConIA = async () => {
+  const generarConIA = async () => {
     if (!incluirBora && !incluirSantaFe && !incluirEntreRios) {
       return alert("Debes seleccionar al menos una fuente de boletines para generar el compilado.");
     }
@@ -236,11 +264,12 @@ const generarConIA = async () => {
     abortarGeneracion.current = false; 
     abortControllerRef.current = new AbortController();
     setGenerandoIA(true);
-    const sessionId = Date.now().toString();
 
+    const sessionId = Date.now().toString();
     const etiquetasOrganismosExcluidos = ESTRUCTURA_ORGANISMOS_BORA
       .filter(o => organismosExcluidos.includes(o.id))
       .map(o => o.label);
+
     const etiquetasSubtopicosExcluidos = ESTRUCTURA_ORGANISMOS_BORA
       .flatMap(o => o.subtopicos)
       .filter(s => subtopicosExcluidos.includes(s.id))
@@ -257,13 +286,15 @@ const generarConIA = async () => {
            if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
            setEstadoGeneracion(`Consultando índice BORA del ${fecha.slice(6,8)}/${fecha.slice(4,6)}...`);
            const urlBoletin = `https://www.boletinoficial.gob.ar/seccion/primera/${fecha}`;
+           
            try {
              const res = await fetch('/.netlify/functions/generarBoletinIA', {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
                body: JSON.stringify({ action: 'extraer_links', jurisdiccion: 'nacional', urlBoletin }),
-               signal: abortControllerRef.current.signal
-              });
+               signal: abortControllerRef.current.signal 
+             });
+             
              if (res.ok) {
                 const data = await res.json();
                 if (data.links) data.links.forEach(link => todosLosLinks.add(link));
@@ -272,17 +303,19 @@ const generarConIA = async () => {
          }
       }
 
+      // EXTRACCION PROVINCIAL
       if (incluirSantaFe || incluirEntreRios) {
          if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
          setEstadoGeneracion(`Consultando portales provinciales vigentes...`);
+         
          try {
              const resProv = await fetch('/.netlify/functions/generarBoletinIA', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    action: 'extraer_links', 
-                    jurisdiccion: 'provincial', 
-                    provinciasActivas: { santaFe: incluirSantaFe, entreRios: incluirEntreRios }
+                     action: 'extraer_links', 
+                     jurisdiccion: 'provincial',
+                     provinciasActivas: { santaFe: incluirSantaFe, entreRios: incluirEntreRios }
                 }),
                 signal: abortControllerRef.current.signal
              });
@@ -294,6 +327,7 @@ const generarConIA = async () => {
       }
 
       const listaLinks = Array.from(todosLosLinks);
+
       if (listaLinks.length === 0) {
         alert("No se encontraron normativas en los portales seleccionados.");
         setGenerandoIA(false);
@@ -308,16 +342,17 @@ const generarConIA = async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-            action: 'iniciar', 
-            sessionId, 
-            links: listaLinks, 
-            organismosExcluidos: etiquetasOrganismosExcluidos, 
-            subtopicosExcluidos: etiquetasSubtopicosExcluidos, 
-            modoOrganismo,
+             action: 'iniciar', 
+             sessionId, 
+             links: listaLinks,
+             organismosExcluidos: etiquetasOrganismosExcluidos,
+             subtopicosExcluidos: etiquetasSubtopicosExcluidos,
+             modoOrganismo,
             palabrasClaves: palabrasSeleccionadas
         }),
         signal: abortControllerRef.current.signal 
       });
+
       if (!resIniciar.ok) throw new Error(`No se pudo iniciar la sesión.`);
       
       let procesando = true;
@@ -339,6 +374,7 @@ const generarConIA = async () => {
           await new Promise(r => setTimeout(r, 1000));
           continue;
         }
+
         const data = await res.json();
         if (data.progress >= data.total) {
           procesando = false;
@@ -356,14 +392,15 @@ const generarConIA = async () => {
         body: JSON.stringify({ action: 'resumir', sessionId }),
         signal: abortControllerRef.current.signal
       });
+
       const dataFinal = await finalRes.json();
       if (!finalRes.ok) throw new Error(dataFinal.error || "Error en la fase final de la IA");
       
       setCuerpoHtml(dataFinal.resumenEmail);
       setBoletinCompleto(dataFinal.boletinCompleto);
       setTabActivo('resumen');
-      
-} catch (error) {
+
+    } catch (error) {
       if (error.name === 'AbortError' || error.message === "CANCELADO_POR_USUARIO") {
         console.log("Generación cancelada por el usuario.");
       } else {
@@ -398,7 +435,6 @@ const generarConIA = async () => {
             p { orphans: 2; widows: 2; margin-bottom: 10px; font-size: 11pt; line-height: 1.5; color: #222222; text-align: justify; }
             .organismo-titulo { font-size: 13pt; font-weight: bold; color: #000000; text-transform: uppercase; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #000000; padding-bottom: 5px; }
           </style>
-
           <div style="text-align: center; margin-bottom: 25px;">
             <img src="${logoSeleccionado}" width="160" style="display: inline-block; margin-bottom: 15px;" />
             <h1 style="margin: 0 0 5px 0; font-size: 16pt; color: #000000; font-weight: bold;">BOLETÍN DE NOVEDADES ${etiquetaJur}</h1>
@@ -425,6 +461,7 @@ const generarConIA = async () => {
           </div>
         </div>`;
     }
+
     const tablaCore = `
       <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
         <tr><td align="center" style="padding-bottom: 20px;"><img src="${logoSeleccionado}" width="154" style="display: block;" /></td></tr>
@@ -434,6 +471,7 @@ const generarConIA = async () => {
           <div style="line-height: 1.6; color: #222;">${contenido}</div>
           <p style="margin-bottom: 0; margin-top: 20px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
         </td></tr></table>`;
+
     return `
       <!DOCTYPE html>
       <html><head><meta charset="utf-8"></head>
@@ -441,50 +479,78 @@ const generarConIA = async () => {
         ${tablaCore}</body></html>`;
   };
 
+  // --- LÓGICA SUPABASE: GUARDAR NUEVO BOLETÍN AL ENVIAR ---
   const manejarEnvio = async (e) => {
     e.preventDefault();
     if (destinatarios.length === 0) return alert("No hay clientes habilitados.");
     if (!asunto.trim() || !cuerpoHtml) return alert("Por favor, completa el asunto y el mensaje.");
+
     setCargando(true);
     try {
       for (const cliente of destinatarios) {
         setEnvioActual(prev => prev + 1);
         const htmlEmail = generarTemplateEmpresa(cuerpoHtml, cliente, false);
         const htmlPdf = generarTemplateEmpresa(boletinCompleto || cuerpoHtml, cliente, true);
-        const opcionesPdf = { 
-              margin: [10, 10, 10, 10], 
-              filename: obtenerNombreArchivoPdf(),
-              image: { type: 'jpeg', quality: 0.98 }, 
-              html2canvas: { scale: 1, useCORS: true, letterRendering: true, scrollY: 0, windowWidth: 1000 }, 
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }, 
-              pagebreak: { mode: ['css', 'legacy'] } 
-            };
+        
+        const opcionesPdf = {
+               margin: [10, 10, 10, 10],
+               filename: obtenerNombreArchivoPdf(),
+              image: { type: 'jpeg', quality: 0.98 },
+               html2canvas: { scale: 1, useCORS: true, letterRendering: true, scrollY: 0, windowWidth: 1000 },
+               jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+               pagebreak: { mode: ['css', 'legacy'] }
+             };
+
         const pdfBase64Uri = await html2pdf().set(opcionesPdf).from(htmlPdf).outputPdf('datauristring');
         const pdfBase64Limpio = pdfBase64Uri.split('base64,')[1];
+
         await fetch('/.netlify/functions/enviarBoletin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ asunto, destinatario: cliente.email, cuerpoHtml: htmlEmail, adjuntoPdf: pdfBase64Limpio }),
         });
       }
-      const nuevoRegistro = { id: Date.now(), fecha: new Date().toLocaleString('es-AR'), asunto, cuerpoHtml, boletinCompleto, clientes: destinatarios.map(c => c.razonSocial) };
-      const nuevoHistorial = [nuevoRegistro, ...historial];
+
+      const registroFrontend = { 
+        id: Date.now(), 
+        fecha: new Date().toLocaleString('es-AR'), 
+        asunto, 
+        cuerpoHtml, 
+        boletinCompleto, 
+        clientes: destinatarios.map(c => c.razonSocial) 
+      };
+
+      await supabase.from('historial_boletines').insert({
+        id: registroFrontend.id,
+        fecha: registroFrontend.fecha,
+        asunto: registroFrontend.asunto,
+        cuerpo_html: registroFrontend.cuerpoHtml,
+        boletin_completo: registroFrontend.boletinCompleto,
+        clientes: registroFrontend.clientes
+      });
+
+      const nuevoHistorial = [registroFrontend, ...historial];
       setHistorial(nuevoHistorial);
-      localStorage.setItem('historial_boletines', JSON.stringify(nuevoHistorial));
+
       alert("Boletines enviados correctamente.");
     } catch (error) {
-      alert(`❌ Error: ${error.message}`);
+      alert(`⚠️ Error: ${error.message}`);
     } finally {
       setCargando(false);
       setEnvioActual(0);
     }
   };
 
-  const borrarHistorial = () => {
+  // --- LÓGICA SUPABASE: BORRAR HISTORIAL ---
+  const borrarHistorial = async () => {
     if (window.confirm("¿Seguro querés borrar el historial?")) {
-      localStorage.removeItem('historial_boletines');
-      setHistorial([]);
-      setBoletinSeleccionado(null);
+      const { error } = await supabase.from('historial_boletines').delete().gt('id', 0);
+      if (!error) {
+        setHistorial([]);
+        setBoletinSeleccionado(null);
+      } else {
+        alert("Hubo un error borrando el historial de la base de datos.");
+      }
     }
   };
 
@@ -530,12 +596,14 @@ const generarConIA = async () => {
               </div>
             </div>
 
+            {/* TARJETA 2: FILTROS PROVINCIALES */}
             {(incluirSantaFe || incluirEntreRios) && (
               <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                   <h4 style={{ margin: 0, fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>2. Filtros Provinciales</h4>
                   <span style={{ fontSize: '11px', color: '#64748b' }}>Solo se incluyen normas con estos términos</span>
                 </div>
+                
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {LISTA_PALABRAS_CLAVES.map(palabra => {
                     const activo = palabrasSeleccionadas.includes(palabra);
@@ -568,10 +636,12 @@ const generarConIA = async () => {
               </div>
             )}
 
+            {/* TARJETA 3: EXCLUSIONES NACIONALES */}
             {incluirBora && (
               <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
                    <h4 style={{ margin: 0, fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>3. Exclusiones Nacionales (BORA)</h4>
+                   
                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px', background: '#f8fafc', padding: '6px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                       <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: modoOrganismo === 'excluir' ? '600' : '400', color: modoOrganismo === 'excluir' ? '#0f172a' : '#64748b' }}>
                         <input type="radio" checked={modoOrganismo === 'excluir'} onChange={() => setModoOrganismo('excluir')} style={{ accentColor: '#2563eb' }} /> 
@@ -588,8 +658,10 @@ const generarConIA = async () => {
                   {ESTRUCTURA_ORGANISMOS_BORA.map(org => {
                     const estaOrgExcluido = organismosExcluidos.includes(org.id);
                     const isOpen = !!dropdownsAbiertos[org.id];
+                    
                     let textoDesplegable = modoOrganismo === 'incluir' ? 'Se incluirá solo si está marcado' : 'Todos los temas incluidos';
                     if (modoOrganismo === 'excluir' && estaOrgExcluido) textoDesplegable = "Organismo omitido";
+
                     return (
                       <div key={org.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
@@ -599,11 +671,13 @@ const generarConIA = async () => {
                             {modoOrganismo === 'incluir' ? 'Incluir' : 'Excluir'}
                           </label>
                         </div>
+
                         <div style={{ position: 'relative', width: '100%' }}>
                           <button type="button" disabled={modoOrganismo === 'excluir' && estaOrgExcluido} onClick={(e) => toggleDropdown(e, org.id)} style={{ width: '100%', padding: '6px 10px', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '4px', textAlign: 'left', fontSize: '11px', color: '#475569', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span>{textoDesplegable}</span>
                             <span style={{ fontSize: '9px', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
                           </button>
+                          
                           {isOpen && !(modoOrganismo === 'excluir' && estaOrgExcluido) && (
                             <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#ffffff', border: '1px solid #94a3b8', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: '160px', overflowY: 'auto', marginTop: '4px' }}>
                               {org.subtopicos.map(sub => (
@@ -630,11 +704,12 @@ const generarConIA = async () => {
           style={{ width: '100%', padding: '12px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: generandoIA ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '15px', fontSize: '16px', letterSpacing: '0.5px' }}>
           {generandoIA ? estadoGeneracion : 'Generar compilado semanal'}
         </button>
+
       {generandoIA && (
         <button type="button"
           onClick={() => {
             abortarGeneracion.current = true;
-            setEstadoGeneracion("Cancelando generación..."); 
+            setEstadoGeneracion("Cancelando generación...");
             if (abortControllerRef.current) {
               abortControllerRef.current.abort(); 
             }
@@ -663,14 +738,17 @@ const generarConIA = async () => {
 
       <form onSubmit={manejarEnvio} className="eb-form">
         <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Asunto del boletín..." className="eb-input-asunto" />
+        
         <div className="eb-destinatarios-bar">
           <button type="button" onClick={() => setVerDestinatariosModal(true)} className="eb-btn-destinatarios">Destinatarios actuales ({destinatarios.length})</button>
         </div>
+
         <div className="eb-tabs-container">
           <div className="eb-tabs-header">
             <button type="button" onClick={() => setTabActivo('resumen')} className={`eb-tab-button ${tabActivo === 'resumen' ? 'eb-tab-button--active' : ''}`}>Resumen para el Email</button>
             <button type="button" onClick={() => setTabActivo('completo')} disabled={!boletinCompleto} className={`eb-tab-button ${tabActivo === 'completo' ? 'eb-tab-button--active' : ''} ${!boletinCompleto ? 'eb-tab-button--disabled' : ''}`}>Detalle para el PDF</button>
           </div>
+          
           <div className="eb-tab-content">
             <div className={`eb-tab-panel ${tabActivo === 'resumen' ? '' : 'eb-tab-panel--hidden'}`}>
               <ReactQuill theme="snow" value={cuerpoHtml} onChange={setCuerpoHtml} className="eb-quill-editor" />
@@ -686,6 +764,7 @@ const generarConIA = async () => {
         </button>
       </form>
 
+      {/* MODAL DESTINATARIOS */}
       {verDestinatariosModal && (
         <div className="eb-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div className="eb-modal-box" style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
@@ -696,17 +775,15 @@ const generarConIA = async () => {
               </div>
               <button type="button" onClick={() => setVerDestinatariosModal(false)} className="eb-modal-close-btn" style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>&times;</button>
             </div>
-
             <div className="eb-modal-search-bar" style={{ marginBottom: '15px' }}>
               <input 
                 type="text" 
                 value={busquedaDestinatario}
                 onChange={(e) => setBusquedaDestinatario(e.target.value)}
-                placeholder="Buscar por Empresa o Email..."
+                placeholder="Buscar por Empresa o Email..." 
                 className="eb-input-busqueda"
                 style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}/>
             </div>
-
             <div className="eb-modal-list" style={{ flex: 1, overflowY: 'auto', marginBottom: '15px', border: '1px solid #eee', padding: '10px' }}>
               {destinatariosFiltrados.length > 0 ? (
                 destinatariosFiltrados.map((cli) => (
@@ -717,7 +794,6 @@ const generarConIA = async () => {
               ) : (
                 <div className="eb-empty-state" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>No se encontraron destinatarios activos.</div>)}
             </div>
-
             <div className="eb-modal-footer" style={{ textAlign: 'right' }}>
               <button type="button" onClick={() => setVerDestinatariosModal(false)} className="eb-btn-entendido" style={{ padding: '8px 15px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
                 Entendido
@@ -726,19 +802,19 @@ const generarConIA = async () => {
           </div>
         </div>)}
 
+      {/* SECCIÓN HISTORIAL */}
       {historial.length > 0 && (
         <div className="eb-historial-section" style={{ marginTop: '40px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
           <div className="eb-historial-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>Historial de Boletines</h3>
             <button onClick={borrarHistorial} className="eb-btn-borrar-historial" style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: '4px', cursor: 'pointer' }}>Borrar Historial</button>
           </div>
-
           <div className="eb-historial-filtros" style={{ display: 'flex', gap: '10px', margin: '15px 0' }}>
             <input 
               type="text" 
               placeholder="Filtrar historial por asunto..." 
-              value={filtroHistorial} 
-              onChange={(e) => { setFiltroHistorial(e.target.value); setPaginaActual(1); }} 
+              value={filtroHistorial}
+              onChange={(e) => { setFiltroHistorial(e.target.value); setPaginaActual(1); }}
               className="eb-input-filtro"
               style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}/>
             <select value={ordenHistorial} onChange={(e) => setOrdenHistorial(e.target.value)} className="eb-select-filtro" style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
@@ -752,7 +828,7 @@ const generarConIA = async () => {
               <option value={10}>Ver 10</option>
             </select>
           </div>
-
+          
           <div className="eb-historial-list">
             {historialPaginado.map((item) => (
               <div key={item.id} onClick={() => setBoletinSeleccionado(item)} className="eb-historial-item" style={{ padding: '12px', border: '1px solid #e2e8f0', borderRadius: '6px', margin: '8px 0', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', transition: 'background 0.2s' }}>
@@ -770,6 +846,7 @@ const generarConIA = async () => {
           </div>
         </div>)}
 
+      {/* MODAL DETALLE HISTORIAL */}
       {boletinSeleccionado && (
         <div className="eb-modal-overlay-preview" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div className="eb-modal-box-preview" style={{ background: '#fff', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '800px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>

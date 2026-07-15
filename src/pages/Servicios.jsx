@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { actividadesArca, serviciosData } from '../data/mockDB.js';
+import { supabase } from '../utils/supabase';
+import { actividadesArca } from '../data/mockDB.js';
 import '../styles/Servicios.css';
 
-const Servicios = () => {
+const Servicios = ({ servicios, setServicios }) => {
   const actividadesDisponibles = actividadesArca.map(a => ({ codigo: a.codigo, descripcion: a.nombre }));
-  const [servicios, setServicios] = useState(serviciosData);
-
   const [editandoId, setEditandoId] = useState(null);
   const [busquedaArca, setBusquedaArca] = useState('');
   const [formData, setFormData] = useState({
@@ -29,11 +28,13 @@ const Servicios = () => {
     marca: '',
     nroRegistro: '',
     establecimiento: '',
-    descripcion: ''});
+    descripcion: ''
+  });
 
   const actividadesFiltradas = actividadesDisponibles.filter(act =>
     act.codigo.includes(busquedaArca) ||
-    act.descripcion.toLowerCase().includes(busquedaArca.toLowerCase()));
+    act.descripcion.toLowerCase().includes(busquedaArca.toLowerCase())
+  );
 
   const iniciarNuevo = () => {
     setEditandoId('nuevo');
@@ -44,49 +45,125 @@ const Servicios = () => {
       contactoCliente: '', contactoOrganismo: '', directorTecnico: '', nroExpediente: '', nombreExpediente: '',
       fechaNotificacionRequeridos: '', fechaVtoRegistro: '', nroExpedienteSecundario: '', nombreExpedienteSecundario: '',
       marca: '', nroRegistro: '', establecimiento: '', descripcion: ''
-    });};
+    });
+  };
 
   const iniciarEditar = (servicio) => {
     setEditandoId(servicio.id);
     setBusquedaArca('');
-    setFormData({ ...servicio });};
+    setFormData({
+      ...servicio,
+      actividadesArca: servicio.actividadesArca || servicio.actividades_arca || [],
+      usuarioAsignado: servicio.usuarioAsignado || servicio.usuario_asignado || 'Valeria F.',
+      estadoServicio: servicio.estadoServicio || servicio.estado_servicio || '1. Pendiente de asignacion',
+      fechaInicio: servicio.fechaInicio || servicio.fecha_inicio || '',
+      fechaFin: servicio.fechaFin || servicio.fecha_fin || '',
+      contactoCliente: servicio.contactoCliente || servicio.contacto_cliente || '',
+      contactoOrganismo: servicio.contactoOrganismo || servicio.contacto_organismo || '',
+      directorTecnico: servicio.directorTecnico || servicio.director_tecnico || '',
+      nroExpediente: servicio.nroExpediente || servicio.nro_expediente || '',
+      nombreExpediente: servicio.nombreExpediente || servicio.nombre_expediente || '',
+      fechaNotificacionRequeridos: servicio.fechaNotificacionRequeridos || servicio.fecha_notificacion_requeridos || '',
+      fechaVtoRegistro: servicio.fechaVtoRegistro || servicio.fecha_vto_registro || '',
+      nroExpedienteSecundario: servicio.nroExpedienteSecundario || servicio.nro_expediente_secundario || '',
+      nombreExpedienteSecundario: servicio.nombreExpedienteSecundario || servicio.nombre_expediente_secundario || '',
+      nroRegistro: servicio.nroRegistro || servicio.nro_registro || '',
+    });
+  };
 
-  const eliminarServicio = (id) => {
+  // --- LÓGICA SUPABASE: ELIMINAR SERVICIO ---
+  const eliminarServicio = async (id) => {
     if (window.confirm('¿Seguro querés eliminar este servicio del portfolio comercial?')) {
+      const { error } = await supabase.from('servicios_catalogo').delete().eq('id', id);
+      if (error) {
+        console.error("Error al eliminar servicio:", error);
+        alert('Hubo un error al eliminar el servicio.');
+        return;
+      }
       setServicios(servicios.filter(s => s.id !== id));
-    }};
+    }
+  };
 
   const manejarCambioInput = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));};
+    }));
+  };
 
   const manejarSeleccionArca = (e) => {
     const codigoSeleccionado = e.target.value;
     if (!codigoSeleccionado) return;
-
     setFormData(prev => {
       if (prev.actividadesArca.includes(codigoSeleccionado)) return prev;
       return { ...prev, actividadesArca: [...prev.actividadesArca, codigoSeleccionado] };
     });
     setBusquedaArca('');
-    e.target.value = '';};
+    e.target.value = '';
+  };
 
   const removerActividadArca = (codigo) => {
     setFormData(prev => ({
       ...prev,
       actividadesArca: prev.actividadesArca.filter(c => c !== codigo)
-    }));};
+    }));
+  };
 
-  const guardarServicio = (e) => {
+  // --- LÓGICA SUPABASE: CREAR Y ACTUALIZAR SERVICIOS ---
+  const guardarServicio = async (e) => {
     e.preventDefault();
+
+    const payload = {
+      servicio: formData.servicio,
+      categoria: formData.categoria,
+      modalidad: formData.modalidad,
+      actividades_arca: formData.actividadesArca,
+      usuario_asignado: formData.usuarioAsignado,
+      estado_servicio: formData.estadoServicio,
+      fecha_inicio: formData.fechaInicio,
+      fecha_fin: formData.fechaFin,
+      contacto_cliente: formData.contactoCliente,
+      contacto_organismo: formData.contactoOrganismo,
+      director_tecnico: formData.directorTecnico,
+      nro_expediente: formData.nroExpediente,
+      nombre_expediente: formData.nombreExpediente,
+      fecha_notificacion_requeridos: formData.fechaNotificacionRequeridos,
+      fecha_vto_registro: formData.fechaVtoRegistro,
+      nro_expediente_secundario: formData.nroExpedienteSecundario,
+      nombre_expediente_secundario: formData.nombreExpedienteSecundario,
+      marca: formData.marca,
+      nro_registro: formData.nroRegistro,
+      establecimiento: formData.establecimiento,
+      descripcion: formData.descripcion
+    };
+
     if (editandoId === 'nuevo') {
-      setServicios([...servicios, { ...formData, id: Date.now() }]);
+      payload.id_servicio = `T-CAT-${Date.now()}`; 
+      
+      const { data, error } = await supabase.from('servicios_catalogo').insert([payload]).select();
+      
+      if (error) {
+        console.error("Error insertando servicio:", error);
+        alert('Error al crear el servicio en la base de datos.');
+        return;
+      }
+      
+      setServicios([...servicios, { ...formData, id: data[0].id, id_servicio: data[0].id_servicio }]);
     } else {
-      setServicios(servicios.map(s => s.id === editandoId ? { ...formData } : s));}
-    setEditandoId(null);};
+      const { error } = await supabase.from('servicios_catalogo').update(payload).eq('id', editandoId);
+      
+      if (error) {
+        console.error("Error actualizando servicio:", error);
+        alert('Error al actualizar el servicio en la base de datos.');
+        return;
+      }
+
+      setServicios(servicios.map(s => s.id === editandoId ? { ...s, ...formData } : s));
+    }
+    
+    setEditandoId(null);
+  };
 
   return (
     <div className="servicios-wrapper">
@@ -123,7 +200,7 @@ const Servicios = () => {
                     <td className="td-nombre">{servicio.servicio}</td>
                     <td>
                       <div className="chips-container">
-                        {(servicio.actividadesArca || []).map(cod => (
+                        {((servicio.actividadesArca || servicio.actividades_arca) || []).map(cod => (
                           <span key={cod} className="chip-codigo">{cod}</span>))}
                       </div>
                     </td>
@@ -145,7 +222,6 @@ const Servicios = () => {
       {editandoId && (
         <form onSubmit={guardarServicio} className="form-panel-horizontal">
           <div className="form-header-interno">DATOS DEL SERVICIO</div>
-
           <div className="form-seccion-lineal">
             <h3 className="seccion-titulo-lineal">INFORMACIÓN PRINCIPAL</h3>
             <div className="grid-lineal-5">
@@ -218,14 +294,14 @@ const Servicios = () => {
               <div className="form-grupo">
                 <label className="label-lineal">CONTACTO CLIENTE</label>
                 <select name="contactoCliente" value={formData.contactoCliente} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="">— Sin contacto —</option>
+                  <option value="">-- Sin contacto --</option>
                 </select>
                 <span className="helper-lineal">Trae contactos desde el módulo Cliente.</span>
               </div>
               <div className="form-grupo">
                 <label className="label-lineal">CONTACTO ORGANISMO</label>
                 <select name="contactoOrganismo" value={formData.contactoOrganismo} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="">— Sin contacto —</option>
+                  <option value="">-- Sin contacto --</option>
                 </select>
               </div>
               <div className="form-grupo flex-row-align">
@@ -259,7 +335,6 @@ const Servicios = () => {
                   </option>))}
               </select>
             </div>
-
             <label className="label-lineal subtle-mt">ACTIVIDADES SELECCIONADAS PARA ESTE SERVICIO:</label>
             <div className="chips-lineal-wrapper">
               {formData.actividadesArca.length > 0 ? (
@@ -280,7 +355,7 @@ const Servicios = () => {
             <h3 className="seccion-titulo-lineal">EXPEDIENTE PRINCIPAL</h3>
             <div className="grid-lineal-4">
               <div className="form-grupo">
-                <label className="label-lineal">N° EXPEDIENTE</label>
+                <label className="label-lineal">Nº EXPEDIENTE</label>
                 <input type="text" name="nroExpediente" placeholder="EXP-2025-001" value={formData.nroExpediente} onChange={manejarCambioInput} className="input-lineal" />
                 <span className="helper-lineal">Acepta letras y números.</span>
               </div>
@@ -306,7 +381,7 @@ const Servicios = () => {
             <h3 className="seccion-titulo-lineal">EXPEDIENTE SECUNDARIO</h3>
             <div className="grid-lineal-4">
               <div className="form-grupo">
-                <label className="label-lineal">N° EXPEDIENTE SECUNDARIO</label>
+                <label className="label-lineal">Nº EXPEDIENTE SECUNDARIO</label>
                 <input type="text" name="nroExpedienteSecundario" placeholder="Opcional" value={formData.nroExpedienteSecundario} onChange={manejarCambioInput} className="input-lineal" />
               </div>
               <div className="form-grupo">
@@ -318,7 +393,7 @@ const Servicios = () => {
                 <input type="text" name="marca" placeholder="Texto libre" value={formData.marca} onChange={manejarCambioInput} className="input-lineal" />
               </div>
               <div className="form-grupo">
-                <label className="label-lineal">N° DE REGISTRO</label>
+                <label className="label-lineal">Nº DE REGISTRO</label>
                 <input type="text" name="nroRegistro" placeholder="Alfanumérico" value={formData.nroRegistro} onChange={manejarCambioInput} className="input-lineal" />
               </div>
             </div>
@@ -331,7 +406,7 @@ const Servicios = () => {
                 <div style={{ flex: 1 }}>
                   <label className="label-lineal">ESTABLECIMIENTO</label>
                   <select name="establecimiento" value={formData.establecimiento} onChange={manejarCambioInput} className="input-lineal">
-                    <option value="">— Seleccionar —</option>
+                    <option value="">-- Seleccionar --</option>
                   </select>
                 </div>
                 <button type="button" className="btn-lineal-redireccion">Ver Establecimiento →</button>
@@ -353,6 +428,8 @@ const Servicios = () => {
             <button type="submit" className="btn-lineal-guardar">Guardar Cambios</button>
           </div>
         </form>)}
-    </div>);};
+    </div>
+  );
+};
 
 export default Servicios;

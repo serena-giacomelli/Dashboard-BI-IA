@@ -34,14 +34,12 @@ const SUBTOPICO_ALIASES = {
   'Compras de Insumos y Equipamiento Hospitalario': ['insumo', 'insumos', 'equipamiento', 'hospitalario', 'hospitalaria', 'compra', 'compras', 'adquisicion'],
   'Inscripciones de Rutina en el Registro de Medicamentos': ['inscripcion', 'inscripciones', 'registro', 'medicamento', 'medicamentos', 'habilitacion', 'habilitaciones'],
   'Ascensos, Retiros y Movimientos de Fuerzas Federales': ['ascenso', 'ascensos', 'retiro', 'retiros', 'movimiento', 'movimientos', 'fuerza', 'fuerzas', 'federal', 'federales'],
-  'Fe de Erratas y Avisos Oficiales de Juzgados': ['fe de erratas', 'errata', 'erratas', 'juzgado', 'juzgados', 'aviso oficial', 'avisos oficiales'],
-};
+  'Fe de Erratas y Avisos Oficiales de Juzgados': ['fe de erratas', 'errata', 'erratas', 'juzgado', 'juzgados', 'aviso oficial', 'avisos oficiales'],};
 
 const PALABRAS_CLAVES_PROVINCIALES = [
   'INGRESOS BRUTOS', 'GANADERÍA', 'INDUSTRIAS', 'INDUSTRIA FRIGORÍFICA',
   'IMPUESTOS', 'PLANES DE PAGO', 'CODIGO FISCAL', 'LEY IMPOSITIVA',
-  'LEY TRIBUTARIA', 'ALICUOTAS'
-];
+  'LEY TRIBUTARIA', 'ALICUOTAS'];
 
 const NOMBRES_MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
@@ -56,8 +54,7 @@ const buscarCoincidencia = (texto = '', filtros = []) => {
   return filtros.some((filtro) => {
     const buscado = normalizarComparacion(filtro);
     if (!buscado) return false;
-    return base === buscado || base.includes(` ${buscado} `) || base.startsWith(`${buscado} `) || base.endsWith(` ${buscado}`);
-  });
+    return base === buscado || base.includes(` ${buscado} `) || base.startsWith(`${buscado} `) || base.endsWith(` ${buscado}`);});
 };
 
 const expandirFiltrosConAlias = (filtros = [], mapaAlias = {}) => {

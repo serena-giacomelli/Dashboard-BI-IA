@@ -2,41 +2,70 @@ import { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import html2pdf from 'html2pdf.js';
+import { supabase } from '../utils/supabase';
 import { LOGO_CIFAS_BASE64, LOGO_CIFAS_URL } from '../utils/assets.js'; 
+
 import '../styles/EditorNovedades.css';
 
 const EditorNovedades = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
   const [boletinCompleto, setBoletinCompleto] = useState('');
-  const [puntosClave, setPuntosClave] = useState(''); 
+  const [puntosClave, setPuntosClave] = useState('');
+  
   const [buscarEnInternet, setBuscarEnInternet] = useState(true);
   const [fuentesGeneradas, setFuentesGeneradas] = useState([]);
+
   const [cargando, setCargando] = useState(false);
   const [generandoIA, setGenerandoIA] = useState(false);
-  const [envioActual, setEnvioActual] = useState(0); 
+  const [envioActual, setEnvioActual] = useState(0);
+  
   const [historial, setHistorial] = useState([]);
-  const [novedadSeleccionada, setNovedadSeleccionada] = useState(null); 
+  const [novedadSeleccionada, setNovedadSeleccionada] = useState(null);
+  
   const [verDestinatariosModal, setVerDestinatariosModal] = useState(false);
   const [busquedaDestinatario, setBusquedaDestinatario] = useState('');
   const [tabActivo, setTabActivo] = useState('resumen');
   const [filtroHistorial, setFiltroHistorial] = useState('');
-  const [ordenHistorial, setOrdenHistorial] = useState('recientes'); 
+  const [ordenHistorial, setOrdenHistorial] = useState('recientes');
+  
   const [paginaActual, setPaginaActual] = useState(1);
   const [itemsPorPagina, setItemsPorPagina] = useState(5);
-  const [etapaIA, setEtapaIA] = useState(''); 
+  const [etapaIA, setEtapaIA] = useState('');
 
+  // --- LÓGICA SUPABASE: CARGAR HISTORIAL ---
   useEffect(() => {
-    const historialGuardado = JSON.parse(localStorage.getItem('historial_novedades') || '[]');
-    setHistorial(historialGuardado);}, []);
+    async function cargarHistorial() {
+      const { data, error } = await supabase
+        .from('historial_novedades')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (!error && data) {
+        // Transformamos de snake_case a camelCase para React
+        const historialFormateado = data.map(item => ({
+          id: item.id,
+          fecha: item.fecha,
+          asunto: item.asunto,
+          cuerpoHtml: item.cuerpo_html,
+          boletinCompleto: item.boletin_completo,
+          clientes: item.clientes
+        }));
+        setHistorial(historialFormateado);
+      }
+    }
+    cargarHistorial();
+  }, []);
 
   const destinatarios = clientesDB?.filter(c => c.enviarNovedades === true) || [];
   const destinatariosFiltrados = destinatarios.filter(c => 
     c.razonSocial?.toLowerCase().includes(busquedaDestinatario.toLowerCase()) ||
-    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase()));
+    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase())
+  );
 
   const historialFiltrado = historial.filter(item => 
-    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase()));
+    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase())
+  );
 
   const historialOrdenado = [...historialFiltrado].sort((a, b) => {
     switch (ordenHistorial) {
@@ -44,99 +73,105 @@ const EditorNovedades = ({ clientesDB }) => {
       case 'antiguos': return a.id - b.id;
       case 'alfa-asc': return (a.asunto || '').localeCompare(b.asunto || '');
       case 'alfa-desc': return (b.asunto || '').localeCompare(a.asunto || '');
-      default: return 0;}});
+      default: return 0;
+    }
+  });
 
   const totalPaginas = Math.ceil(historialOrdenado.length / itemsPorPagina);
   const paginaValida = Math.min(paginaActual, totalPaginas || 1);
   const indiceInicial = (paginaValida - 1) * itemsPorPagina;
   const historialPaginado = historialOrdenado.slice(indiceInicial, indiceInicial + itemsPorPagina);
 
-const generarConIA = async () => {
-  if (!puntosClave.trim()) return alert("Por favor, ingresa los puntos clave de la novedad.");
-  setGenerandoIA(true);
-  setFuentesGeneradas([]);
+  const generarConIA = async () => {
+    if (!puntosClave.trim()) return alert("Por favor, ingresa los puntos clave de la novedad.");
+    
+    setGenerandoIA(true);
+    setFuentesGeneradas([]);
 
-  try {
-    let investigacion = '';
-    let fuentes = [];
+    try {
+      let investigacion = '';
+      let fuentes = [];
 
-    if (buscarEnInternet) {
-      setEtapaIA('Buscando información actualizada en internet...');
-      const resInvestigar = await fetch('/.netlify/functions/generarNovedadIA', {
+      if (buscarEnInternet) {
+        setEtapaIA('Buscando información actualizada en internet...');
+        const resInvestigar = await fetch('/.netlify/functions/generarNovedadIA', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'investigar', puntosClave })
+        });
+        
+        const dataInvestigar = await resInvestigar.json();
+        
+        if (resInvestigar.ok) {
+          investigacion = dataInvestigar.investigacion || '';
+          fuentes = dataInvestigar.fuentes || [];
+        } else {
+          console.warn('Falló la búsqueda web, se redacta sin investigación:', dataInvestigar.error);
+        }
+      }
+
+      setEtapaIA('Redactando la novedad...');
+      const resRedactar = await fetch('/.netlify/functions/generarNovedadIA', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'investigar', puntosClave })
+        body: JSON.stringify({ action: 'redactar', puntosClave, investigacion, fuentes })
       });
-      const dataInvestigar = await resInvestigar.json();
-      if (resInvestigar.ok) {
-        investigacion = dataInvestigar.investigacion || '';
-        fuentes = dataInvestigar.fuentes || [];
+      
+      const dataRedactar = await resRedactar.json();
+      
+      if (dataRedactar.resumenEmail && dataRedactar.boletinCompleto) {
+        setCuerpoHtml(dataRedactar.resumenEmail);
+        setBoletinCompleto(dataRedactar.boletinCompleto);
+        setFuentesGeneradas(dataRedactar.fuentes || []);
+        setTabActivo('resumen');
       } else {
-        console.warn('Falló la búsqueda web, se redacta sin investigación:', dataInvestigar.error);
+        throw new Error(dataRedactar.error || "Respuesta incompleta de IA");
       }
+    } catch (error) {
+      alert("Error al conectar con la IA: " + error.message);
+    } finally {
+      setGenerandoIA(false);
+      setEtapaIA('');
     }
-
-    setEtapaIA('Redactando la novedad...');
-    const resRedactar = await fetch('/.netlify/functions/generarNovedadIA', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'redactar', puntosClave, investigacion, fuentes })
-    });
-    const dataRedactar = await resRedactar.json();
-
-    if (dataRedactar.resumenEmail && dataRedactar.boletinCompleto) {
-      setCuerpoHtml(dataRedactar.resumenEmail);
-      setBoletinCompleto(dataRedactar.boletinCompleto);
-      setFuentesGeneradas(dataRedactar.fuentes || []);
-      setTabActivo('resumen');
-    } else {
-      throw new Error(dataRedactar.error || "Respuesta incompleta de IA");
-    }
-  } catch (error) {
-    alert("Error al conectar con la IA: " + error.message);
-  } finally {
-    setGenerandoIA(false);
-    setEtapaIA('');
-  }
-};
+  };
 
   const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
     const fechaHoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-      if (paraPdf) {
-        return `
-          <div style="font-family: Arial, Helvetica, sans-serif; width: 100%; max-width: 700px; margin: 0 auto; padding: 0 8px; background: #ffffff; box-sizing: border-box;">
-            <style>
-              .evitar-corte p, .evitar-corte li, .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte h4, .evitar-corte strong {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-              }
-              .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte h4 {
-                page-break-after: avoid !important;
-                break-after: avoid !important;
-              }
-              .evitar-corte ul, .evitar-corte ol {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-              }
-            </style>
-            <div style="text-align: center; margin-bottom: 20px;">
-              <img src="${logoSeleccionado}" width="154" style="display: inline-block;" />
+      
+    if (paraPdf) {
+      return `
+        <div style="font-family: Arial, Helvetica, sans-serif; width: 100%; max-width: 700px; margin: 0 auto; padding: 0 8px; background: #ffffff; box-sizing: border-box;">
+          <style>
+            .evitar-corte p, .evitar-corte li, .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte h4, .evitar-corte strong {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .evitar-corte h1, .evitar-corte h2, .evitar-corte h3, .evitar-corte h4 {
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+            }
+            .evitar-corte ul, .evitar-corte ol {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+          </style>
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="${logoSeleccionado}" width="154" style="display: inline-block;" />
+          </div>
+          <div style="text-align: center; margin-bottom: 25px;">
+            <h1 style="margin: 0; font-size: 22px; color: #333; font-weight: bold;">NOVEDADES DIARIAS</h1>
+            <h2 style="margin: 5px 0 0 0; font-size: 15px; color: #666; font-weight: normal;">FECHA: ${fechaHoy}</h2>
+          </div>
+          <div class="evitar-corte" style="padding: 0 4px; box-sizing: border-box;">
+            <p style="margin-top: 0; font-size: 15px;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
+            <div style="line-height: 1.6; font-size: 14px; color: #111; word-wrap: break-word; overflow-wrap: break-word;">
+              ${contenido}
             </div>
-            <div style="text-align: center; margin-bottom: 25px;">
-              <h1 style="margin: 0; font-size: 22px; color: #333; font-weight: bold;">NOVEDADES DIARIAS</h1>
-              <h2 style="margin: 5px 0 0 0; font-size: 15px; color: #666; font-weight: normal;">FECHA: ${fechaHoy}</h2>
-            </div>
-            <div class="evitar-corte" style="padding: 0 4px; box-sizing: border-box;">
-              <p style="margin-top: 0; font-size: 15px;">Estimado/a <strong>${cliente.razonSocial}</strong>,</p>
-              <div style="line-height: 1.6; font-size: 14px; color: #111; word-wrap: break-word; overflow-wrap: break-word;">
-                ${contenido}
-              </div>
-              <p style="margin-bottom: 0; margin-top: 25px; font-size: 15px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
-            </div>
-          </div>`;
-      }
+            <p style="margin-bottom: 0; margin-top: 25px; font-size: 15px;">Reciban un cordial saludo,<br><strong>El equipo de CIFAS.</strong></p>
+          </div>
+        </div>`;
+    }
 
     const tablaCore = `
       <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
@@ -159,13 +194,17 @@ const generarConIA = async () => {
       <body style="margin: 0; padding: 20px; background-color: #f4f4f4;">
         ${tablaCore}
       </body>
-      </html>`;};
+      </html>`;
+  };
 
+  // --- LÓGICA SUPABASE: GUARDAR HISTORIAL DE NOVEDADES AL ENVIAR ---
   const manejarEnvio = async (e) => {
     e.preventDefault();
     
     if (!asunto || asunto.trim() === "") {
-        return alert("Por favor, ingresá un asunto para la novedad.");}
+        return alert("Por favor, ingresá un asunto para la novedad.");
+    }
+
     if (destinatarios.length === 0) return alert("No hay destinatarios habilitados.");
     if (!cuerpoHtml) return alert("Por favor, genera o escribe el contenido.");
 
@@ -175,13 +214,15 @@ const generarConIA = async () => {
         setEnvioActual(prev => prev + 1);
         const htmlEmail = generarTemplateEmpresa(cuerpoHtml, cliente, false);
         const htmlPdf = generarTemplateEmpresa(boletinCompleto || cuerpoHtml, cliente, true);
+        
         const opcionesPdf = {
           margin: [15, 15, 15, 15], 
           filename: 'novedad_cifas.pdf',
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, letterRendering: true },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'] }};
+          pagebreak: { mode: ['css', 'legacy'] }
+        };
 
         const pdfBase64Uri = await html2pdf().set(opcionesPdf).from(htmlPdf).outputPdf('datauristring');
         const pdfBase64Limpio = pdfBase64Uri.split('base64,')[1];
@@ -190,57 +231,82 @@ const generarConIA = async () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            asunto, 
-            destinatario: cliente.email, 
-            cuerpoHtml: htmlEmail, 
-            adjuntoPdf: pdfBase64Limpio,
-            filename: 'Novedad_Diaria_CIFAS.pdf'}),});}
+             asunto, 
+             destinatario: cliente.email, 
+             cuerpoHtml: htmlEmail, 
+             adjuntoPdf: pdfBase64Limpio,
+            filename: 'Novedad_Diaria_CIFAS.pdf'
+          }),
+        });
+      }
 
-      const nuevoRegistro = {
+      const registroFrontend = {
         id: Date.now(),
         fecha: new Date().toLocaleString('es-AR'),
         asunto,
         cuerpoHtml,
         boletinCompleto,
-        clientes: destinatarios.map(c => c.razonSocial)};
+        clientes: destinatarios.map(c => c.razonSocial)
+      };
 
-      const nuevoHistorial = [nuevoRegistro, ...historial];
+      await supabase.from('historial_novedades').insert({
+        id: registroFrontend.id,
+        fecha: registroFrontend.fecha,
+        asunto: registroFrontend.asunto,
+        cuerpo_html: registroFrontend.cuerpoHtml,
+        boletin_completo: registroFrontend.boletinCompleto,
+        clientes: registroFrontend.clientes
+      });
+
+      const nuevoHistorial = [registroFrontend, ...historial];
       setHistorial(nuevoHistorial);
-      localStorage.setItem('historial_novedades', JSON.stringify(nuevoHistorial));
       
       alert("Novedades enviadas correctamente a todos los clientes.");
       setAsunto('');
       setCuerpoHtml('');
       setBoletinCompleto('');
       setFuentesGeneradas([]);
+
     } catch (error) {
-      alert(`❌ Error: ${error.message}`);
+      alert(`⚠️ Error: ${error.message}`);
     } finally {
       setCargando(false);
-      setEnvioActual(0);}};
+      setEnvioActual(0);
+    }
+  };
 
-  const borrarHistorial = () => {
+  // --- LÓGICA SUPABASE: BORRAR HISTORIAL ---
+  const borrarHistorial = async () => {
     if (window.confirm("¿Seguro querés borrar el historial de novedades?")) {
-      localStorage.removeItem('historial_novedades');
-      setHistorial([]);}};
+      const { error } = await supabase.from('historial_novedades').delete().gt('id', 0);
+      if (!error) {
+        setHistorial([]);
+        setNovedadSeleccionada(null);
+      } else {
+        alert("Hubo un error borrando el historial de la base de datos.");
+      }
+    }
+  };
 
   const cargarEnEditor = (item) => {
     setAsunto(item.asunto);
     setCuerpoHtml(item.cuerpoHtml);
     setBoletinCompleto(item.boletinCompleto || '');
-    setNovedadSeleccionada(null);};
+    setNovedadSeleccionada(null);
+  };
 
   return (
     <div className="en-container">
       <h2>Centro de Despacho de Novedades</h2>
-     <div className="en-ia-section">
+      <div className="en-ia-section">
         <h4 className="en-ia-title">Generar Novedad con IA</h4>
         <textarea 
           value={puntosClave} 
           onChange={(e) => setPuntosClave(e.target.value)} 
           placeholder="Escribí aquí: capacitaciones, charlas, congresos..." 
-          className="en-ia-textarea"/>
-
+          className="en-ia-textarea"
+        />
+        
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '10px 0', fontSize: '13px', cursor: 'pointer' }}>
           <input
             type="checkbox"
@@ -274,15 +340,18 @@ const generarConIA = async () => {
           value={asunto} 
           onChange={(e) => setAsunto(e.target.value)} 
           placeholder="Asunto de la novedad (obligatorio)..." 
-          className="en-input-asunto" />
-
+          className="en-input-asunto" 
+        />
+        
         <div className="en-destinatarios-bar">
           <button
             type="button"
             onClick={() => {
               setBusquedaDestinatario('');
-              setVerDestinatariosModal(true);}}
-            className="en-btn-destinatarios">
+              setVerDestinatariosModal(true);
+            }}
+            className="en-btn-destinatarios"
+          >
             Destinatarios actuales ({destinatarios.length})
           </button>
         </div>
@@ -305,7 +374,7 @@ const generarConIA = async () => {
               Detalle PDF
             </button>
           </div>
-
+          
           <div className="en-tab-content">
             <div className={`en-tab-panel ${tabActivo === 'resumen' ? '' : 'en-tab-panel--hidden'}`}>
                 <ReactQuill theme="snow" value={cuerpoHtml} onChange={setCuerpoHtml} className="en-quill-editor" />
@@ -321,6 +390,7 @@ const generarConIA = async () => {
         </button>
       </form>
 
+      {/* MODAL DE DESTINATARIOS */}
       {verDestinatariosModal && (
         <div className="en-modal-overlay">
           <div className="en-modal-box">
@@ -331,14 +401,15 @@ const generarConIA = async () => {
               </div>
               <button type="button" onClick={() => setVerDestinatariosModal(false)} className="en-modal-close-btn">&times;</button>
             </div>
-
+            
             <div className="en-modal-search-bar">
               <input 
                 type="text" 
                 value={busquedaDestinatario}
                 onChange={(e) => setBusquedaDestinatario(e.target.value)}
-                placeholder="Buscar por Empresa o Email..."
-                className="en-input-busqueda"/>
+                placeholder="Buscar por Empresa o Email..." 
+                className="en-input-busqueda"
+              />
             </div>
 
             <div className="en-modal-list">
@@ -349,31 +420,35 @@ const generarConIA = async () => {
                     <span className="en-destinatario-email">{cli.email}</span>
                   </div>))
               ) : (
-                <div className="en-empty-state">No se encontraron destinatarios activos.</div>)}
+                <div className="en-empty-state">No se encontraron destinatarios activos.</div>
+              )}
             </div>
-
+            
             <div className="en-modal-footer">
               <button type="button" onClick={() => setVerDestinatariosModal(false)} className="en-btn-entendido">
                 Entendido
               </button>
             </div>
           </div>
-        </div>)}
+        </div>
+      )}
 
+      {/* SECCIÓN HISTORIAL */}
       {historial.length > 0 && (
         <div className="en-historial-section">
           <div className="en-historial-header">
             <h3>Historial de Novedades</h3>
             <button onClick={borrarHistorial} className="en-btn-borrar-historial">Borrar Historial</button>
           </div>
-
+          
           <div className="en-historial-filtros">
             <input 
               type="text" 
               placeholder="Filtrar historial por asunto..." 
-              value={filtroHistorial} 
-              onChange={(e) => { setFiltroHistorial(e.target.value); setPaginaActual(1); }} 
-              className="en-input-filtro"/>
+              value={filtroHistorial}
+              onChange={(e) => { setFiltroHistorial(e.target.value); setPaginaActual(1); }}
+              className="en-input-filtro"
+            />
             <select value={ordenHistorial} onChange={(e) => setOrdenHistorial(e.target.value)} className="en-select-filtro">
               <option value="recientes">Más recientes primero</option>
               <option value="antiguos">Más antiguos primero</option>
@@ -391,7 +466,8 @@ const generarConIA = async () => {
               <div key={item.id} onClick={() => setNovedadSeleccionada(item)} className="en-historial-item">
                 <span>{item.asunto}</span>
                 <span className="en-historial-item-fecha">{item.fecha}</span>
-              </div>))}
+              </div>
+            ))}
           </div>
 
           <div className="en-paginacion-bar">
@@ -401,8 +477,10 @@ const generarConIA = async () => {
               <button disabled={paginaActual >= totalPaginas} onClick={() => setPaginaActual(p => p + 1)} className="en-btn-paginacion">Siguiente</button>
             </div>
           </div>
-        </div>)}
+        </div>
+      )}
 
+      {/* MODAL DETALLE HISTORIAL */}
       {novedadSeleccionada && (
         <div className="en-modal-overlay-preview">
           <div className="en-modal-box-preview">
@@ -413,7 +491,10 @@ const generarConIA = async () => {
                   <button onClick={() => cargarEnEditor(novedadSeleccionada)} className="en-btn-cargar-editor">Cargar en Editor</button>
               </div>
           </div>
-        </div>)}
-    </div>);};
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default EditorNovedades;

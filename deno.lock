@@ -24,6 +24,7 @@
         "npm:jspdf@^3.0.1",
         "npm:pdf-lib@^1.17.1",
         "npm:pdf-parse@^2.4.5",
+        "npm:pdf2json@^4.0.3",
         "npm:react-dom@^19.1.0",
         "npm:react-quill-new@^3.8.3",
         "npm:react-router-dom@^7.6.1",

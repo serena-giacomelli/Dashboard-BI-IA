@@ -8,8 +8,7 @@ const obtenerNombreArchivoPdf = () => {
 
   const meses = [
     'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
-    'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
-  ];
+    'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
   
   const mesInicio = meses[lunes.getMonth()];
   const mesFin = meses[viernes.getMonth()];
@@ -17,8 +16,7 @@ const obtenerNombreArchivoPdf = () => {
   const diaFin = String(viernes.getDate()).padStart(2, '0');
   const anio = viernes.getFullYear();
 
-  return `NOVEDADES ${mesInicio} del ${diaInicio} AL ${diaFin} DE ${mesFin} ${anio}.pdf`;
-};
+  return `NOVEDADES ${mesInicio} del ${diaInicio} AL ${diaFin} DE ${mesFin} ${anio}.pdf`;};
 
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "POST") {
@@ -30,23 +28,20 @@ exports.handler = async (event, context) => {
     const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey) {
-      return { statusCode: 500, body: JSON.stringify({ error: "Falta configurar la API KEY en Netlify" }) };    
-    }
+      return { statusCode: 500, body: JSON.stringify({ error: "Falta configurar la API KEY en Netlify" })};}
 
     const emailPayload = {
       from: "Prototipo Boletines <onboarding@resend.dev>",
       to: "sere22giacomelli@gmail.com", 
       subject: asunto,
       html: cuerpoHtml, 
-      attachments: []
-    };
+      attachments: []};
 
     if (adjuntoPdf) {
       emailPayload.attachments.push({
         filename: obtenerNombreArchivoPdf(),
         content: adjuntoPdf 
-      });
-    }
+      });}
 
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -54,8 +49,7 @@ exports.handler = async (event, context) => {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(emailPayload)
-    });
+      body: JSON.stringify(emailPayload)});
 
     const data = await response.json();
 
@@ -64,8 +58,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: response.status,
         body: JSON.stringify({ error: data.message })
-      };
-    }
+      };}
 
     return {
       statusCode: 200,
@@ -76,6 +69,4 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Error interno en el servidor" })
-    };
-  }
-};
+    };}};

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { actividadesArca, actividadesRuca, actividadesSenasa } from '../data/mockDB.js';
+import { supabase } from '../utils/supabase.js';
 import '../styles/Clientes.css';
 
 const Clientes = ({ clientes, setClientes, serviciosData }) => {
@@ -79,6 +80,7 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
   const [nuevoServicio, setNuevoServicio] = useState({ servicio: '', estado: '1. Pendiente de asignacion', fechaInicio: '16/06/2026', actividadArca: '' });
   const [subTabServicios, setSubTabServicios] = useState('activos');
   const filtroEstadosRef = useRef(null);
+  const [filtroCapaCliente, setFiltroCapaCliente] = useState('ARCA');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -196,12 +198,19 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     limpiarFiltrosInternosServicios();
   };
 
-  const toggleBoletin = (id) => {
-    setClientes(clientes.map(c => c.id === id ? { ...c, enviarBoletin: !c.enviarBoletin } : c));
+  const toggleBoletin = async (id) => {
+    const cliente = clientes.find(c => c.id === id);
+    const nuevoEstado = !cliente.enviarBoletin;
+    await supabase.from('clientes').update({ enviar_boletin: nuevoEstado }).eq('id', id);
+    setClientes(clientes.map(c => c.id === id ? { ...c, enviarBoletin: nuevoEstado } : c));
   };
 
-  const toggleNovedades = (id) => {
-    setClientes(clientes.map(c => c.id === id ? { ...c, enviarNovedades: !c.enviarNovedades } : c));
+  const toggleNovedades = async (id) => {
+    const cliente = clientes.find(c => c.id === id);
+    const nuevoEstado = !cliente.enviarNovedades;
+    
+    await supabase.from('clientes').update({ enviar_novedades: nuevoEstado }).eq('id', id);
+    setClientes(clientes.map(c => c.id === id ? { ...c, enviarNovedades: nuevoEstado } : c));
   };
 
   const manejarEdicion = (cliente) => {
@@ -247,8 +256,59 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
     setNuevaHistoria({ descripcion: '', fecha: '18/03/2026', tipo: 'Historia' });
   };
 
-  const guardarCambios = (e) => {
+const guardarCambios = async (e) => {
     e.preventDefault();
+
+    // 1. Actualizamos la tabla principal del cliente
+    const { error: errCliente } = await supabase
+      .from('clientes')
+      .update({
+        razon_social: formData.razonSocial,
+        cuit: formData.cuit,
+        condicion_fiscal: formData.condicionFiscal,
+        domicilio_fiscal: formData.domicilioFiscal,
+        localidad_fiscal: formData.localidadFiscal,
+        mail_primario: formData.mailPrimario,
+        mail_secundario: formData.mailSecundario,
+        direccion_administrativa: formData.dirAdmin_direccion,
+        localidad_admin: formData.dirAdmin_localidad
+      })
+      .eq('id', formData.id);
+
+    if (errCliente) {
+      console.error("Error al actualizar cliente:", errCliente);
+      alert("Hubo un error al guardar los cambios principales.");
+      return;
+    }
+
+    // 2. Sincronizamos Contactos (Borramos los anteriores e insertamos los nuevos)
+    await supabase.from('cliente_contactos').delete().eq('cliente_id', formData.id);
+    if (formData.contactos && formData.contactos.length > 0) {
+      const contactosUpsert = formData.contactos.map(c => ({
+        cliente_id: formData.id,
+        nombre: c.nombre,
+        apellido: c.apellido,
+        telefono: c.telefono,
+        interno: c.interno,
+        celular: c.celular,
+        mail: c.mail,
+        cargo: c.cargo,
+        obs: c.obs
+      }));
+      await supabase.from('cliente_contactos').insert(contactosUpsert);
+    }
+
+    // 3. Sincronizamos Historia
+    await supabase.from('cliente_historia').delete().eq('cliente_id', formData.id);
+    if (formData.historia && formData.historia.length > 0) {
+      const historiaUpsert = formData.historia.map(h => ({
+        cliente_id: formData.id,
+        descripcion: h.descripcion,
+        fecha: h.fecha,
+        tipo: h.tipo
+      }));
+      await supabase.from('cliente_historia').insert(historiaUpsert);}
+
     setClientes(clientes.map(c => c.id === formData.id ? formData : c));
     setClienteEditando(null);
     setFormData(null);
@@ -257,15 +317,19 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
 
   const todosFiltradosMarcados = clientesFiltrados.length > 0 && clientesFiltrados.every(c => c.enviarBoletin);
   const todosFiltradosNovedades = clientesFiltrados.length > 0 && clientesFiltrados.every(c => c.enviarNovedades);
-  const toggleTodosFiltrados = () => {
+
+const toggleTodosFiltrados = async () => {
     const nuevoEstado = !todosFiltradosMarcados;
     const idsVisibles = clientesFiltrados.map(c => c.id);
+    await supabase.from('clientes').update({ enviar_boletin: nuevoEstado }).in('id', idsVisibles);
     setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarBoletin: nuevoEstado } : c));
   };
 
-  const toggleTodosFiltradosNovedades = () => {
+const toggleTodosFiltradosNovedades = async () => {
     const nuevoEstado = !todosFiltradosNovedades;
     const idsVisibles = clientesFiltrados.map(c => c.id);
+    
+    await supabase.from('clientes').update({ enviar_novedades: nuevoEstado }).in('id', idsVisibles);
     setClientes(prev => prev.map(c => idsVisibles.includes(c.id) ? { ...c, enviarNovedades: nuevoEstado } : c));
   };
 
@@ -627,65 +691,137 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
                       </tbody>
                     </table>)}
                 </div>)}
-                {tabActiva === 'Actividades' && (() => {
-                  const listaArca = formData.servicios.flatMap(s => s.actividadesCliente?.arca || []);
-                  const listaRuca = formData.servicios.flatMap(s => s.actividadesCliente?.ruca || []);
-                  const listaSenasa = formData.servicios.flatMap(s => s.actividadesCliente?.senasa || []);
-                  const maxFilas = Math.max(listaArca.length, listaRuca.length, listaSenasa.length);
-                  const filas = Array.from({ length: maxFilas });
 
-                  return (
-                    <div className="actividades-tabla-container" style={{ padding: '10px' }}>
-                      <table className="tabla-actividades-comparativa" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                        <thead>
-                          <tr style={{ borderBottom: '2px solid #e2e8f0', background: '#f8fafc' }}>
-                            <th style={{ padding: '12px', width: '33%' }}>ARCA</th>
-                            <th style={{ padding: '12px', width: '33%' }}>RUCA</th>
-                            <th style={{ padding: '12px', width: '33%' }}>SENASA</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {maxFilas === 0 ? (
-                            <tr>
-                              <td colSpan="3" style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
-                                No hay actividades asignadas.
-                              </td>
-                            </tr>
-                          ) : (
-                            filas.map((_, i) => (
-                              <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                <td style={{ padding: '10px', fontSize: '13px' }}>
-                                  {listaArca[i] ? (
-                                    <div>
-                                      <strong>{listaArca[i]}</strong><br/>
-                                      <span style={{ color: '#475569' }}>{getNombreActividadArca(listaArca[i])}</span>
-                                    </div>
-                                  ) : '-'}
-                                </td>
-                                <td style={{ padding: '10px', fontSize: '13px', borderLeft: '1px solid #f1f5f9' }}>
-                                  {listaRuca[i] ? (
-                                    <div>
-                                      <strong>{listaRuca[i]}</strong><br/>
-                                      <span style={{ color: '#475569' }}>{getNombreActividadRuca(listaRuca[i])}</span>
-                                    </div>
-                                  ) : '-'}
-                                </td>
-                                <td style={{ padding: '10px', fontSize: '13px', borderLeft: '1px solid #f1f5f9' }}>
-                                  {listaSenasa[i] ? (
-                                    <div>
-                                      <strong>{listaSenasa[i]}</strong><br/>
-                                      <span style={{ color: '#475569' }}>{getNombreActividadSenasa(listaSenasa[i])}</span>
-                                    </div>
-                                  ) : '-'}
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
+            {tabActiva === 'Actividades' && (() => {
+                const actividadesVista = [];
+                
+                // Lógica para agrupar y filtrar según la capa seleccionada
+                if (filtroCapaCliente === 'ARCA') {
+                  const mapaArca = {};
+                  
+                  // Recorremos los servicios para encontrar las vinculaciones directas
+                  (formData.servicios || []).forEach(s => {
+                    let arcas = s.actividadesCliente?.arca || [];
+                    
+                    // Fallback por si hay servicios guardados con el formato antiguo
+                    if (arcas.length === 0) {
+                      const actAntigua = obtenerActividadDeServicio(s);
+                      const actArr = Array.isArray(actAntigua) ? actAntigua : (actAntigua ? [actAntigua] : []);
+                      arcas = actArr.map(a => obtenerCodigoActividad(a)).filter(Boolean);
+                    }
+                    
+                    const rucas = s.actividadesCliente?.ruca || [];
+                    const senasas = s.actividadesCliente?.senasa || [];
+
+                    // Vinculamos RUCA y SENASA a su actividad ARCA correspondiente dentro del mismo servicio
+                    arcas.forEach(cod => {
+                      if (!mapaArca[cod]) mapaArca[cod] = { ruca: new Set(), senasa: new Set() };
+                      rucas.forEach(r => mapaArca[cod].ruca.add(r));
+                      senasas.forEach(se => mapaArca[cod].senasa.add(se));
+                    });
+                  });
+
+                  Object.keys(mapaArca).forEach(cod => {
+                    actividadesVista.push({
+                      codigo: cod,
+                      nombre: getNombreActividadArca(cod),
+                      ruca: Array.from(mapaArca[cod].ruca),
+                      senasa: Array.from(mapaArca[cod].senasa)
+                    });
+                  });
+                } else if (filtroCapaCliente === 'RUCA') {
+                  const setRuca = new Set();
+                  (formData.servicios || []).forEach(s => {
+                    (s.actividadesCliente?.ruca || []).forEach(cod => setRuca.add(cod));
+                  });
+                  Array.from(setRuca).forEach(cod => actividadesVista.push({ codigo: cod, nombre: getNombreActividadRuca(cod) }));
+                } else if (filtroCapaCliente === 'SENASA') {
+                  const setSenasa = new Set();
+                  (formData.servicios || []).forEach(s => {
+                    (s.actividadesCliente?.senasa || []).forEach(cod => setSenasa.add(cod));
+                  });
+                  Array.from(setSenasa).forEach(cod => actividadesVista.push({ codigo: cod, nombre: getNombreActividadSenasa(cod) }));
+                }
+
+                return (
+                  <div className="actividades-tabla-container" style={{ padding: '24px 16px' }}>
+                    
+                    <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', borderBottom: '1px solid #e2e8f0' }}>
+                      {['ARCA', 'RUCA', 'SENASA'].map((capa) => (
+                        <button
+                          key={capa}
+                          type="button"
+                          onClick={() => setFiltroCapaCliente(capa)}
+                          style={{
+                            padding: '8px 16px',
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: `2px solid ${filtroCapaCliente === capa ? '#3b82f6' : 'transparent'}`,
+                            color: filtroCapaCliente === capa ? '#0f172a' : '#64748b',
+                            fontWeight: filtroCapaCliente === capa ? 'bold' : 'normal',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {capa}
+                        </button>
+                      ))}
                     </div>
-                  );
-                })()}
+
+                    <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px 0' }}>
+                      {filtroCapaCliente === 'ARCA' 
+                        ? 'Actividades principales y sus vinculaciones (RUCA/SENASA) según los servicios contratados' 
+                        : `Actividades registradas en el organismo ${filtroCapaCliente}`}
+                    </p>
+                    
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc' }}>
+                          <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', width: '60%', borderBottom: 'none' }}>
+                            Actividad {filtroCapaCliente}
+                          </th>
+                          {filtroCapaCliente === 'ARCA' && (
+                            <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', borderBottom: 'none' }}>
+                              Vinculaciones
+                            </th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {actividadesVista.length === 0 ? (
+                          <tr>
+                            <td colSpan={filtroCapaCliente === 'ARCA' ? 2 : 1} style={{ padding: '20px 16px', textAlign: 'center', color: '#94a3b8', fontSize: '14px', borderBottom: '1px solid #f1f5f9' }}>
+                              No hay actividades de {filtroCapaCliente} asignadas.
+                            </td>
+                          </tr>
+                        ) : (
+                          actividadesVista.map((act, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '16px', fontSize: '14px', color: '#334155', verticalAlign: 'top' }}>
+                                <span style={{ fontWeight: 'bold', color: '#3b82f6', fontFamily: 'monospace', marginRight: '8px' }}>
+                                  {act.codigo}
+                                </span> 
+                                {act.nombre}
+                              </td>
+                              {filtroCapaCliente === 'ARCA' && (
+                                <td style={{ padding: '16px', fontSize: '13px', color: '#555', verticalAlign: 'top', lineHeight: '1.6' }}>
+                                  <div>
+                                    <strong>RUCA:</strong> {act.ruca.length > 0 ? act.ruca.join(', ') : <span style={{color: '#94a3b8'}}>-</span>}
+                                  </div>
+                                  <div>
+                                    <strong>SENASA:</strong> {act.senasa.length > 0 ? act.senasa.join(', ') : <span style={{color: '#94a3b8'}}>-</span>}
+                                  </div>
+                                </td>
+                              )}
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
 
               {tabActiva === 'Presupuestos' && <p style={{ fontSize: '13px', color: '#64748b', padding: '10px' }}>Módulo Presupuestos vinculado al ID del cliente.</p>}
               {tabActiva === 'Establecimientos' && <p style={{ fontSize: '13px', color: '#64748b', padding: '10px' }}>Listado de plantas, locales y números RUCA/RNE asignados.</p>}
