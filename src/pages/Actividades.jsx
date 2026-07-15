@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { actividadesArca, actividadesRuca, actividadesSenasa } from '../data/mockDB.js';
+import { useCatalogos } from '../hooks/useCatalogos'; // <-- Nuevo hook
 import '../styles/Actividades.css';
 
 const Actividades = () => {

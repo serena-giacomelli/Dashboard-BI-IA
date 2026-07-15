@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { supabase } from '../utils/supabase';
 import { allColumnsByReport, reportConfigs } from '../data/mockDB.js';
 import { exportToExcel } from '../utils/exportExcel.js';
 import ExportModal from '../components/ExportModal.jsx';
 import { COMPANY_CONFIG } from '../styles/reportTheme';
 import { LOGO_CIFAS_BASE64 } from '../utils/assets.js';
 import { PDF_THEME } from '../styles/Pdftheme.js';
-
 import '../styles/Global.css';
 
 const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
@@ -98,11 +98,17 @@ function buildFilterSummary(reportConfig, filters) {
   }));
 }
 
+// Convertidor automático de formato de BD a React
+const snakeToCamel = (str) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+
 function Informes() {
   const navigate = useNavigate();
   const [reportId, setReportId] = useState('servicios');
   const [filters, setFilters] = useState(() => createInitialFilters('servicios'));
   const [exportFormat, setExportFormat] = useState(null);
+  
+  const [dbRows, setDbRows] = useState([]);
+  const [cargandoReporte, setCargandoReporte] = useState(false);
 
   const reportConfig = reportConfigs[reportId];
   const allColumns = allColumnsByReport[reportId] ?? reportConfig.columns;
@@ -111,9 +117,45 @@ function Informes() {
     setFilters(createInitialFilters(reportId));
   }, [reportId]);
 
+  // --- LÓGICA SUPABASE: Consultar la tabla correcta según el dropdown ---
+  useEffect(() => {
+    async function fetchReportData() {
+      setCargandoReporte(true);
+      let tableName = '';
+      
+      if (reportId === 'servicios') tableName = 'reportes_servicios';
+      if (reportId === 'tramites') tableName = 'reportes_tramites';
+      if (reportId === 'vencimientos') tableName = 'reportes_vencimientos';
+      if (reportId === 'engordes') tableName = 'reportes_engordes';
+      if (reportId === 'pedidosPendientes') tableName = 'reportes_pedidos_pendientes';
+
+      if (tableName) {
+        const { data, error } = await supabase.from(tableName).select('*');
+        if (error) {
+          console.error(`Error cargando tabla ${tableName}:`, error);
+          setDbRows([]);
+        } else if (data) {
+          // Adaptamos las variables de Supabase para que encajen en tu interfaz
+          const translatedData = data.map(row => {
+            const newRow = {};
+            for (const key in row) {
+              newRow[snakeToCamel(key)] = row[key];
+            }
+            if (newRow.nroExpedienteSecundario) newRow.nroExpedienteSec = newRow.nroExpedienteSecundario;
+            return newRow;
+          });
+          setDbRows(translatedData);
+        }
+      }
+      setCargandoReporte(false);
+    }
+
+    fetchReportData();
+  }, [reportId]);
+
   const filteredRows = useMemo(
-    () => filterRows(reportConfig.rows, reportId, filters),
-    [filters, reportConfig.rows, reportId],
+    () => filterRows(dbRows, reportId, filters),
+    [filters, dbRows, reportId],
   );
 
   const filterSummary = useMemo(
@@ -140,7 +182,6 @@ function Informes() {
 
   const handleExportConfirm = async (selectedColumnKeys, format) => {
     const configForExport = { ...reportConfig, allColumns };
-
     if (format === 'excel') {
       await exportToExcel({
         reportConfig: configForExport,
@@ -151,7 +192,6 @@ function Informes() {
       });
       return;
     }
-
     if (format === 'pdf') {
       handleExportPdf(selectedColumnKeys);
     }
@@ -176,13 +216,15 @@ function Informes() {
       doc.text(COMPANY_CONFIG.name, PDF_THEME.header.companyName.x, PDF_THEME.header.companyName.y);
       doc.setFont(COMPANY_CONFIG.font, 'normal');
       doc.setFontSize(PDF_THEME.header.reportTitle.fontSize);
-      doc.text(`Informe: ${reportConfig.label}`, PDF_THEME.header.reportTitle.x, PDF_THEME.header.reportTitle.y);      
+      doc.text(`Informe: ${reportConfig.label}`, PDF_THEME.header.reportTitle.x, PDF_THEME.header.reportTitle.y);
+      
       doc.setDrawColor(...PDF_THEME.colors.divider);
       doc.line(PDF_THEME.header.dividerX1, PDF_THEME.header.dividerY, PDF_THEME.header.dividerX2, PDF_THEME.header.dividerY);
     };
-    addHeader();
 
+    addHeader();
     let cursorY = PDF_THEME.body.startY;
+
     doc.setFont(COMPANY_CONFIG.font, 'normal');
     doc.setFontSize(PDF_THEME.body.metadataFontSize);
     doc.setTextColor(...PDF_THEME.colors.textSecondary);
@@ -229,7 +271,6 @@ function Informes() {
       doc.setTextColor(...PDF_THEME.colors.textSecondary);
       doc.text('No hay registros para exportar con los filtros seleccionados.', 14, cursorY + PDF_THEME.body.tableOffset + 5);
     }
-
     doc.save(`informe_${reportId}_${formatFileDate()}.pdf`);
   };
 
@@ -238,7 +279,6 @@ function Informes() {
       <header className="cifas-header">
         <h1>Generación de Informes Operativos</h1>
       </header>
-
       <div className="cifas-layout-split">
         
         <section className="cifas-card">
@@ -314,7 +354,6 @@ function Informes() {
               );
             })}
           </div>
-
           <div className="cifas-btn-group">
             <button className="cifas-btn cifas-btn--secondary" type="button" onClick={() => navigate('/dashboard')}>
               Volver
@@ -333,6 +372,7 @@ function Informes() {
           <h2 className="cifas-card__main-name">Resultados filtrados</h2>
           <p className="cifas-card__description">
             El informe devuelve <strong>{filteredRows.length}</strong> registro{filteredRows.length === 1 ? '' : 's'}.
+            {cargandoReporte && <span style={{ marginLeft: '10px', color: '#3b82f6', fontSize: '13px' }}>(Sincronizando con la nube...)</span>}
           </p>
 
           <div className="cifas-chips">
@@ -353,9 +393,15 @@ function Informes() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.length ? (
-                  filteredRows.map((row) => (
-                    <tr key={row.id}>
+                {cargandoReporte ? (
+                  <tr>
+                    <td className="cifas-table-empty" colSpan={reportConfig.columns.length}>
+                      Cargando registros...
+                    </td>
+                  </tr>
+                ) : filteredRows.length ? (
+                  filteredRows.map((row, index) => (
+                    <tr key={row.id || index}>
                       {reportConfig.columns.map((column) => (
                         <td key={column.key}>
                           {column.key === 'fecha' || column.key === 'vencimiento' || column.key === 'fechaInicio'
@@ -376,7 +422,6 @@ function Informes() {
             </table>
           </div>
         </section>
-
       </div>
 
       <ExportModal
