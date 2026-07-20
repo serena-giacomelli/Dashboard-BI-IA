@@ -13,6 +13,7 @@
       "dependencies": [
         "npm:@google/generative-ai@~0.24.1",
         "npm:@netlify/blobs@^10.7.9",
+        "npm:@supabase/supabase-js@^2.110.6",
         "npm:@vitejs/plugin-react@^4.4.1",
         "npm:axios@^1.18.1",
         "npm:cheerio@^1.2.0",

@@ -1,4 +1,4 @@
-import '../styles/Global.css'; // Importamos el diseño unificado
+import '../styles/Global.css';
 
 function Detail() {
   return (

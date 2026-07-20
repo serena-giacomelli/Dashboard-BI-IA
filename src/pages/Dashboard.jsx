@@ -1,7 +1,7 @@
 import AIInsightsPanel from '../components/AIInsightsPanel';
 import LookerEmbed from '../components/LookerEmbed';
 import Informes from './Informes';
-import { budgetRows, defaultQuestionSuggestions } from '../data/mockDB.js';
+import { budgetRows, defaultQuestionSuggestions } from '../data/reportConfig.js';
 import '../styles/Global.css'; 
 
 function Dashboard() {

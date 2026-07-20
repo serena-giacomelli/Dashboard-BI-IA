@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '../utils/supabase';
-import { actividadesArca } from '../data/mockDB.js';
+import { useCatalogos } from '../hooks/useCatalogos';
 import '../styles/Servicios.css';
 
 const Servicios = ({ servicios, setServicios }) => {
-  const actividadesDisponibles = actividadesArca.map(a => ({ codigo: a.codigo, descripcion: a.nombre }));
+  const { arca: actividadesArca } = useCatalogos();
+  const actividadesDisponibles = (actividadesArca || []).map(a => ({ codigo: a.codigo, descripcion: a.nombre }));
+  
   const [editandoId, setEditandoId] = useState(null);
   const [busquedaArca, setBusquedaArca] = useState('');
   const [formData, setFormData] = useState({

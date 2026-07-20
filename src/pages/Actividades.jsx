@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { useCatalogos } from '../hooks/useCatalogos'; // <-- Nuevo hook
+import { useCatalogos } from '../hooks/useCatalogos';
 import '../styles/Actividades.css';
 
 const Actividades = () => {
+  // Extraemos los datos desde Supabase
+  const { arca: actividadesArca, ruca: actividadesRuca, senasa: actividadesSenasa, loading } = useCatalogos();
+  
   const [busqueda, setBusqueda] = useState('');
   const [orden, setOrden] = useState('asc'); 
   const [capaActiva, setCapaActiva] = useState('ARCA'); 
 
   const obtenerCatalogo = () => {
-    if (capaActiva === 'ARCA') return actividadesArca;
-    if (capaActiva === 'RUCA') return actividadesRuca;
-    return actividadesSenasa;
+    if (capaActiva === 'ARCA') return actividadesArca || [];
+    if (capaActiva === 'RUCA') return actividadesRuca || [];
+    return actividadesSenasa || [];
   };
 
   const actividadesFiltradas = obtenerCatalogo().filter((item) =>
@@ -26,6 +29,8 @@ const Actividades = () => {
   const toggleOrden = () => {
     setOrden(orden === 'asc' ? 'desc' : 'asc');
   };
+
+  if (loading) return <div className="actividades-wrapper">Cargando catálogos...</div>;
 
   return (
     <div className="actividades-wrapper">

@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { actividadesArca, actividadesRuca, actividadesSenasa } from '../data/mockDB.js';
 import { supabase } from '../utils/supabase.js';
+import { useCatalogos } from '../hooks/useCatalogos.js';
 import '../styles/Clientes.css';
 
 const Clientes = ({ clientes, setClientes, serviciosData }) => {
+  const { arca: actividadesArca, ruca: actividadesRuca, senasa: actividadesSenasa } = useCatalogos();
+
   const obtenerCodigoActividad = (act) => {
     if (!act) return '';
     if (typeof act === 'object') {
@@ -15,19 +17,19 @@ const Clientes = ({ clientes, setClientes, serviciosData }) => {
 
   const getNombreActividadArca = (codigo) => {
     const limpia = String(codigo).split(' — ')[0].trim();
-    const actividad = actividadesArca.find(a => String(a.codigo) === limpia);
+    const actividad = (actividadesArca || []).find(a => String(a.codigo) === limpia);
     return actividad ? actividad.nombre : limpia;
   };
 
   const getNombreActividadRuca = (codigo) => {
     const limpia = String(codigo).split(' — ')[0].trim();
-    const actividad = actividadesRuca.find(a => String(a.codigo) === limpia);
+    const actividad = (actividadesRuca || []).find(a => String(a.codigo) === limpia);
     return actividad ? actividad.nombre : limpia;
   };
 
   const getNombreActividadSenasa = (codigo) => {
     const limpia = String(codigo).split(' — ')[0].trim();
-    const actividad = actividadesSenasa.find(a => String(a.codigo) === limpia);
+    const actividad = (actividadesSenasa || []).find(a => String(a.codigo) === limpia);
     return actividad ? actividad.nombre : limpia;
   };
 
