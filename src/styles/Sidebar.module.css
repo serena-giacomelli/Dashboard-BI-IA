@@ -82,3 +82,25 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
+
+.toggleBtn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+.toggleBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.arrowIcon {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  transition: transform 0.2s ease;
+}

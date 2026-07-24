@@ -17,10 +17,22 @@ const reportEntries = Object.entries(reportConfigs).map(([value, config]) => ({
   description: config.description,
 }));
 
-function formatDate(value) {
-  if (!value) return '-';
-  return new Intl.DateTimeFormat('es-AR').format(new Date(`${value}T00:00:00`));
-}
+const formatDate = (dateValue) => {
+  // 1. Si no hay valor, retornamos un texto por defecto o un string vacío
+  if (!dateValue) {
+    return 'Sin fecha'; 
+  }
+
+  const date = new Date(dateValue);
+
+  // 2. Comprobar si, a pesar de tener un valor, la fecha construida es inválida
+  if (isNaN(date.getTime())) {
+    return 'Fecha inválida'; 
+  }
+
+  // 3. Si todo está bien, aplica el formateo que ya tenías (ejemplo abajo)
+  return date.toLocaleDateString('es-AR'); 
+};
 
 function formatFileDate(value = new Date()) {
   return value.toISOString().slice(0, 10);

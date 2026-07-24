@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../utils/supabase';
 import { useCatalogos } from '../hooks/useCatalogos';
-import '../styles/Servicios.css';
+import '../styles/Global.css';
 
 const Servicios = ({ servicios, setServicios }) => {
   const { arca: actividadesArca } = useCatalogos();
@@ -9,27 +9,15 @@ const Servicios = ({ servicios, setServicios }) => {
   
   const [editandoId, setEditandoId] = useState(null);
   const [busquedaArca, setBusquedaArca] = useState('');
+  
   const [formData, setFormData] = useState({
-    servicio: '',
+    id_servicio: '',
+    nombre: '',
     categoria: 'Regulaciones',
     modalidad: 'Por Proyecto',
+    presupuesto: '',
+    tramite: '',
     actividadesArca: [],
-    usuarioAsignado: 'Valeria F.',
-    estadoServicio: '1. Pendiente de asignacion',
-    fechaInicio: '',
-    fechaFin: '',
-    contactoCliente: '',
-    contactoOrganismo: '',
-    directorTecnico: '',
-    nroExpediente: '',
-    nombreExpediente: '',
-    fechaNotificacionRequeridos: '',
-    fechaVtoRegistro: '',
-    nroExpedienteSecundario: '',
-    nombreExpedienteSecundario: '',
-    marca: '',
-    nroRegistro: '',
-    establecimiento: '',
     descripcion: ''
   });
 
@@ -42,11 +30,14 @@ const Servicios = ({ servicios, setServicios }) => {
     setEditandoId('nuevo');
     setBusquedaArca('');
     setFormData({
-      servicio: '', categoria: 'Regulaciones', modalidad: 'Por Proyecto', actividadesArca: [],
-      usuarioAsignado: 'Valeria F.', estadoServicio: '1. Pendiente de asignacion', fechaInicio: '', fechaFin: '',
-      contactoCliente: '', contactoOrganismo: '', directorTecnico: '', nroExpediente: '', nombreExpediente: '',
-      fechaNotificacionRequeridos: '', fechaVtoRegistro: '', nroExpedienteSecundario: '', nombreExpedienteSecundario: '',
-      marca: '', nroRegistro: '', establecimiento: '', descripcion: ''
+      id_servicio: '',
+      nombre: '', 
+      categoria: 'Regulaciones', 
+      modalidad: 'Por Proyecto', 
+      presupuesto: '',
+      tramite: '',
+      actividadesArca: [],
+      descripcion: ''
     });
   };
 
@@ -54,29 +45,20 @@ const Servicios = ({ servicios, setServicios }) => {
     setEditandoId(servicio.id);
     setBusquedaArca('');
     setFormData({
-      ...servicio,
-      actividadesArca: servicio.actividadesArca || servicio.actividades_arca || [],
-      usuarioAsignado: servicio.usuarioAsignado || servicio.usuario_asignado || 'Valeria F.',
-      estadoServicio: servicio.estadoServicio || servicio.estado_servicio || '1. Pendiente de asignacion',
-      fechaInicio: servicio.fechaInicio || servicio.fecha_inicio || '',
-      fechaFin: servicio.fechaFin || servicio.fecha_fin || '',
-      contactoCliente: servicio.contactoCliente || servicio.contacto_cliente || '',
-      contactoOrganismo: servicio.contactoOrganismo || servicio.contacto_organismo || '',
-      directorTecnico: servicio.directorTecnico || servicio.director_tecnico || '',
-      nroExpediente: servicio.nroExpediente || servicio.nro_expediente || '',
-      nombreExpediente: servicio.nombreExpediente || servicio.nombre_expediente || '',
-      fechaNotificacionRequeridos: servicio.fechaNotificacionRequeridos || servicio.fecha_notificacion_requeridos || '',
-      fechaVtoRegistro: servicio.fechaVtoRegistro || servicio.fecha_vto_registro || '',
-      nroExpedienteSecundario: servicio.nroExpedienteSecundario || servicio.nro_expediente_secundario || '',
-      nombreExpedienteSecundario: servicio.nombreExpedienteSecundario || servicio.nombre_expediente_secundario || '',
-      nroRegistro: servicio.nroRegistro || servicio.nro_registro || '',
+      id_servicio: servicio.id_servicio || '',
+      nombre: servicio.nombre || servicio.servicio || '',
+      categoria: servicio.categoria || 'Regulaciones',
+      modalidad: servicio.modalidad || 'Por Proyecto',
+      presupuesto: servicio.presupuesto || '',
+      tramite: servicio.tramite || '',
+      actividadesArca: servicio.actividades_arca || servicio.actividadesArca || [],
+      descripcion: servicio.descripcion || ''
     });
   };
 
-  // --- LÓGICA SUPABASE: ELIMINAR SERVICIO ---
   const eliminarServicio = async (id) => {
     if (window.confirm('¿Seguro querés eliminar este servicio del portfolio comercial?')) {
-      const { error } = await supabase.from('servicios_catalogo').delete().eq('id', id);
+      const { error } = await supabase.from('servicio').delete().eq('id', id);
       if (error) {
         console.error("Error al eliminar servicio:", error);
         alert('Hubo un error al eliminar el servicio.');
@@ -112,325 +94,251 @@ const Servicios = ({ servicios, setServicios }) => {
     }));
   };
 
-  // --- LÓGICA SUPABASE: CREAR Y ACTUALIZAR SERVICIOS ---
   const guardarServicio = async (e) => {
     e.preventDefault();
 
     const payload = {
-      servicio: formData.servicio,
+      id_servicio: formData.id_servicio,
+      nombre: formData.nombre,
       categoria: formData.categoria,
       modalidad: formData.modalidad,
+      presupuesto: formData.presupuesto ? parseFloat(formData.presupuesto) : null,
+      tramite: formData.tramite,
       actividades_arca: formData.actividadesArca,
-      usuario_asignado: formData.usuarioAsignado,
-      estado_servicio: formData.estadoServicio,
-      fecha_inicio: formData.fechaInicio,
-      fecha_fin: formData.fechaFin,
-      contacto_cliente: formData.contactoCliente,
-      contacto_organismo: formData.contactoOrganismo,
-      director_tecnico: formData.directorTecnico,
-      nro_expediente: formData.nroExpediente,
-      nombre_expediente: formData.nombreExpediente,
-      fecha_notificacion_requeridos: formData.fechaNotificacionRequeridos,
-      fecha_vto_registro: formData.fechaVtoRegistro,
-      nro_expediente_secundario: formData.nroExpedienteSecundario,
-      nombre_expediente_secundario: formData.nombreExpedienteSecundario,
-      marca: formData.marca,
-      nro_registro: formData.nroRegistro,
-      establecimiento: formData.establecimiento,
       descripcion: formData.descripcion
     };
 
     if (editandoId === 'nuevo') {
-      payload.id_servicio = `T-CAT-${Date.now()}`; 
-      
-      const { data, error } = await supabase.from('servicios_catalogo').insert([payload]).select();
+      const { data, error } = await supabase.from('servicio').insert([payload]).select();
       
       if (error) {
         console.error("Error insertando servicio:", error);
         alert('Error al crear el servicio en la base de datos.');
         return;
       }
-      
-      setServicios([...servicios, { ...formData, id: data[0].id, id_servicio: data[0].id_servicio }]);
+      setServicios([...servicios, { ...payload, id: data[0].id }]);
     } else {
-      const { error } = await supabase.from('servicios_catalogo').update(payload).eq('id', editandoId);
+      const { error } = await supabase.from('servicio').update(payload).eq('id', editandoId);
       
       if (error) {
         console.error("Error actualizando servicio:", error);
         alert('Error al actualizar el servicio en la base de datos.');
         return;
       }
-
-      setServicios(servicios.map(s => s.id === editandoId ? { ...s, ...formData } : s));
+      setServicios(servicios.map(s => s.id === editandoId ? { ...s, ...payload } : s));
     }
     
     setEditandoId(null);
   };
 
   return (
-    <div className="servicios-wrapper">
-      <div className="servicios-header">
-        <div>
-          {!editandoId && <span className="servicios-eyebrow">Módulo Comercial</span>}
-          <h2>
-            {editandoId ? (editandoId === 'nuevo' ? 'Añadir Nuevo Servicio' : 'Modificar Servicio') : 'Portfolio de Servicios CIFAS'}
-          </h2>
-        </div>
-        {!editandoId && (
-          <button onClick={iniciarNuevo} className="btn-base btn-crear">
-            + Crear Servicio
-          </button>)}
-      </div>
-
+    <>
       {!editandoId && (
-        <div className="tabla-panel">
-          <div className="tabla-scroll">
-            <table className="tabla-portfolio">
+        <div className="cifas-card">
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <p className="cifas-card__titulo">Módulo Comercial</p>
+              <h2 className="cifas-card__main-name">Portfolio de Servicios CIFAS</h2>
+            </div>
+            <button onClick={iniciarNuevo} className="cifas-btn cifas-btn--primary">
+              + Crear Servicio
+            </button>
+          </header>
+
+          <div className="cifas-table-wrap">
+            <table className="cifas-table">
               <thead>
                 <tr>
-                  <th className="th-servicio">Servicio</th>
-                  <th className="th-arca">Actividades ARCA</th>
+                  <th>ID</th>
+                  <th>Servicio</th>
                   <th>Descripción</th>
-                  <th className="th-categoria">Categoría</th>
-                  <th className="th-modalidad">Modalidad</th>
-                  <th className="th-acciones">Acciones</th>
+                  <th>Actividades ARCA</th>
+                  <th>Categoría</th>
+                  <th>Modalidad</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {servicios.map((servicio) => (
                   <tr key={servicio.id}>
-                    <td className="td-nombre">{servicio.servicio}</td>
+                    <td style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                      {servicio.id_servicio || '-'}
+                    </td>
+                    <td style={{ fontWeight: '600', color: '#1e293b' }}>
+                      {servicio.nombre || servicio.servicio}
+                    </td>
+                    <td style={{ color: '#475569', lineHeight: '1.5', maxWidth: '300px' }}>
+                      {servicio.descripcion}
+                    </td>
                     <td>
-                      <div className="chips-container">
-                        {((servicio.actividadesArca || servicio.actividades_arca) || []).map(cod => (
-                          <span key={cod} className="chip-codigo">{cod}</span>))}
+                      <div className="cifas-chips">
+                        {((servicio.actividades_arca || servicio.actividadesArca) || []).map(cod => (
+                          <span key={cod} className="cifas-chip" style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}>
+                            {cod}
+                          </span>
+                        ))}
                       </div>
                     </td>
-                    <td className="td-descripcion">{servicio.descripcion}</td>
                     <td>
-                      <span className="badge-categoria">{servicio.categoria}</span>
+                      <span className="cifas-chip" style={{ background: '#eff6ff', color: '#2563eb', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.3px', fontSize: '10px' }}>
+                        {servicio.categoria}
+                      </span>
                     </td>
-                    <td className="td-modalidad">{servicio.modalidad}</td>
-                    <td className="td-acciones">
-                      <button onClick={() => iniciarEditar(servicio)} className="btn-tabla btn-tabla-editar">Editar</button>
-                      <button onClick={() => eliminarServicio(servicio.id)} className="btn-tabla btn-tabla-borrar">Borrar</button>
+                    <td style={{ whiteSpace: 'nowrap' }}>{servicio.modalidad}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <button onClick={() => iniciarEditar(servicio)} className="cifas-btn cifas-btn--secondary" style={{ padding: '6px 12px', fontSize: '11px', marginRight: '8px' }}>
+                        Editar
+                      </button>
+                      <button onClick={() => eliminarServicio(servicio.id)} className="cifas-btn cifas-btn--pdf" style={{ padding: '6px 12px', fontSize: '11px' }}>
+                        Borrar
+                      </button>
                     </td>
-                  </tr>))}
+                  </tr>
+                ))}
+                {servicios.length === 0 && (
+                  <tr>
+                    <td colSpan="7" className="cifas-table-empty">
+                      No hay servicios registrados en el portfolio.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-        </div>)}
+        </div>
+      )}
 
       {editandoId && (
-        <form onSubmit={guardarServicio} className="form-panel-horizontal">
-          <div className="form-header-interno">DATOS DEL SERVICIO</div>
-          <div className="form-seccion-lineal">
-            <h3 className="seccion-titulo-lineal">INFORMACIÓN PRINCIPAL</h3>
-            <div className="grid-lineal-5">
-              <div className="form-grupo">
-                <label className="label-lineal">SERVICIO</label>
-                <input type="text" name="servicio" value={formData.servicio} onChange={manejarCambioInput} required className="input-lineal" />
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">USUARIO ASIGNADO</label>
-                <select name="usuarioAsignado" value={formData.usuarioAsignado} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="Valeria F.">Valeria F.</option>
-                </select>
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">ESTADO DE SERVICIO</label>
-                <select name="estadoServicio" value={formData.estadoServicio} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="1. Pendiente de asignacion">1. Pendiente de asignacion</option>
-                  <option value="2. Asignada">2. Asignada</option>
-                  <option value="3. Servicio no aceptado">3. Servicio no aceptado</option>
-                  <option value="4. En curso">4. En curso</option>
-                  <option value="5. En obra">5. En obra</option>
-                  <option value="6. Presentada">6. Presentada</option>
-                  <option value="7. Demorada por el cliente">7. Demorada por el cliente</option>
-                  <option value="8. Demorada por el organismo">8. Demorada por el organismo</option>
-                  <option value="9. Observada">9. Observada</option>
-                  <option value="10. Finalizada">10. Finalizada</option>
-                  <option value="11. Finalizada. no corresponde facturar">11. Finalizada. no corresponde facturar</option>
-                  <option value="12. Anualidad">12. Anualidad</option>
-                </select>
-                <span className="helper-lineal">Estado "FACTURACIÓN PARCIAL" eliminado. 12 estados activos.</span>
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">FECHA INICIO <span className="badge-inline-auto">AUTO</span></label>
-                <input type="date" name="fechaInicio" value={formData.fechaInicio} onChange={manejarCambioInput} className="input-lineal" />
-                <span className="helper-lineal">Registro automático al pasar a "En Curso". No editable.</span>
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">FECHA FIN <span className="badge-inline-coordinadora">SOLO COORDINADORA</span></label>
-                <input type="date" name="fechaFin" value={formData.fechaFin} onChange={manejarCambioInput} className="input-lineal" />
-                <span className="helper-lineal">= Fecha Inicio + 15 días corridos por defecto.</span>
-              </div>
-            </div>
-          </div>
+        <div className="cifas-card">
+          <header style={{ marginBottom: '20px' }}>
+            <p className="cifas-card__titulo">Módulo Comercial</p>
+            <h2 className="cifas-card__main-name">
+              {editandoId === 'nuevo' ? 'Añadir Nuevo Servicio' : 'Modificar Servicio'}
+            </h2>
+          </header>
 
-          <div className="form-seccion-lineal">
-            <h3 className="seccion-titulo-lineal">DATOS COMERCIALES</h3>
-            <div className="grid-lineal-2">
-              <div className="form-grupo">
-                <label className="label-lineal">CATEGORÍA</label>
-                <select name="categoria" value={formData.categoria} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="Regulaciones">Regulaciones / Habilitaciones</option>
-                  <option value="Ingeniería">Ingeniería & Termomecánica</option>
-                  <option value="Calidad">Calidad & Inocuidad</option>
-                  <option value="Estrategia">Gestión Estratégica</option>
-                </select>
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">MODALIDAD</label>
-                <select name="modalidad" value={formData.modalidad} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="Por Proyecto">Por Hito / Proyecto Cerrado</option>
-                  <option value="Por Hora">Por Hora de Consultoría</option>
-                </select>
+          <form onSubmit={guardarServicio}>
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#334155', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px', marginBottom: '16px' }}>
+                Información Principal
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
+                <label className="cifas-field">
+                  <span>Código / ID Interno</span>
+                  <input type="text" name="id_servicio" value={formData.id_servicio} onChange={manejarCambioInput} required className="cifas-input" placeholder="Ej: SRV-001" />
+                </label>
+                <label className="cifas-field">
+                  <span>Nombre del Servicio</span>
+                  <input type="text" name="nombre" value={formData.nombre} onChange={manejarCambioInput} required className="cifas-input" />
+                </label>
               </div>
             </div>
-          </div>
 
-          <div className="form-seccion-lineal">
-            <h3 className="seccion-titulo-lineal">CONTACTOS Y DIRECTOR TÉCNICO</h3>
-            <div className="grid-lineal-contactos">
-              <div className="form-grupo">
-                <label className="label-lineal">CONTACTO CLIENTE</label>
-                <select name="contactoCliente" value={formData.contactoCliente} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="">-- Sin contacto --</option>
-                </select>
-                <span className="helper-lineal">Trae contactos desde el módulo Cliente.</span>
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">CONTACTO ORGANISMO</label>
-                <select name="contactoOrganismo" value={formData.contactoOrganismo} onChange={manejarCambioInput} className="input-lineal">
-                  <option value="">-- Sin contacto --</option>
-                </select>
-              </div>
-              <div className="form-grupo flex-row-align">
-                <div style={{ flex: 1 }}>
-                  <label className="label-lineal">DIRECTOR TÉCNICO</label>
-                  <input type="text" name="directorTecnico" placeholder="Buscar por nombre..." value={formData.directorTecnico} onChange={manejarCambioInput} className="input-lineal" />
-                  <span className="helper-lineal">Autocompletado desde tabla secundaria.</span>
-                </div>
-                <button type="button" className="btn-lineal-redireccion">Ver Director Técnico →</button>
-              </div>
-            </div>
-          </div>
-
-          <div className="form-seccion-lineal">
-            <h3 className="seccion-titulo-lineal">VINCULAR ACTIVIDADES OFICIALES ARCA (CLAE)</h3>
-            <div className="grid-lineal-2">
-              <input
-                type="text"
-                placeholder="Filtrar por código o nombre..."
-                value={busquedaArca}
-                onChange={(e) => setBusquedaArca(e.target.value)}
-                className="input-lineal bg-white"
-              />
-              <select onChange={manejarSeleccionArca} defaultValue="" className="input-lineal bg-white">
-                <option value="" disabled>
-                  {actividadesFiltradas.length === 0 ? 'No hay coincidencias' : `-- Seleccionar (${actividadesFiltradas.length} encontradas) --`}
-                </option>
-                {actividadesFiltradas.map(act => (
-                  <option key={act.codigo} value={act.codigo}>
-                    [{act.codigo}] {act.descripcion}
-                  </option>))}
-              </select>
-            </div>
-            <label className="label-lineal subtle-mt">ACTIVIDADES SELECCIONADAS PARA ESTE SERVICIO:</label>
-            <div className="chips-lineal-wrapper">
-              {formData.actividadesArca.length > 0 ? (
-                formData.actividadesArca.map(codigo => {
-                  const infoAct = actividadesDisponibles.find(a => a.codigo === codigo);
-                  return (
-                    <div key={codigo} className="chip-lineal-item">
-                      <span className="chip-lineal-code">{codigo}</span>
-                      <span className="chip-lineal-text">{infoAct ? infoAct.descripcion : ''}</span>
-                      <button type="button" onClick={() => removerActividadArca(codigo)} className="chip-lineal-remove">×</button>
-                    </div>);})
-              ) : (
-                <span className="helper-lineal italic">Ninguna actividad vinculada. Usá el buscador de arriba.</span>)}
-            </div>
-          </div>
-
-          <div className="form-seccion-lineal">
-            <h3 className="seccion-titulo-lineal">EXPEDIENTE PRINCIPAL</h3>
-            <div className="grid-lineal-4">
-              <div className="form-grupo">
-                <label className="label-lineal">Nº EXPEDIENTE</label>
-                <input type="text" name="nroExpediente" placeholder="EXP-2025-001" value={formData.nroExpediente} onChange={manejarCambioInput} className="input-lineal" />
-                <span className="helper-lineal">Acepta letras y números.</span>
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">NOMBRE EXPEDIENTE</label>
-                <input type="text" name="nombreExpediente" placeholder="Nombre descriptivo" value={formData.nombreExpediente} onChange={manejarCambioInput} className="input-lineal" />
-                <span className="helper-lineal">Alfanumérico - carga manual.</span>
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">FECHA NOTIFICACIÓN REQUERIDOS</label>
-                <input type="date" name="fechaNotificacionRequeridos" value={formData.fechaNotificacionRequeridos} onChange={manejarCambioInput} className="input-lineal" />
-                <span className="helper-lineal">Notifica al usuario asignado 15 días antes.</span>
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">FECHA VTO REGISTRO</label>
-                <input type="date" name="fechaVtoRegistro" value={formData.fechaVtoRegistro} onChange={manejarCambioInput} className="input-lineal" />
-                <span className="helper-lineal">Notifica a cifas@cifas.com.ar 15 días antes.</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="form-seccion-lineal">
-            <h3 className="seccion-titulo-lineal">EXPEDIENTE SECUNDARIO</h3>
-            <div className="grid-lineal-4">
-              <div className="form-grupo">
-                <label className="label-lineal">Nº EXPEDIENTE SECUNDARIO</label>
-                <input type="text" name="nroExpedienteSecundario" placeholder="Opcional" value={formData.nroExpedienteSecundario} onChange={manejarCambioInput} className="input-lineal" />
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">NOMBRE EXPEDIENTE SECUNDARIO</label>
-                <input type="text" name="nombreExpedienteSecundario" placeholder="Opcional" value={formData.nombreExpedienteSecundario} onChange={manejarCambioInput} className="input-lineal" />
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">MARCA</label>
-                <input type="text" name="marca" placeholder="Texto libre" value={formData.marca} onChange={manejarCambioInput} className="input-lineal" />
-              </div>
-              <div className="form-grupo">
-                <label className="label-lineal">Nº DE REGISTRO</label>
-                <input type="text" name="nroRegistro" placeholder="Alfanumérico" value={formData.nroRegistro} onChange={manejarCambioInput} className="input-lineal" />
-              </div>
-            </div>
-          </div>
-
-          <div className="form-seccion-lineal">
-            <h3 className="seccion-titulo-lineal">ESTABLECIMIENTO</h3>
-            <div className="grid-lineal-establecimiento">
-              <div className="form-grupo flex-row-align">
-                <div style={{ flex: 1 }}>
-                  <label className="label-lineal">ESTABLECIMIENTO</label>
-                  <select name="establecimiento" value={formData.establecimiento} onChange={manejarCambioInput} className="input-lineal">
-                    <option value="">-- Seleccionar --</option>
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#334155', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px', marginBottom: '16px' }}>
+                Datos Comerciales
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                <label className="cifas-field">
+                  <span>Categoría</span>
+                  <select name="categoria" value={formData.categoria} onChange={manejarCambioInput} className="cifas-select">
+                    <option value="Regulaciones">Regulaciones / Habilitaciones</option>
+                    <option value="Ingeniería">Ingeniería & Termomecánica</option>
+                    <option value="Calidad">Calidad & Inocuidad</option>
+                    <option value="Estrategia">Gestión Estratégica</option>
                   </select>
-                </div>
-                <button type="button" className="btn-lineal-redireccion">Ver Establecimiento →</button>
+                </label>
+                <label className="cifas-field">
+                  <span>Modalidad</span>
+                  <select name="modalidad" value={formData.modalidad} onChange={manejarCambioInput} className="cifas-select">
+                    <option value="Por Proyecto">Por Hito / Proyecto Cerrado</option>
+                    <option value="Por Hora">Por Hora de Consultoría</option>
+                  </select>
+                </label>
+                <label className="cifas-field">
+                  <span>Honorarios Base ($)</span>
+                  <input type="number" name="presupuesto" value={formData.presupuesto} onChange={manejarCambioInput} className="cifas-input" placeholder="0.00" />
+                </label>
+                <label className="cifas-field">
+                  <span>Trámite Asociado</span>
+                  <input type="text" name="tramite" value={formData.tramite} onChange={manejarCambioInput} className="cifas-input" placeholder="Ej: Inscripción RNPA" />
+                </label>
               </div>
             </div>
-          </div>
 
-          <div className="form-seccion-lineal no-border">
-            <h3 className="seccion-titulo-lineal">DESCRIPCIÓN</h3>
-            <div className="form-grupo">
-              <label className="label-lineal">DESCRIPCIÓN DEL SERVICIO</label>
-              <textarea name="descripcion" value={formData.descripcion} onChange={manejarCambioInput} placeholder="Descripción interna..." required rows="3" className="input-lineal textarea-lineal" />
-              <span className="helper-lineal">Uso interno. No se incluye en los reportes de cara al cliente.</span>
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#334155', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px', marginBottom: '16px' }}>
+                Vincular Actividades Oficiales ARCA (CLAE)
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <input
+                  type="text"
+                  placeholder="Filtrar por código o nombre..."
+                  value={busquedaArca}
+                  onChange={(e) => setBusquedaArca(e.target.value)}
+                  className="cifas-input"
+                  style={{ backgroundColor: '#fff' }}
+                />
+                <select onChange={manejarSeleccionArca} defaultValue="" className="cifas-select" style={{ backgroundColor: '#fff' }}>
+                  <option value="" disabled>
+                    {actividadesFiltradas.length === 0 ? 'No hay coincidencias' : `-- Seleccionar (${actividadesFiltradas.length} encontradas) --`}
+                  </option>
+                  {actividadesFiltradas.map(act => (
+                    <option key={act.codigo} value={act.codigo}>
+                      [{act.codigo}] {act.descripcion}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginTop: '16px' }}>
+                <span className="cifas-field">
+                  <span>Actividades seleccionadas para este servicio:</span>
+                </span>
+                <div className="cifas-chips">
+                  {formData.actividadesArca.length > 0 ? (
+                    formData.actividadesArca.map(codigo => {
+                      const infoAct = actividadesDisponibles.find(a => a.codigo === codigo);
+                      return (
+                        <div key={codigo} className="cifas-chip" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <strong style={{ color: '#0f172a' }}>{codigo}</strong>
+                          <span>{infoAct ? infoAct.descripcion : ''}</span>
+                          <button type="button" onClick={() => removerActividadArca(codigo)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', padding: '0 4px' }}>
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <span className="cifas-helper" style={{ fontStyle: 'italic', marginTop: 0 }}>
+                      Ninguna actividad vinculada. Usá el buscador de arriba.
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="form-acciones-lineal">
-            <button type="button" onClick={() => setEditandoId(null)} className="btn-lineal-cancelar">Cancelar</button>
-            <button type="submit" className="btn-lineal-guardar">Guardar Cambios</button>
-          </div>
-        </form>)}
-    </div>
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#334155', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px', marginBottom: '16px' }}>
+                Descripción
+              </h3>
+              <label className="cifas-field">
+                <span>Descripción del servicio</span>
+                <textarea name="descripcion" value={formData.descripcion} onChange={manejarCambioInput} placeholder="Descripción o alcance del servicio..." required rows="3" className="cifas-input" style={{ resize: 'vertical' }} />
+              </label>
+            </div>
+
+            <div className="cifas-btn-group" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+              <button type="button" onClick={() => setEditandoId(null)} className="cifas-btn cifas-btn--secondary">
+                Cancelar
+              </button>
+              <button type="submit" className="cifas-btn cifas-btn--primary">
+                Guardar Cambios
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </>
   );
 };
 

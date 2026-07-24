@@ -12,6 +12,8 @@ import Clientes from './pages/Clientes';
 import Servicios from './pages/Servicios';
 import Actividades from './pages/Actividades';
 import styles from './styles/AppShell.module.css';
+import Presupuestos from './pages/Presupuestos.jsx';
+import Tramites from './pages/Tramites.jsx';
 
 function App() {
   // Iniciamos los estados vacíos
@@ -24,7 +26,7 @@ useEffect(() => {
       try {
         // 1. Traemos los catálogos de servicios
         const { data: dataServicios, error: errServicios } = await supabase
-          .from('servicios_catalogo')
+          .from('servicio')
           .select('*');
         
         if (errServicios) throw errServicios;
@@ -128,6 +130,14 @@ useEffect(() => {
             <Route 
               path="/clientes" 
               element={<Clientes clientes={clientes} setClientes={setClientes} serviciosData={servicios} />} 
+            />
+            <Route 
+              path="/presupuestos" 
+              element={<Presupuestos />} 
+            />
+            <Route 
+              path="/tramites" 
+              element={<Tramites />} 
             />
             <Route 
               path="/servicios" 
