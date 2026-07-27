@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { useCatalogos } from '../hooks/useCatalogos';
 import '../styles/Global.css';
@@ -9,10 +9,27 @@ const Servicios = ({ servicios, setServicios }) => {
   
   const [editandoId, setEditandoId] = useState(null);
   const [busquedaArca, setBusquedaArca] = useState('');
+  const [tabActiva, setTabActiva] = useState('Observaciones Internas');
   
   const [formData, setFormData] = useState({
     id_servicio: '',
     nombre: '',
+    usuario_asignado: '',
+    estado: '4. En Curso',
+    fecha_inicio: '',
+    fecha_fin: '',
+    contacto_cliente: '',
+    contacto_organismo: '',
+    director_tecnico: '',
+    nro_expediente: '',
+    nombre_expediente: '',
+    fecha_notificacion: '',
+    fecha_vto_registro: '',
+    nro_expediente_sec: '',
+    nombre_expediente_sec: '',
+    marca: '',
+    nro_registro: '',
+    establecimiento: '',
     categoria: 'Regulaciones',
     modalidad: 'Por Proyecto',
     presupuesto: '',
@@ -20,6 +37,16 @@ const Servicios = ({ servicios, setServicios }) => {
     actividadesArca: [],
     descripcion: ''
   });
+
+  // Filtros y Paginación para el listado
+  const [filtroTexto, setFiltroTexto] = useState('');
+  const [filtroCategoria, setFiltroCategoria] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const itemsPorPagina = 10;
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtroTexto, filtroCategoria]);
 
   const actividadesFiltradas = actividadesDisponibles.filter(act =>
     act.codigo.includes(busquedaArca) ||
@@ -29,9 +56,26 @@ const Servicios = ({ servicios, setServicios }) => {
   const iniciarNuevo = () => {
     setEditandoId('nuevo');
     setBusquedaArca('');
+    setTabActiva('Observaciones Internas');
     setFormData({
       id_servicio: '',
       nombre: '', 
+      usuario_asignado: '',
+      estado: '4. En Curso',
+      fecha_inicio: '',
+      fecha_fin: '',
+      contacto_cliente: '',
+      contacto_organismo: '',
+      director_tecnico: '',
+      nro_expediente: '',
+      nombre_expediente: '',
+      fecha_notificacion: '',
+      fecha_vto_registro: '',
+      nro_expediente_sec: '',
+      nombre_expediente_sec: '',
+      marca: '',
+      nro_registro: '',
+      establecimiento: '',
       categoria: 'Regulaciones', 
       modalidad: 'Por Proyecto', 
       presupuesto: '',
@@ -44,9 +88,26 @@ const Servicios = ({ servicios, setServicios }) => {
   const iniciarEditar = (servicio) => {
     setEditandoId(servicio.id);
     setBusquedaArca('');
+    setTabActiva('Observaciones Internas');
     setFormData({
       id_servicio: servicio.id_servicio || '',
       nombre: servicio.nombre || servicio.servicio || '',
+      usuario_asignado: servicio.usuario_asignado || '',
+      estado: servicio.estado || '4. En Curso',
+      fecha_inicio: servicio.fecha_inicio || '',
+      fecha_fin: servicio.fecha_fin || '',
+      contacto_cliente: servicio.contacto_cliente || '',
+      contacto_organismo: servicio.contacto_organismo || '',
+      director_tecnico: servicio.director_tecnico || '',
+      nro_expediente: servicio.nro_expediente || '',
+      nombre_expediente: servicio.nombre_expediente || '',
+      fecha_notificacion: servicio.fecha_notificacion || '',
+      fecha_vto_registro: servicio.fecha_vto_registro || '',
+      nro_expediente_sec: servicio.nro_expediente_sec || '',
+      nombre_expediente_sec: servicio.nombre_expediente_sec || '',
+      marca: servicio.marca || '',
+      nro_registro: servicio.nro_registro || '',
+      establecimiento: servicio.establecimiento || '',
       categoria: servicio.categoria || 'Regulaciones',
       modalidad: servicio.modalidad || 'Por Proyecto',
       presupuesto: servicio.presupuesto || '',
@@ -100,6 +161,22 @@ const Servicios = ({ servicios, setServicios }) => {
     const payload = {
       id_servicio: formData.id_servicio,
       nombre: formData.nombre,
+      usuario_asignado: formData.usuario_asignado,
+      estado: formData.estado,
+      fecha_inicio: formData.fecha_inicio,
+      fecha_fin: formData.fecha_fin,
+      contacto_cliente: formData.contacto_cliente,
+      contacto_organismo: formData.contacto_organismo,
+      director_tecnico: formData.director_tecnico,
+      nro_expediente: formData.nro_expediente,
+      nombre_expediente: formData.nombre_expediente,
+      fecha_notificacion: formData.fecha_notificacion,
+      fecha_vto_registro: formData.fecha_vto_registro,
+      nro_expediente_sec: formData.nro_expediente_sec,
+      nombre_expediente_sec: formData.nombre_expediente_sec,
+      marca: formData.marca,
+      nro_registro: formData.nro_registro,
+      establecimiento: formData.establecimiento,
       categoria: formData.categoria,
       modalidad: formData.modalidad,
       presupuesto: formData.presupuesto ? parseFloat(formData.presupuesto) : null,
@@ -131,6 +208,19 @@ const Servicios = ({ servicios, setServicios }) => {
     setEditandoId(null);
   };
 
+  const serviciosFiltrados = servicios.filter((s) => {
+    const searchString = `${s.id_servicio || ''} ${s.nombre || s.servicio || ''}`.toLowerCase();
+    const coincideTexto = !filtroTexto || searchString.includes(filtroTexto.toLowerCase());
+    const coincideCategoria = !filtroCategoria || s.categoria === filtroCategoria;
+    
+    return coincideTexto && coincideCategoria;
+  });
+
+  const indiceUltimoItem = paginaActual * itemsPorPagina;
+  const indicePrimerItem = indiceUltimoItem - itemsPorPagina;
+  const serviciosPaginados = serviciosFiltrados.slice(indicePrimerItem, indiceUltimoItem);
+  const totalPaginas = Math.ceil(serviciosFiltrados.length / itemsPorPagina);
+
   return (
     <>
       {!editandoId && (
@@ -144,6 +234,69 @@ const Servicios = ({ servicios, setServicios }) => {
               + Crear Servicio
             </button>
           </header>
+
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1', minWidth: '250px' }}>
+              <input 
+                type="text" 
+                placeholder="Buscar por ID o Nombre del servicio..." 
+                className="cifas-input" 
+                value={filtroTexto}
+                onChange={(e) => setFiltroTexto(e.target.value)}
+                style={{ margin: 0, backgroundColor: '#fff' }}
+              />
+            </div>
+            <div style={{ width: '220px' }}>
+              <select 
+                className="cifas-select" 
+                value={filtroCategoria}
+                onChange={(e) => setFiltroCategoria(e.target.value)}
+                style={{ margin: 0, backgroundColor: '#fff' }}
+              >
+                <option value="">Todas las Categorías</option>
+                <option value="Regulaciones">Regulaciones / Habilitaciones</option>
+                <option value="Ingeniería">Ingeniería & Termomecánica</option>
+                <option value="Calidad">Calidad & Inocuidad</option>
+                <option value="Estrategia">Gestión Estratégica</option>
+              </select>
+            </div>
+            {(filtroTexto || filtroCategoria) && (
+              <button 
+                onClick={() => { setFiltroTexto(''); setFiltroCategoria(''); }} 
+                className="cifas-btn cifas-btn--secondary"
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                Limpiar Filtros
+              </button>
+            )}
+          </div>
+
+          {serviciosFiltrados.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', fontSize: '13px', color: '#64748b' }}>
+              <span>
+                Mostrando {indicePrimerItem + 1} a {Math.min(indiceUltimoItem, serviciosFiltrados.length)} de {serviciosFiltrados.length} servicios
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => setPaginaActual(p => Math.max(1, p - 1))} 
+                  disabled={paginaActual === 1}
+                  className="cifas-btn cifas-btn--secondary"
+                  style={{ padding: '4px 12px' }}
+                >
+                  Anterior
+                </button>
+                <span style={{ padding: '4px 8px', fontWeight: 'bold', color: '#0f172a' }}>{paginaActual} / {totalPaginas}</span>
+                <button 
+                  onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))} 
+                  disabled={paginaActual === totalPaginas}
+                  className="cifas-btn cifas-btn--secondary"
+                  style={{ padding: '4px 12px' }}
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="cifas-table-wrap">
             <table className="cifas-table">
@@ -159,7 +312,7 @@ const Servicios = ({ servicios, setServicios }) => {
                 </tr>
               </thead>
               <tbody>
-                {servicios.map((servicio) => (
+                {serviciosPaginados.map((servicio) => (
                   <tr key={servicio.id}>
                     <td style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                       {servicio.id_servicio || '-'}
@@ -195,7 +348,7 @@ const Servicios = ({ servicios, setServicios }) => {
                     </td>
                   </tr>
                 ))}
-                {servicios.length === 0 && (
+                {serviciosFiltrados.length === 0 && (
                   <tr>
                     <td colSpan="7" className="cifas-table-empty">
                       No hay servicios registrados en el portfolio.
@@ -209,20 +362,33 @@ const Servicios = ({ servicios, setServicios }) => {
       )}
 
       {editandoId && (
-        <div className="cifas-card">
-          <header style={{ marginBottom: '20px' }}>
-            <p className="cifas-card__titulo">Módulo Comercial</p>
-            <h2 className="cifas-card__main-name">
-              {editandoId === 'nuevo' ? 'Añadir Nuevo Servicio' : 'Modificar Servicio'}
-            </h2>
+        <div className="cifas-card" style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          
+          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #e2e8f0', paddingBottom: '16px' }}>
+            <div>
+              <p className="cifas-card__titulo">Módulo Comercial</p>
+              <h2 className="cifas-card__main-name" style={{ fontSize: '20px', color: '#1e3a8a' }}>
+                {editandoId === 'nuevo' ? 'Añadir Nuevo Servicio' : `Editar Servicio — N° ${editandoId}`}
+              </h2>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="button" onClick={() => setEditandoId(null)} className="cifas-btn cifas-btn--secondary">
+                ← Volver
+              </button>
+              <button type="submit" form="form-servicio" className="cifas-btn cifas-btn--primary">
+                Guardar cambios
+              </button>
+            </div>
           </header>
 
-          <form onSubmit={guardarServicio}>
+          <form id="form-servicio" onSubmit={guardarServicio}>
+            
+            {/* INFORMACIÓN PRINCIPAL */}
             <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#334155', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
                 Información Principal
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1.5fr 1fr 1fr', gap: '16px' }}>
                 <label className="cifas-field">
                   <span>Código / ID Interno</span>
                   <input type="text" name="id_servicio" value={formData.id_servicio} onChange={manejarCambioInput} required className="cifas-input" placeholder="Ej: SRV-001" />
@@ -231,12 +397,25 @@ const Servicios = ({ servicios, setServicios }) => {
                   <span>Nombre del Servicio</span>
                   <input type="text" name="nombre" value={formData.nombre} onChange={manejarCambioInput} required className="cifas-input" />
                 </label>
+                <label className="cifas-field">
+                  <span>Usuario Asignado</span>
+                  <input type="text" name="usuario_asignado" value={formData.usuario_asignado} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Fecha Inicio</span>
+                  <input type="date" name="fecha_inicio" value={formData.fecha_inicio} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Fecha Fin</span>
+                  <input type="date" name="fecha_fin" value={formData.fecha_fin} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
               </div>
             </div>
 
+            {/* DATOS COMERCIALES Y ESTADO */}
             <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#334155', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px', marginBottom: '16px' }}>
-                Datos Comerciales
+              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
+                Datos Comerciales y Estado
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                 <label className="cifas-field">
@@ -256,6 +435,15 @@ const Servicios = ({ servicios, setServicios }) => {
                   </select>
                 </label>
                 <label className="cifas-field">
+                  <span>Estado del Servicio</span>
+                  <select name="estado" value={formData.estado} onChange={manejarCambioInput} className="cifas-select">
+                    <option value="1. Pendiente de asignacion">1. Pendiente de asignacion</option>
+                    <option value="4. En Curso">4. En Curso</option>
+                    <option value="6. Presentada">6. Presentada</option>
+                    <option value="10. Finalizada">10. Finalizada</option>
+                  </select>
+                </label>
+                <label className="cifas-field">
                   <span>Honorarios Base ($)</span>
                   <input type="number" name="presupuesto" value={formData.presupuesto} onChange={manejarCambioInput} className="cifas-input" placeholder="0.00" />
                 </label>
@@ -266,8 +454,99 @@ const Servicios = ({ servicios, setServicios }) => {
               </div>
             </div>
 
+            {/* CONTACTOS Y DIRECTOR TÉCNICO */}
             <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#334155', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
+                Contactos y Director Técnico
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr auto', gap: '16px', alignItems: 'flex-end' }}>
+                <label className="cifas-field">
+                  <span>Contacto Cliente</span>
+                  <input type="text" name="contacto_cliente" value={formData.contacto_cliente} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Contacto Organismo</span>
+                  <input type="text" name="contacto_organismo" value={formData.contacto_organismo} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Director Técnico</span>
+                  <input type="text" name="director_tecnico" value={formData.director_tecnico} onChange={manejarCambioInput} className="cifas-input" placeholder="Buscar por nombre..." />
+                </label>
+                <button type="button" className="cifas-btn cifas-btn--secondary" style={{ height: '38px', whiteSpace: 'nowrap' }}>
+                  Ver Director Técnico →
+                </button>
+              </div>
+            </div>
+
+            {/* EXPEDIENTE PRINCIPAL */}
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
+                Expediente Principal
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr', gap: '16px' }}>
+                <label className="cifas-field">
+                  <span>Nº Expediente</span>
+                  <input type="text" name="nro_expediente" value={formData.nro_expediente} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Nombre Expediente</span>
+                  <input type="text" name="nombre_expediente" value={formData.nombre_expediente} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Fecha Notificación Requeridos</span>
+                  <input type="date" name="fecha_notificacion" value={formData.fecha_notificacion} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Fecha Vto Registro</span>
+                  <input type="date" name="fecha_vto_registro" value={formData.fecha_vto_registro} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+              </div>
+            </div>
+
+            {/* EXPEDIENTE SECUNDARIO */}
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
+                Expediente Secundario
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr', gap: '16px' }}>
+                <label className="cifas-field">
+                  <span>Nº Expediente Secundario</span>
+                  <input type="text" name="nro_expediente_sec" value={formData.nro_expediente_sec} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Nombre Expediente Secundario</span>
+                  <input type="text" name="nombre_expediente_sec" value={formData.nombre_expediente_sec} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Marca</span>
+                  <input type="text" name="marca" value={formData.marca} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <label className="cifas-field">
+                  <span>Nº de Registro</span>
+                  <input type="text" name="nro_registro" value={formData.nro_registro} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+              </div>
+            </div>
+
+            {/* ESTABLECIMIENTO */}
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
+                Establecimiento
+              </h3>
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
+                <label className="cifas-field" style={{ flex: 1 }}>
+                  <span>Establecimiento</span>
+                  <input type="text" name="establecimiento" value={formData.establecimiento} onChange={manejarCambioInput} className="cifas-input" />
+                </label>
+                <button type="button" className="cifas-btn cifas-btn--secondary" style={{ height: '38px' }}>
+                  Ver Establecimiento →
+                </button>
+              </div>
+            </div>
+
+            {/* VINCULACIÓN ACTIVIDADES ARCA */}
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
                 Vincular Actividades Oficiales ARCA (CLAE)
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -317,24 +596,72 @@ const Servicios = ({ servicios, setServicios }) => {
               </div>
             </div>
 
+            {/* DESCRIPCIÓN */}
             <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#334155', textTransform: 'uppercase', borderBottom: '1px solid #cbd5e1', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
                 Descripción
               </h3>
               <label className="cifas-field">
-                <span>Descripción del servicio</span>
+                <span>Descripción del Servicio</span>
                 <textarea name="descripcion" value={formData.descripcion} onChange={manejarCambioInput} placeholder="Descripción o alcance del servicio..." required rows="3" className="cifas-input" style={{ resize: 'vertical' }} />
               </label>
             </div>
 
-            <div className="cifas-btn-group" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-              <button type="button" onClick={() => setEditandoId(null)} className="cifas-btn cifas-btn--secondary">
-                Cancelar
-              </button>
-              <button type="submit" className="cifas-btn cifas-btn--primary">
-                Guardar Cambios
-              </button>
+            {/* SOLAPAS INFERIORES */}
+            <div style={{ marginTop: '32px', borderTop: '2px solid #e2e8f0', paddingTop: '16px' }}>
+              <div style={{ display: 'flex', gap: '20px', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px', marginBottom: '16px' }}>
+                {['Observaciones Internas', 'Aranceles', 'Honorarios', 'Facturas', 'Porcentajes'].map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setTabActiva(tab)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: `2px solid ${tabActiva === tab ? '#2563eb' : 'transparent'}`,
+                      color: tabActiva === tab ? '#2563eb' : '#64748b',
+                      fontWeight: tabActiva === tab ? 'bold' : 'normal',
+                      cursor: 'pointer',
+                      paddingBottom: '8px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              {tabActiva === 'Observaciones Internas' && (
+                <div>
+                  <p style={{ color: '#64748b', fontSize: '13px' }}>Gestión de observaciones internas para el seguimiento del servicio.</p>
+                </div>
+              )}
+
+              {tabActiva === 'Aranceles' && (
+                <div>
+                  <p style={{ color: '#64748b', fontSize: '13px' }}>Los aranceles son calculados automáticamente por el sistema según la tabla interna de CIFAS.</p>
+                </div>
+              )}
+
+              {tabActiva === 'Honorarios' && (
+                <div>
+                  <p style={{ color: '#64748b', fontSize: '13px' }}>Administración de honorarios profesionales del servicio.</p>
+                </div>
+              )}
+
+              {tabActiva === 'Facturas' && (
+                <div>
+                  <p style={{ color: '#64748b', fontSize: '13px' }}>Control de porcentajes de facturación y subcompañías.</p>
+                </div>
+              )}
+
+              {tabActiva === 'Porcentajes' && (
+                <div>
+                  <p style={{ color: '#64748b', fontSize: '13px' }}>Asignación de porcentaje de facturación por usuario y costos comerciales.</p>
+                </div>
+              )}
             </div>
+
           </form>
         </div>
       )}
