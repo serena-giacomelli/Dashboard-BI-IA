@@ -9,7 +9,7 @@ export default function Presupuestos() {
   useEffect(() => {
     async function cargarPresupuestos() {
       try {
-        // Aprovechamos las relaciones de FK en Supabase para traer todo anidado
+        // ACTUALIZADO: Consultamos los trámites a través de la tabla intermedia 'tramite_presupuesto'
         const { data, error } = await supabase
           .from('presupuesto')
           .select(`
@@ -17,7 +17,9 @@ export default function Presupuestos() {
             tipo,
             created_at,
             clientes ( razon_social ),
-            tramite ( id, nombre )
+            tramite_presupuesto ( 
+              tramite ( id, nombre ) 
+            )
           `)
           .order('created_at', { ascending: false });
 
@@ -39,7 +41,7 @@ export default function Presupuestos() {
   }
 
   return (
-    <div className="cifas-card"> {/* Usando las clases de tu Global.css */}
+    <div className="cifas-card"> 
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
           <p className="cifas-card__titulo">Gestión Comercial</p>
@@ -66,16 +68,17 @@ export default function Presupuestos() {
             {presupuestos.length > 0 ? (
               presupuestos.map((presu) => (
                 <tr key={presu.id}>
-                  {/* Como el ID es un UUID, mostramos solo los primeros 8 caracteres para no romper la tabla */}
-                  <td style={{ fontFamily: 'monospace' }}>{presu.id.substring(0, 8)}</td>
+                  {/* El ID ahora es numérico, ya no necesitamos substring(0,8) pero lo dejamos seguro por las dudas */}
+                  <td style={{ fontFamily: 'monospace' }}>{presu.id}</td>
                   <td>{presu.clientes?.razon_social || 'Sin cliente'}</td>
                   <td>{presu.tipo}</td>
                   <td>{new Date(presu.created_at).toLocaleDateString('es-AR')}</td>
                   <td>
-                    {presu.tramite && presu.tramite.length > 0 ? (
+                    {/* ACTUALIZADO: Iteramos sobre tramite_presupuesto */}
+                    {presu.tramite_presupuesto && presu.tramite_presupuesto.length > 0 ? (
                       <div className="cifas-chips">
-                        {presu.tramite.map(t => (
-                          <span key={t.id} className="cifas-chip">{t.nombre}</span>
+                        {presu.tramite_presupuesto.map(tp => (
+                          <span key={tp.tramite?.id} className="cifas-chip">{tp.tramite?.nombre}</span>
                         ))}
                       </div>
                     ) : (

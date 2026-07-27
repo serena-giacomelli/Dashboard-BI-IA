@@ -138,7 +138,7 @@ const Servicios = ({ servicios, setServicios }) => {
           <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <p className="cifas-card__titulo">Módulo Comercial</p>
-              <h2 className="cifas-card__main-name">Portfolio de Servicios CIFAS</h2>
+              <h2 className="cifas-card__main-name">Servicios</h2>
             </div>
             <button onClick={iniciarNuevo} className="cifas-btn cifas-btn--primary">
               + Crear Servicio

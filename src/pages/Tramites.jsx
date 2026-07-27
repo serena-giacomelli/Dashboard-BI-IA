@@ -9,18 +9,20 @@ export default function Tramites() {
   useEffect(() => {
     async function cargarTramites() {
       try {
-        // Hacemos el fetch de los trámites con toda su info anidada
+        // ACTUALIZADO: Hacemos el fetch pasando por la nueva tabla puente 'tramite_presupuesto'
         const { data, error } = await supabase
           .from('tramite')
           .select(`
             id,
             nombre,
             created_at,
-            presupuesto (
-              id,
-              tipo,
-              clientes (
-                razon_social
+            tramite_presupuesto (
+              presupuesto (
+                id,
+                tipo,
+                clientes (
+                  razon_social
+                )
               )
             ),
             tramite_servicio (
@@ -77,13 +79,20 @@ export default function Tramites() {
           <tbody>
             {tramites.length > 0 ? (
               tramites.map((tram) => {
-                // Extraemos la información de forma segura por si algún dato es null
-                const clienteNombre = tram.presupuesto?.clientes?.razon_social || 'Sin asignar';
-                const presupuestoTipo = tram.presupuesto?.tipo || 'N/A';
+                // ACTUALIZADO: Manejo de la relación N:M
+                // Tomamos el primer presupuesto asociado a este trámite para mostrarlo en la tabla
+                const primerPresupuestoInfo = tram.tramite_presupuesto?.[0]?.presupuesto;
+                const clienteNombre = primerPresupuestoInfo?.clientes?.razon_social || 'Sin asignar';
+                
+                // Si el trámite está en más de un tipo de presupuesto, mostramos un indicador
+                let presupuestoTipo = primerPresupuestoInfo?.tipo || 'N/A';
+                if (tram.tramite_presupuesto?.length > 1) {
+                    presupuestoTipo += ` (+${tram.tramite_presupuesto.length - 1})`;
+                }
                 
                 return (
                   <tr key={tram.id}>
-                    <td style={{ fontFamily: 'monospace' }}>{tram.id.substring(0, 8)}</td>
+                    <td style={{ fontFamily: 'monospace' }}>{tram.id}</td>
                     <td style={{ fontWeight: '600', color: '#1e293b' }}>{tram.nombre}</td>
                     <td>{clienteNombre}</td>
                     <td>{presupuestoTipo}</td>
