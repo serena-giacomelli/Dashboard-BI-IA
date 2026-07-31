@@ -9,7 +9,6 @@ const obtenerNombreArchivoPdf = () => {
   const meses = [
     'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
     'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
-  
   const mesInicio = meses[lunes.getMonth()];
   const mesFin = meses[viernes.getMonth()];
   const diaInicio = String(lunes.getDate()).padStart(2, '0');
@@ -20,8 +19,7 @@ const obtenerNombreArchivoPdf = () => {
 
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: JSON.stringify({ error: "Método no permitido" }) };  
-  }
+    return { statusCode: 405, body: JSON.stringify({ error: "Método no permitido" }) };}
 
   try {
     const { asunto, cuerpoHtml, destinatario, adjuntoPdf, filename } = JSON.parse(event.body);

@@ -34,8 +34,7 @@ function LookerEmbed({
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.92);
             border: 1px solid #c8d2dd;
-            box-shadow: 0 18px 48px rgba(16, 33, 51, 0.12);
-          }
+            box-shadow: 0 18px 48px rgba(16, 33, 51, 0.12);}
           h3 { margin: 0 0 10px; font-size: 1.25rem; }
           p { margin: 0; line-height: 1.7; color: #5f6f82; }
         </style>
@@ -50,7 +49,6 @@ function LookerEmbed({
 
   return (
     <section className={styles.wrapper}>
-
       <div className={styles.frameShell}>
         <iframe
           className={styles.frame}
@@ -65,7 +63,6 @@ function LookerEmbed({
           allowFullScreen
           srcDoc={!src ? placeholderMarkup : undefined}/>
       </div>
-    </section>
-  );}
+    </section>);}
 
 export default LookerEmbed;

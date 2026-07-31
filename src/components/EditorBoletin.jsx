@@ -13,14 +13,12 @@ const ESTRUCTURA_ORGANISMOS_BORA = [
   { id: 'min_capital_humano', label: 'Ministerio de Capital Humano', subtopicos: [{ id: 'ch_personal', label: 'Contrataciones y Altas de Personal' }, { id: 'ch_planes', label: 'Asignación de Fondos a Cooperativas y Planes Sociales' }, { id: 'ch_universidades', label: 'Convenios e Internas Universitarias' }] },
   { id: 'bcra_cnv', label: 'Banco Central (BCRA) y CNV', subtopicos: [{ id: 'fin_comunicados', label: 'Circulares de Comunicación Interna y Rutina' }, { id: 'fin_sanciones', label: 'Sumarios Administrativos Menores a Entidades' }] },
   { id: 'min_salud_anmat', label: 'Ministerio de Salud y ANMAT', subtopicos: [{ id: 'salud_compras', label: 'Compras de Insumos y Equipamiento Hospitalario' }, { id: 'salud_autorizaciones', label: 'Inscripciones de Rutina en el Registro de Medicamentos' }] },
-  { id: 'min_seguridad_justicia', label: 'Ministerios de Seguridad y Justicia', subtopicos: [{ id: 'seg_ascensos', label: 'Ascensos, Retiros y Movimientos de Fuerzas Federales' }, { id: 'seg_erratas', label: 'Fe de Erratas y Avisos Oficiales de Juzgados' }] }
-];
+  { id: 'min_seguridad_justicia', label: 'Ministerios de Seguridad y Justicia', subtopicos: [{ id: 'seg_ascensos', label: 'Ascensos, Retiros y Movimientos de Fuerzas Federales' }, { id: 'seg_erratas', label: 'Fe de Erratas y Avisos Oficiales de Juzgados' }] }];
 
 const LISTA_PALABRAS_CLAVES = [
   'INGRESOS BRUTOS', 'GANADERÍA', 'INDUSTRIAS', 'INDUSTRIA FRIGORÍFICA',
   'IMPUESTOS', 'PLANES DE PAGO', 'CODIGO FISCAL', 'LEY IMPOSITIVA',
-  'LEY TRIBUTARIA', 'ALICUOTAS'
-];
+  'LEY TRIBUTARIA', 'ALICUOTAS'];
 
 const EditorBoletin = ({ clientesDB }) => {
   const [asunto, setAsunto] = useState('');
@@ -51,7 +49,6 @@ const EditorBoletin = ({ clientesDB }) => {
   const abortarGeneracion = useRef(false);
   const abortControllerRef = useRef(null);
 
-  // --- LÓGICA SUPABASE: CARGAR HISTORIAL ---
   useEffect(() => {
     async function cargarHistorial() {
       const { data, error } = await supabase
@@ -60,7 +57,6 @@ const EditorBoletin = ({ clientesDB }) => {
         .order('id', { ascending: false });
 
       if (!error && data) {
-        // Transformamos de snake_case a camelCase para React
         const historialFormateado = data.map(item => ({
           id: item.id,
           fecha: item.fecha,
@@ -69,9 +65,7 @@ const EditorBoletin = ({ clientesDB }) => {
           boletinCompleto: item.boletin_completo,
           clientes: item.clientes
         }));
-        setHistorial(historialFormateado);
-      }
-    }
+        setHistorial(historialFormateado);}}
     cargarHistorial();
   }, []);
 
@@ -84,18 +78,15 @@ const EditorBoletin = ({ clientesDB }) => {
   const togglePalabra = (palabra) => {
     setPalabrasSeleccionadas(prev => 
       prev.includes(palabra) ? prev.filter(p => p !== palabra) : [...prev, palabra]
-    );
-  };
+    );};
 
   const destinatarios = clientesDB?.filter(c => c.enviarBoletin === true) || [];
   const destinatariosFiltrados = destinatarios.filter(c =>
     c.razonSocial?.toLowerCase().includes(busquedaDestinatario.toLowerCase()) ||
-    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase())
-  );
+    c.email?.toLowerCase().includes(busquedaDestinatario.toLowerCase()));
 
   const historialFiltrado = historial.filter(item =>
-    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase())
-  );
+    item.asunto?.toLowerCase().includes(filtroHistorial.toLowerCase()));
 
   const historialOrdenado = [...historialFiltrado].sort((a, b) => {
     switch (ordenHistorial) {
@@ -103,9 +94,7 @@ const EditorBoletin = ({ clientesDB }) => {
       case 'antiguos': return a.id - b.id;
       case 'alfa-asc': return (a.asunto || '').localeCompare(b.asunto || '');
       case 'alfa-desc': return (b.asunto || '').localeCompare(a.asunto || '');
-      default: return 0;
-    }
-  });
+      default: return 0;}});
 
   const totalPaginas = Math.ceil(historialOrdenado.length / itemsPorPagina);
   const paginaValida = Math.min(paginaActual, totalPaginas || 1);
@@ -120,8 +109,7 @@ const EditorBoletin = ({ clientesDB }) => {
     const viernes = new Date(lunes);
     viernes.setDate(lunes.getDate() + 4);
     const formatoFecha = (fecha) => fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(viernes)}`;
-  };
+    return `DEL ${formatoFecha(lunes)} AL ${formatoFecha(viernes)}`; };
 
   const obtenerNombreArchivoPdf = () => {
     const hoy = new Date();
@@ -133,8 +121,7 @@ const EditorBoletin = ({ clientesDB }) => {
     
     const meses = [
       'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
-      'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
-    ];
+      'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
     
     const mesInicio = meses[lunes.getMonth()];
     const mesFin = meses[viernes.getMonth()];
@@ -147,8 +134,7 @@ const EditorBoletin = ({ clientesDB }) => {
     else if (incluirBora) etiquetaJur = 'NACIONALES';
     else etiquetaJur = 'PROVINCIALES';
     
-    return `NOVEDADES ${etiquetaJur} ${mesInicio} del ${diaInicio} AL ${diaFin} DE ${mesFin} ${anio}.pdf`;
-  };
+    return `NOVEDADES ${etiquetaJur} ${mesInicio} del ${diaInicio} AL ${diaFin} DE ${mesFin} ${anio}.pdf`;};
 
   const obtenerFechasSemana = () => {
     const fechas = [];
@@ -163,10 +149,8 @@ const EditorBoletin = ({ clientesDB }) => {
       const yyyy = fechaIteracion.getFullYear();
       const mm = String(fechaIteracion.getMonth() + 1).padStart(2, '0');
       const dd = String(fechaIteracion.getDate()).padStart(2, '0');
-      fechas.push(`${yyyy}${mm}${dd}`);
-    }
-    return fechas;
-  };
+      fechas.push(`${yyyy}${mm}${dd}`);}
+    return fechas;};
 
   const manejarToggleOrganismo = (orgId) => {
     if (organismosExcluidos.includes(orgId)) {
@@ -176,25 +160,21 @@ const EditorBoletin = ({ clientesDB }) => {
       const configOrg = ESTRUCTURA_ORGANISMOS_BORA.find(o => o.id === orgId);
       const subIds = configOrg.subtopicos.map(s => s.id);
       setSubtopicosExcluidos(subtopicosExcluidos.filter(id => !subIds.includes(id)));
-      setDropdownsAbiertos(prev => ({ ...prev, [orgId]: false }));
-    }
-  };
+      setDropdownsAbiertos(prev => ({ ...prev, [orgId]: false }));}};
 
   const manejarToggleSubtopico = (subId) => {
     if (subtopicosExcluidos.includes(subId)) {
       setSubtopicosExcluidos(subtopicosExcluidos.filter(id => id !== subId));
     } else {
       setSubtopicosExcluidos([...subtopicosExcluidos, subId]);
-    }
-  };
+    }};
 
   const toggleDropdown = (e, orgId) => {
     e.stopPropagation();
     setDropdownsAbiertos(prev => ({
       ...Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
       [orgId]: !prev[orgId]
-    }));
-  };
+    }));};
 
   const escapeHtml = (texto = '') => texto
     .replace(/&/g, '&amp;')
@@ -215,8 +195,7 @@ const EditorBoletin = ({ clientesDB }) => {
     if (!textoPlano) return '<p style="margin: 0; line-height: 1.6; color: #334155;">Sin contenido para mostrar.</p>';
 
     if (/<[a-z][\s\S]*>/i.test(textoPlano)) {
-      return textoPlano;
-    }
+      return textoPlano;}
 
     const lineas = textoPlano.split('\n').map((linea) => linea.trim()).filter(Boolean);
     const partes = [];
@@ -225,9 +204,7 @@ const EditorBoletin = ({ clientesDB }) => {
     const cerrarLista = () => {
       if (listaAbierta) {
         partes.push('</ul>');
-        listaAbierta = false;
-      }
-    };
+        listaAbierta = false;}};
 
     lineas.forEach((linea) => {
       if (/^#{1,3}\s+/.test(linea)) {
@@ -236,8 +213,7 @@ const EditorBoletin = ({ clientesDB }) => {
         const texto = escapeHtml(linea.replace(/^#{1,3}\s+/, ''));
         const tamanio = nivel === 1 ? '20px' : nivel === 2 ? '17px' : '15px';
         partes.push(`<h${Math.min(nivel + 1, 4)} style="margin: 18px 0 8px 0; font-size: ${tamanio}; color: #0f172a; line-height: 1.25;">${texto}</h${Math.min(nivel + 1, 4)}>`);
-        return;
-      }
+        return;}
 
       if (/^[-* ]\s+/.test(linea)) {
         if (!listaAbierta) {
@@ -245,21 +221,17 @@ const EditorBoletin = ({ clientesDB }) => {
           listaAbierta = true;
         }
         partes.push(`<li style="margin: 0 0 8px 0; line-height: 1.55; color: #334155;">${escapeHtml(linea.replace(/^[-* ]\s+/, ''))}</li>`);
-        return;
-      }
+        return;}
 
       cerrarLista();
-      partes.push(`<p style="margin: 0 0 12px 0; line-height: 1.65; color: #334155;">${escapeHtml(linea)}</p>`);
-    });
+      partes.push(`<p style="margin: 0 0 12px 0; line-height: 1.65; color: #334155;">${escapeHtml(linea)}</p>`);});
 
     cerrarLista();
-    return partes.join('');
-  };
+    return partes.join('');};
 
   const generarConIA = async () => {
     if (!incluirBora && !incluirSantaFe && !incluirEntreRios) {
-      return alert("Debes seleccionar al menos una fuente de boletines para generar el compilado.");
-    }
+      return alert("Debes seleccionar al menos una fuente de boletines para generar el compilado.");}
     
     abortarGeneracion.current = false; 
     abortControllerRef.current = new AbortController();
@@ -278,8 +250,6 @@ const EditorBoletin = ({ clientesDB }) => {
     try {
       setEstadoGeneracion("Calculando rutas y consultando fuentes...");
       let todosLosLinks = new Set();
-
-      // EXTRACCION NACIONAL
       if (incluirBora) {
          const fechas = obtenerFechasSemana();
          for (const fecha of fechas) {
@@ -292,18 +262,15 @@ const EditorBoletin = ({ clientesDB }) => {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
                body: JSON.stringify({ action: 'extraer_links', jurisdiccion: 'nacional', urlBoletin }),
-               signal: abortControllerRef.current.signal 
-             });
+               signal: abortControllerRef.current.signal});
              
              if (res.ok) {
                 const data = await res.json();
                 if (data.links) data.links.forEach(link => todosLosLinks.add(link));
              }
            } catch (e) { console.error(`Error BORA ${fecha}:`, e); }
-         }
-      }
+         }}
 
-      // EXTRACCION PROVINCIAL
       if (incluirSantaFe || incluirEntreRios) {
          if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
          setEstadoGeneracion(`Consultando portales provinciales vigentes...`);
@@ -323,8 +290,7 @@ const EditorBoletin = ({ clientesDB }) => {
                 const dataProv = await resProv.json();
                 if (dataProv.links) dataProv.links.forEach(l => todosLosLinks.add(l));
              }
-         } catch(e) { console.error("Error provincial:", e); }
-      }
+         } catch(e) { console.error("Error provincial:", e); }}
 
       const listaLinks = Array.from(todosLosLinks);
 
@@ -332,8 +298,7 @@ const EditorBoletin = ({ clientesDB }) => {
         alert("No se encontraron normativas en los portales seleccionados.");
         setGenerandoIA(false);
         setEstadoGeneracion("");
-        return;
-      }
+        return;}
 
       if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
       setEstadoGeneracion(`Iniciando filtrado inteligente de ${listaLinks.length} enlaces detectados...`);
@@ -350,8 +315,7 @@ const EditorBoletin = ({ clientesDB }) => {
              modoOrganismo,
             palabrasClaves: palabrasSeleccionadas
         }),
-        signal: abortControllerRef.current.signal 
-      });
+        signal: abortControllerRef.current.signal});
 
       if (!resIniciar.ok) throw new Error(`No se pudo iniciar la sesión.`);
       
@@ -367,21 +331,18 @@ const EditorBoletin = ({ clientesDB }) => {
         const res = await fetch('/.netlify/functions/generarBoletinIA', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'procesar_siguiente', sessionId }),
-        });
+          body: JSON.stringify({ action: 'procesar_siguiente', sessionId }),});
         
         if (!res.ok) {
           await new Promise(r => setTimeout(r, 1000));
-          continue;
-        }
+          continue;}
 
         const data = await res.json();
         if (data.progress >= data.total) {
           procesando = false;
         } else {
           setEstadoGeneracion(`Extrayendo texto base: ${data.progress} de ${data.total}...`);
-        }
-      }
+        }}
       
       if (abortarGeneracion.current) throw new Error("CANCELADO_POR_USUARIO");
       setEstadoGeneracion("Ensamblando Boletín Integral con IA en Lotes de Alta Velocidad...");
@@ -390,8 +351,7 @@ const EditorBoletin = ({ clientesDB }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'resumir', sessionId }),
-        signal: abortControllerRef.current.signal
-      });
+        signal: abortControllerRef.current.signal});
 
       const dataFinal = await finalRes.json();
       if (!finalRes.ok) throw new Error(dataFinal.error || "Error en la fase final de la IA");
@@ -405,8 +365,7 @@ const EditorBoletin = ({ clientesDB }) => {
         console.log("Generación cancelada por el usuario.");
       } else {
         console.error(error);
-        alert("Error crítico durante la generación: " + error.message);
-      }
+        alert("Error crítico durante la generación: " + error.message);}
     } finally {
       setGenerandoIA(false);
       if (abortarGeneracion.current) {
@@ -414,9 +373,7 @@ const EditorBoletin = ({ clientesDB }) => {
         setTimeout(() => setEstadoGeneracion(""), 3000); 
       } else {
         setEstadoGeneracion("");
-      }
-    }
-  };
+      }}};
 
   const generarTemplateEmpresa = (contenido, cliente, paraPdf = false) => {
     const logoSeleccionado = paraPdf ? LOGO_CIFAS_BASE64 : LOGO_CIFAS_URL;
@@ -439,28 +396,24 @@ const EditorBoletin = ({ clientesDB }) => {
             <img src="${logoSeleccionado}" width="160" style="display: inline-block; margin-bottom: 15px;" />
             <h1 style="margin: 0 0 5px 0; font-size: 16pt; color: #000000; font-weight: bold;">BOLETÍN DE NOVEDADES ${etiquetaJur}</h1>
             <h2 style="margin: 0; font-size: 12pt; color: #333333; font-weight: normal;">Semana del ${obtenerRangoSemana()}</h2>
-          </div>
-          
+          </div>          
           <div style="margin-bottom: 30px; text-align: justify;" class="evitar-corte">
             <p style="font-weight: bold; color: #000000;">Estimados Clientes de CIFAS:</p>
             <p>Desde CIFAS, como parte de nuestro servicio de asesoramiento, elaboramos un informe semanal con las actualizaciones más relevantes en materia impositiva y comercial, tanto a nivel nacional como provincial, del rubro y de aquellas que afectan a todos los sectores en general.</p>
             <p>En esta ocasión, queremos compartirlo también con ustedes, con el propósito de brindar información clave para la toma de decisiones y fortalecer el conocimiento dentro del sector.</p>
             <p>Si alguna de estas novedades es de su interés o desean profundizar en su impacto, estamos a disposición para asesorarlos.</p>
             <p style="margin-top: 25px; color: #000000; text-align: justify;">Saludos cordiales,<br><strong>El equipo de CIFAS</strong></p>
-          </div>
-          
+          </div>          
           <div style="word-wrap: break-word; overflow-wrap: break-word; font-size: 11pt; line-height: 1.5; color: #222222;">
             ${formatearContenidoPdf(contenido)}
           </div>
-
           <div style="margin-top: 40px; padding-top: 20px; text-align: center !important;" class="evitar-corte">
             <img src="${logoSeleccionado}" width="140" style="display: inline-block; margin-bottom: 15px;" />
             <p style="font-size: 11pt; text-align: center !important; color: #000000; margin-bottom: 5px;"><strong>Referente Comercial:</strong></p>
             <p style="font-size: 11pt; text-align: center !important; color: #000000; margin-bottom: 5px;">valeriafabrizio@cifas.com.ar // +54 9 341 307-1907</p>
             <p style="font-size: 11pt; text-align: center !important; font-weight: bold; margin-bottom: 0;"><a href="http://www.cifas.com.ar" style="color: #000000; text-decoration: none;">www.cifas.com.ar</a></p>
           </div>
-        </div>`;
-    }
+        </div>`;}
 
     const tablaCore = `
       <table align="center" width="600" style="width: 600px; margin: 0 auto; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;">
@@ -476,10 +429,8 @@ const EditorBoletin = ({ clientesDB }) => {
       <!DOCTYPE html>
       <html><head><meta charset="utf-8"></head>
       <body style="margin: 0; padding: 20px; background-color: #f4f4f4;">
-        ${tablaCore}</body></html>`;
-  };
+        ${tablaCore}</body></html>`;};
 
-  // --- LÓGICA SUPABASE: GUARDAR NUEVO BOLETÍN AL ENVIAR ---
   const manejarEnvio = async (e) => {
     e.preventDefault();
     if (destinatarios.length === 0) return alert("No hay clientes habilitados.");
@@ -508,8 +459,7 @@ const EditorBoletin = ({ clientesDB }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ asunto, destinatario: cliente.email, cuerpoHtml: htmlEmail, adjuntoPdf: pdfBase64Limpio }),
-        });
-      }
+        });}
 
       const registroFrontend = { 
         id: Date.now(), 
@@ -517,8 +467,7 @@ const EditorBoletin = ({ clientesDB }) => {
         asunto, 
         cuerpoHtml, 
         boletinCompleto, 
-        clientes: destinatarios.map(c => c.razonSocial) 
-      };
+        clientes: destinatarios.map(c => c.razonSocial)};
 
       await supabase.from('historial_boletines').insert({
         id: registroFrontend.id,
@@ -526,8 +475,7 @@ const EditorBoletin = ({ clientesDB }) => {
         asunto: registroFrontend.asunto,
         cuerpo_html: registroFrontend.cuerpoHtml,
         boletin_completo: registroFrontend.boletinCompleto,
-        clientes: registroFrontend.clientes
-      });
+        clientes: registroFrontend.clientes});
 
       const nuevoHistorial = [registroFrontend, ...historial];
       setHistorial(nuevoHistorial);
@@ -538,10 +486,8 @@ const EditorBoletin = ({ clientesDB }) => {
     } finally {
       setCargando(false);
       setEnvioActual(0);
-    }
-  };
+    }};
 
-  // --- LÓGICA SUPABASE: BORRAR HISTORIAL ---
   const borrarHistorial = async () => {
     if (window.confirm("¿Seguro querés borrar el historial?")) {
       const { error } = await supabase.from('historial_boletines').delete().gt('id', 0);
@@ -549,17 +495,13 @@ const EditorBoletin = ({ clientesDB }) => {
         setHistorial([]);
         setBoletinSeleccionado(null);
       } else {
-        alert("Hubo un error borrando el historial de la base de datos.");
-      }
-    }
-  };
+        alert("Hubo un error borrando el historial de la base de datos.");}}};
 
   const cargarEnEditor = (boletin) => {
     setAsunto(boletin.asunto);
     setCuerpoHtml(boletin.cuerpoHtml);
     setBoletinCompleto(boletin.boletinCompleto || '');
-    setBoletinSeleccionado(null);
-  };
+    setBoletinSeleccionado(null);};
 
   return (
     <div className="eb-container">
@@ -574,10 +516,8 @@ const EditorBoletin = ({ clientesDB }) => {
             {mostrarFiltros ? 'Ocultar Filtros' : 'Mostrar Filtros y Fuentes'}
           </button>
         </div>
-
       {mostrarFiltros && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
-            {/* TARJETA 1: FUENTES */}
             <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
               <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>1. Fuentes a Consultar</h4>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -595,15 +535,12 @@ const EditorBoletin = ({ clientesDB }) => {
                 </label>
               </div>
             </div>
-
-            {/* TARJETA 2: FILTROS PROVINCIALES */}
             {(incluirSantaFe || incluirEntreRios) && (
               <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                   <h4 style={{ margin: 0, fontSize: '13px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>2. Filtros Provinciales</h4>
                   <span style={{ fontSize: '11px', color: '#64748b' }}>Solo se incluyen normas con estos términos</span>
-                </div>
-                
+                </div>              
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {LISTA_PALABRAS_CLAVES.map(palabra => {
                     const activo = palabrasSeleccionadas.includes(palabra);
@@ -624,19 +561,14 @@ const EditorBoletin = ({ clientesDB }) => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '4px',
-                          transition: 'all 0.2s'
-                        }}
+                          transition: 'all 0.2s'}}
                       >
                         {activo && <span style={{ fontSize: '10px' }}>✓</span>}
                         {palabra}
-                      </button>
-                    )
+                      </button>)
                   })}
                 </div>
-              </div>
-            )}
-
-            {/* TARJETA 3: EXCLUSIONES NACIONALES */}
+              </div>)}
             {incluirBora && (
               <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
@@ -652,16 +584,13 @@ const EditorBoletin = ({ clientesDB }) => {
                         Incluir solo marcados
                       </label>
                    </div>
-                </div>
-                
+                </div>                
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '10px' }}>
                   {ESTRUCTURA_ORGANISMOS_BORA.map(org => {
                     const estaOrgExcluido = organismosExcluidos.includes(org.id);
-                    const isOpen = !!dropdownsAbiertos[org.id];
-                    
+                    const isOpen = !!dropdownsAbiertos[org.id];                    
                     let textoDesplegable = modoOrganismo === 'incluir' ? 'Se incluirá solo si está marcado' : 'Todos los temas incluidos';
                     if (modoOrganismo === 'excluir' && estaOrgExcluido) textoDesplegable = "Organismo omitido";
-
                     return (
                       <div key={org.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
@@ -689,22 +618,16 @@ const EditorBoletin = ({ clientesDB }) => {
                             </div>
                           )}
                         </div>
-                      </div>
-                    );
-                  })}
+                      </div>);})}
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-
+              </div>)}
+          </div>)}
         <button type="button"
           onClick={generarConIA}
           disabled={generandoIA}
           style={{ width: '100%', padding: '12px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: generandoIA ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '15px', fontSize: '16px', letterSpacing: '0.5px' }}>
           {generandoIA ? estadoGeneracion : 'Generar compilado semanal'}
         </button>
-
       {generandoIA && (
         <button type="button"
           onClick={() => {
@@ -712,8 +635,7 @@ const EditorBoletin = ({ clientesDB }) => {
             setEstadoGeneracion("Cancelando generación...");
             if (abortControllerRef.current) {
               abortControllerRef.current.abort(); 
-            }
-          }}
+            }}}
           style={{
             width: '100%',
             padding: '12px',
@@ -732,23 +654,18 @@ const EditorBoletin = ({ clientesDB }) => {
           onMouseOut={(e) => e.target.style.background = '#ef4444'}
         >
           Cancelar
-        </button>
-      )}
+        </button>)}
       </div>
-
       <form onSubmit={manejarEnvio} className="eb-form">
-        <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Asunto del boletín..." className="eb-input-asunto" />
-        
+        <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Asunto del boletín..." className="eb-input-asunto" />       
         <div className="eb-destinatarios-bar">
           <button type="button" onClick={() => setVerDestinatariosModal(true)} className="eb-btn-destinatarios">Destinatarios actuales ({destinatarios.length})</button>
         </div>
-
         <div className="eb-tabs-container">
           <div className="eb-tabs-header">
             <button type="button" onClick={() => setTabActivo('resumen')} className={`eb-tab-button ${tabActivo === 'resumen' ? 'eb-tab-button--active' : ''}`}>Resumen para el Email</button>
             <button type="button" onClick={() => setTabActivo('completo')} disabled={!boletinCompleto} className={`eb-tab-button ${tabActivo === 'completo' ? 'eb-tab-button--active' : ''} ${!boletinCompleto ? 'eb-tab-button--disabled' : ''}`}>Detalle para el PDF</button>
-          </div>
-          
+          </div>          
           <div className="eb-tab-content">
             <div className={`eb-tab-panel ${tabActivo === 'resumen' ? '' : 'eb-tab-panel--hidden'}`}>
               <ReactQuill theme="snow" value={cuerpoHtml} onChange={setCuerpoHtml} className="eb-quill-editor" />
@@ -758,13 +675,10 @@ const EditorBoletin = ({ clientesDB }) => {
             </div>
           </div>
         </div>
-
         <button type="submit" disabled={cargando} className="eb-btn-submit">
           {cargando ? `Enviando (${envioActual}/${destinatarios.length})...` : 'Enviar Boletines'}
         </button>
       </form>
-
-      {/* MODAL DESTINATARIOS */}
       {verDestinatariosModal && (
         <div className="eb-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div className="eb-modal-box" style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
@@ -801,8 +715,6 @@ const EditorBoletin = ({ clientesDB }) => {
             </div>
           </div>
         </div>)}
-
-      {/* SECCIÓN HISTORIAL */}
       {historial.length > 0 && (
         <div className="eb-historial-section" style={{ marginTop: '40px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
           <div className="eb-historial-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -827,8 +739,7 @@ const EditorBoletin = ({ clientesDB }) => {
               <option value={5}>Ver 5</option>
               <option value={10}>Ver 10</option>
             </select>
-          </div>
-          
+          </div>          
           <div className="eb-historial-list">
             {historialPaginado.map((item) => (
               <div key={item.id} onClick={() => setBoletinSeleccionado(item)} className="eb-historial-item" style={{ padding: '12px', border: '1px solid #e2e8f0', borderRadius: '6px', margin: '8px 0', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', transition: 'background 0.2s' }}>
@@ -836,7 +747,6 @@ const EditorBoletin = ({ clientesDB }) => {
                 <span className="eb-historial-item-fecha" style={{ fontSize: '12px', color: '#64748b' }}>{item.fecha}</span>
               </div>))}
           </div>
-
           <div className="eb-paginacion-bar" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px', alignItems: 'center', fontSize: '13px', color: '#475569' }}>
             <span>Mostrando página {paginaValida} de {totalPaginas || 1} ({historialOrdenado.length} resultados)</span>
             <div style={{ display: 'flex', gap: '5px' }}>
@@ -846,7 +756,6 @@ const EditorBoletin = ({ clientesDB }) => {
           </div>
         </div>)}
 
-      {/* MODAL DETALLE HISTORIAL */}
       {boletinSeleccionado && (
         <div className="eb-modal-overlay-preview" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div className="eb-modal-box-preview" style={{ background: '#fff', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '800px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
@@ -858,8 +767,6 @@ const EditorBoletin = ({ clientesDB }) => {
               </div>
           </div>
         </div>)}
-    </div>
-  );
-};
+    </div>);};
 
 export default EditorBoletin;

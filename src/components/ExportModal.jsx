@@ -14,8 +14,7 @@ function ExportModal({ isOpen, onClose, onConfirm, format, columns }) {
 
   const toggleColumn = (key) => {
     setSelected((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );};
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);};
 
   const toggleAll = () => {
     setSelected(selected.length === columns.length ? [] : columns.map((c) => c.key));};

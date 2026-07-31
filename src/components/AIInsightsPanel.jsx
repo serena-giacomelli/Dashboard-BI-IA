@@ -12,8 +12,7 @@ function summarizeRows(rows) {
   
   const byStatus = rows.reduce((accumulator, row) => {
     accumulator[row.estadoPresupuesto] = (accumulator[row.estadoPresupuesto] || 0) + 1;
-    return accumulator;
-  }, {});
+    return accumulator;}, {});
 
   const topRow = rows.reduce((best, row) => (row.honorarioMonto > (best?.honorarioMonto || 0) ? row : best), rows[0]);
   const pendingRows = rows.filter((row) => row.estadoPresupuesto !== 'Enviado');
@@ -61,11 +60,9 @@ function answerQuestion(question, stats) {
     return `Hay ${sent} presupuesto${sent === 1 ? '' : 's'} enviado${sent === 1 ? '' : 's'}.`;  }
 
   if (normalized.includes('total') || normalized.includes('honorarios') || normalized.includes('monto')) {
-    return `El total de honorarios analizado es ${currencyFormatter.format(stats.totalFees)}.`;
-  }
+    return `El total de honorarios analizado es ${currencyFormatter.format(stats.totalFees)}.`;  }
 
-  return 'Puedo responder sobre el total de honorarios, estados, cliente con mayor importe y recomendaciones.';
-}
+  return 'Puedo responder sobre el total de honorarios, estados, cliente con mayor importe y recomendaciones.';}
 
 function AIInsightsPanel({ rows, suggestions = [] }) {
   const stats = useMemo(() => summarizeRows(rows), [rows]);
@@ -97,7 +94,6 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
               Generar informe
             </button>
           </div>
-
           <div className={styles.reportBox}>
             <p className={styles.resultLabel}>Informe generado</p>
             <p className={styles.resultText}>
@@ -121,9 +117,7 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
               placeholder="Ejemplo: ¿Qué cliente tiene el mayor total de honorarios?"
-              rows={4}
-            />
-
+              rows={4}/>
           </label>
           {suggestions.length ? (
             <div className={styles.suggestionPicker}>
@@ -132,9 +126,7 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
                 <select
                   className={styles.select}
                   value={selectedSuggestion}
-                  onChange={(event) => setSelectedSuggestion(event.target.value)}
-
-                >
+                  onChange={(event) => setSelectedSuggestion(event.target.value)} >
                   {suggestions.map((suggestion) => (
                     <option key={suggestion} value={suggestion}>
                       {suggestion}
@@ -146,20 +138,17 @@ function AIInsightsPanel({ rows, suggestions = [] }) {
                 className={`${styles.button} ${styles.suggestionButton}`}
                 type="button"
                 onClick={handleUseSuggestion}
-               disabled={!selectedSuggestion}
-              >
+               disabled={!selectedSuggestion}>
                 Usar pregunta
               </button>
             </div>
           ) : null}
-
           <div className={styles.resultBox}>
             <p className={styles.resultLabel}>Respuesta IA</p>
             <p className={styles.resultText}>{answer}</p>
           </div>
        </article>
       </div>
-    </section>
-  );}
+    </section>);}
 
 export default AIInsightsPanel;

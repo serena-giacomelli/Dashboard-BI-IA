@@ -158,20 +158,23 @@ const Servicios = ({ servicios, setServicios }) => {
   const guardarServicio = async (e) => {
     e.preventDefault();
 
-    const payload = {
+const payload = {
       id_servicio: formData.id_servicio,
       nombre: formData.nombre,
       usuario_asignado: formData.usuario_asignado,
       estado: formData.estado,
-      fecha_inicio: formData.fecha_inicio,
-      fecha_fin: formData.fecha_fin,
+      
+      // Aplicar esta corrección a las 4 fechas:
+      fecha_inicio: formData.fecha_inicio || null,
+      fecha_fin: formData.fecha_fin || null,
+      fecha_notificacion: formData.fecha_notificacion || null,
+      fecha_vto_registro: formData.fecha_vto_registro || null,
+      
       contacto_cliente: formData.contacto_cliente,
       contacto_organismo: formData.contacto_organismo,
       director_tecnico: formData.director_tecnico,
       nro_expediente: formData.nro_expediente,
       nombre_expediente: formData.nombre_expediente,
-      fecha_notificacion: formData.fecha_notificacion,
-      fecha_vto_registro: formData.fecha_vto_registro,
       nro_expediente_sec: formData.nro_expediente_sec,
       nombre_expediente_sec: formData.nombre_expediente_sec,
       marca: formData.marca,

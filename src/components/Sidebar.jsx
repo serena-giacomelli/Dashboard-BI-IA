@@ -4,10 +4,9 @@ import { NavLink } from 'react-router-dom';
 import styles from '../styles/Sidebar.module.css';
 
 function Sidebar() {
-  // Estado para controlar el menú de Nivel 1 (Presupuestos)
   const [isPresupuestosOpen, setIsPresupuestosOpen] = useState(false);
-  // Estado para controlar el menú de Nivel 2 (Trámites)
   const [isTramitesOpen, setIsTramitesOpen] = useState(false);
+  const [isContactosOpen, setIsContactosOpen] = useState(false);
 
   return (
     <aside className={styles.sidebar}>
@@ -32,10 +31,8 @@ function Sidebar() {
           ACTIVIDADES
         </NavLink>
 
-        {/* --- INICIO DEL MENÚ ANIDADO (3 NIVELES) --- */}
         <div className={styles.group}>
           
-          {/* NIVEL 1: PRESUPUESTOS */}
           <NavLink 
             to="/presupuestos" 
             className={({ isActive }) => `${styles.link} ${styles.toggleBtn} ${isActive ? styles.active : ''}`}
@@ -50,7 +47,6 @@ function Sidebar() {
           {isPresupuestosOpen && (
             <div className={styles.groupLinks}>
               
-              {/* NIVEL 2: TRÁMITES */}
               <div className={styles.group}>
                 <NavLink 
                   to="/tramites" 
@@ -63,7 +59,6 @@ function Sidebar() {
                   </span>
                 </NavLink>
 
-                {/* NIVEL 3: SERVICIOS */}
                 {isTramitesOpen && (
                   <div className={styles.groupLinks}>
                     <NavLink 
@@ -80,8 +75,36 @@ function Sidebar() {
             </div>
           )}
         </div>
-        {/* --- FIN DEL MENÚ ANIDADO --- */}
 
+        <div className={styles.group}>
+          <div 
+            className={`${styles.link} ${styles.toggleBtn}`}
+            onClick={() => setIsContactosOpen(!isContactosOpen)}
+            style={{ cursor: 'pointer' }}
+          >
+            <span>CONTACTOS</span>
+            <span className={styles.arrowIcon}>
+              {isContactosOpen ? '▲' : '▼'}
+            </span>
+          </div>
+
+          {isContactosOpen && (
+            <div className={styles.groupLinks}>
+              <NavLink 
+                to="/directores-tecnicos" 
+                className={({ isActive }) => `${styles.link} ${styles.subLink} ${isActive ? styles.active : ''}`}
+              >
+                Directores Técnicos
+              </NavLink>
+              <NavLink 
+                to="/organismos" 
+                className={({ isActive }) => `${styles.link} ${styles.subLink} ${isActive ? styles.active : ''}`}
+              >
+                Organismos y Regionales
+              </NavLink>
+            </div>
+          )}
+        </div>
         <NavLink to="/boletines" className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
           BOLETINES
         </NavLink>

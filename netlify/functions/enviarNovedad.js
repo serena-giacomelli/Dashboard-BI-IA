@@ -37,8 +37,7 @@ exports.handler = async (event, context) => {
       emailPayload.attachments.push({
         filename: filename || obtenerNombreArchivoPdfNovedad(),
         content: adjuntoPdf
-      });
-    }
+      });}
 
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -46,8 +45,7 @@ exports.handler = async (event, context) => {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(emailPayload)
-    });
+      body: JSON.stringify(emailPayload)});
 
     const data = await response.json();
 
@@ -56,8 +54,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: response.status,
         body: JSON.stringify({ error: data.message })
-      };
-    }
+      };}
 
     return {
       statusCode: 200,

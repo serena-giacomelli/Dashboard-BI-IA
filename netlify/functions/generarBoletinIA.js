@@ -86,8 +86,7 @@ const extraerFechaPublicacion = (texto = '', url = '') => {
     const raw = matchUrl[1];
     return `${raw.slice(6, 8)}/${raw.slice(4, 6)}/${raw.slice(0, 4)}`;  
   }
-  return new Date().toLocaleDateString('es-AR');
-};
+  return new Date().toLocaleDateString('es-AR');};
 
   const obtenerFechasSemana = () => {
   const fechas = [];
@@ -100,16 +99,14 @@ const extraerFechaPublicacion = (texto = '', url = '') => {
     fechaIteracion.setDate(lunes.getDate() + i);
     fechas.push(fechaIteracion);
   }
-  return fechas;
-};
+  return fechas;};
 
 const tomarFragmentos = (texto = '', cantidad = 4) => {
   return texto.split('\n')
     .map(linea => linea.trim())
     .filter(linea => linea.length > 20)
     .filter((linea) => !/^(bolet[ií]n oficial|secci[oó]n|edici[oó]n del|b[uú]squeda:|buscar:|men[uú]|navegaci[oó]n)/i.test(linea))
-    .slice(0, cantidad);
-};
+    .slice(0, cantidad);};
 
 const limpiarTituloPresentacion = (titulo = '') => titulo
   .replace(/^b[uú]squeda:\s*/i, '')
@@ -121,16 +118,14 @@ const limpiarTituloPresentacion = (titulo = '') => titulo
 const esLinkValido = (href) => {
   if (!href) return false;
   const invalido = ['mailto:', 'tel:', '#', 'javascript:', 'javascript:void(0)'];
-  return !invalido.some(prefijo => href.toLowerCase().startsWith(prefijo));
-};
+  return !invalido.some(prefijo => href.toLowerCase().startsWith(prefijo));};
 
 const resolverUrl = (href, base) => {
   try {
     return new URL(href, base).toString();
   } catch (e) {
     return null;
-  }
-};
+  }};
 
 const esUrlPdf = (url = '') => /\.pdf(\?|$)/i.test(url) || /verpdf\.php/i.test(url);
 
@@ -155,8 +150,7 @@ const construirHtmlListado = (items = [], titulo, subtitulo, opciones = {}) => {
       <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #111827;">${titulo}</h2>
       <p style="margin: 0 0 18px 0; font-size: 13px; color: #4b5563;">${subtitulo}</p>
       ${bloques || '<p>No se extrajeron items para este boletín.</p>'}
-    </div>`;
-};
+    </div>`;};
 
 const acotarHtmlResumenEmail = (html = '') => {
   const $ = cheerio.load(`<div id="root">${html}</div>`, { decodeEntities: false });
@@ -186,15 +180,13 @@ const acotarHtmlResumenEmail = (html = '') => {
         const listTag = tag;
         const items = $node.children('li').slice(0, 2).toArray().map((li) => $.html(li)).join('');
         permitidos.push(`<${listTag}>${items}</${listTag}>`);
-        listas += 1;      
-      }    
+        listas += 1;}    
     }  
   });
   if (permitidos.length === 0) {
     return html;  
   }
-  return permitidos.join('');
-};
+  return permitidos.join('');};
 
 const construirHtmlFactualFallback = (items = [], titulo, subtitulo) => {
   const agrupados = items.reduce((acc, item) => {
@@ -238,8 +230,7 @@ return {
       <div style="font-family: Arial, Helvetica, sans-serif; color: #111827;">
         ${secciones.trim() !== '' ? secciones : '<p style="color: #64748b;">No hay contenido disponible para este período.</p>'}
       </div>`,  
-  };
-};
+  };};
 
 const invocarGroqConReintentos = async (payload) => {
   const maxIntentos = 3;
@@ -253,8 +244,7 @@ const invocarGroqConReintentos = async (payload) => {
           Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
-      });
+        body: JSON.stringify(payload),});
 
       if (response.ok) {
         const data = await response.json();
@@ -282,8 +272,7 @@ const invocarGroqConReintentos = async (payload) => {
       await new Promise((resolve) => setTimeout(resolve, baseDelay * intento));
     }
   }
-  throw new Error('Fallback crítico: No se pudo obtener respuesta válida de Groq.');
-};
+  throw new Error('Fallback crítico: No se pudo obtener respuesta válida de Groq.');};
 
 const invocarGroqLoteNormas = async (lote) => {
   const compactos = lote.map((item, idx) => `ID: ${idx}\nNORMA: ${item.titulo}\nEnlace: ${item.url}\nContenido: ${item.texto.substring(0, item.esProvincial ? 2500 : 1200)}`).join('\n---\n');
@@ -305,12 +294,10 @@ const invocarGroqLoteNormas = async (lote) => {
         ].join('\n')
       },
       { role: 'user', content: `Analizá y devolvé el JSON para las siguientes normas:\n\n${compactos}` }
-    ]
-  };
+    ]};
   
   const respuesta = await invocarGroqConReintentos(payload);
-  return respuesta.normas || [];
-};
+  return respuesta.normas || [];};
 
 const invocarGroqResumenEmail = async (textoBase) => {
   const payload = {
@@ -329,18 +316,15 @@ const invocarGroqResumenEmail = async (textoBase) => {
         ].join(' ')
       },
       { role: 'user', content: `Temas destacados a resumir:\n${textoBase.slice(0, 2500)}` }
-    ],  
-  };
-  return invocarGroqConReintentos(payload);
-};
+    ],};
+  return invocarGroqConReintentos(payload);};
 
 const obtenerHtml = async (url) => {
   const response = await fetch(url, { headers: DEFAULT_HEADERS });
   if (!response.ok) {
     throw new Error(`No se pudo obtener ${url} (HTTP ${response.status})`);  
   }
-  return response.text();
-};
+  return response.text();};
 
 const obtenerPdfTexto = async (url) => {
   let bufferData;
@@ -351,15 +335,13 @@ const obtenerPdfTexto = async (url) => {
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('text/html')) {
       console.warn(`[Descarga] El archivo no es un PDF (posible feriado o 404). URL: ${url}`);
-      return "";
-    }
+      return "";}
 
     const arrayBuffer = await response.arrayBuffer();
     bufferData = Buffer.isBuffer(arrayBuffer) ? arrayBuffer : Buffer.from(arrayBuffer);
   } catch (downloadError) {
     console.warn(`[Descarga] Fallo al descargar el PDF: ${downloadError.message}`);
-    return "";
-  }
+    return "";}
 
   console.log(`[PDF2JSON] Intentando extracción local completa para: ${url}`);
   
@@ -370,16 +352,13 @@ const obtenerPdfTexto = async (url) => {
       
       pdfParser.on("pdfParser_dataError", errData => {
          console.warn(`[PDF2JSON] Error en parseo: ${errData.parserError}`);
-         resolve("");
-      });
+         resolve("");});
       
       pdfParser.on("pdfParser_dataReady", pdfData => {
          const texto = pdfParser.getRawTextContent();
-         resolve(texto || "");
-      });
+         resolve(texto || "");});
       
-      pdfParser.parseBuffer(bufferData);
-    });
+      pdfParser.parseBuffer(bufferData);});
 
     if (textoExtraido.trim().length > 100) {
       console.log(`[PDF2JSON] Extracción exitosa. Caracteres: ${textoExtraido.length}`);
@@ -429,16 +408,14 @@ const obtenerPdfTexto = async (url) => {
     console.warn(`[OCR] Fallo de red en servicio externo: ${ocrError.message}`);
   }
 
-  return "";
-};
+  return "";};
 
 const extraerFechaDeUrlProvincial = (url = '') => {
   let m = url.match(/BO(\d{2})(\d{2})(\d{4})\.pdf/i); 
   if (m) return `${m[1]}/${m[2]}/${m[3]}`;
   m = url.match(/(\d{2})-(\d{2})-(\d{2})\.pdf/); 
   if (m) return `${m[1]}/${m[2]}/20${m[3]}`;
-  return new Date().toLocaleDateString('es-AR');
-};
+  return new Date().toLocaleDateString('es-AR');};
 
 const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLabel = '') => {
   const textoLimpio = textoPdf.replace(/\s+/g, ' '); 
@@ -451,10 +428,8 @@ const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLa
     let index = textoMayus.indexOf(claveMayus);
     while (index !== -1) {
       coincidencias.push({ clave: claveMayus, index });
-      // Buscamos si la misma palabra aparece más adelante
       index = textoMayus.indexOf(claveMayus, index + claveMayus.length);
-    }
-  });
+    }});
 
   if (coincidencias.length === 0) return items;
 
@@ -471,8 +446,7 @@ const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLa
         }
      } else {
         ventanas.push({ inicio, fin, clavePrincipal: c.clave });
-     }
-  });
+     }});
 
   const fechaPublicacion = extraerFechaDeUrlProvincial(urlOrigen);
   ventanas.forEach((v, i) => {
@@ -484,11 +458,9 @@ const extraerNormasDePdfProvincial = (textoPdf = '', urlOrigen = '', provinciaLa
        textoInicial: fragmento.substring(0, 1800),
        fechaPublicacion,
        url: urlOrigen
-     });
-  });
+     });});
 
-  return items;
-};
+  return items;};
   
 const extraerDatosDetalle = (html, url = '', jurisdiccion = 'nacional') => {
   const $ = cheerio.load(html);
@@ -504,8 +476,7 @@ const extraerDatosDetalle = (html, url = '', jurisdiccion = 'nacional') => {
        texto: recortarTexto(textoCompleto, 8000),
        textoInicial: recortarTexto(textoCompleto, 2000),
        fechaPublicacion: new Date().toLocaleDateString('es-AR')
-     };
-  }
+     };}
 
   const encabezado = $('h1').first().text().trim() || 'Organismo no especificado';
   let textoCompleto = normalizarTexto($('body').text())
@@ -520,8 +491,7 @@ const extraerDatosDetalle = (html, url = '', jurisdiccion = 'nacional') => {
   const cuerpoMin = cuerpo.toLowerCase();
   marcadoresFin.forEach((marcador) => {
     const idx = cuerpoMin.indexOf(marcador);
-    if (idx !== -1 && idx < indiceFin) indiceFin = idx;
-  });
+    if (idx !== -1 && idx < indiceFin) indiceFin = idx;});
   cuerpo = cuerpo.slice(0, indiceFin).trim();
 
   const tituloPagina = ($('meta[property="og:title"]').attr('content') || $('title').text() || '').trim();
@@ -533,15 +503,13 @@ const extraerDatosDetalle = (html, url = '', jurisdiccion = 'nacional') => {
     }
     if (/^(Resoluci[oó]n|Disposici[oó]n|Decreto|Comunicaci[oó]n|Circular|Decisi[oó]n\s+Administrativa|Instrucci[oó]n|Nota)\b/i.test(resto)) {
       tituloNorma = resto;
-    }
-  }
+    }}
 
   if (!tituloNorma) {
     const matchIdentificador = cuerpo.match(
       /(Resoluci[oó]n(?:\s+General)?\s*N?[°ºo]?\.?\s*[\d/\-A-Z]+|Disposici[oó]n\s*N?[°ºo]?\.?\s*[\d/\-A-Z]+|Decreto\s*N?[°ºo]?\.?\s*[\d/\-A-Z]+|Comunicaci[oó]n\s*[“"]?[A-Z][”"]?\s*[\d/]+|RESOL-[\w-]+)/i
     );
-    tituloNorma = matchIdentificador ? matchIdentificador[0].trim() : '';
-  }
+    tituloNorma = matchIdentificador ? matchIdentificador[0].trim() : '';}
 
   const anclasCorteLegal = [
     "contra la medida dispuesta",
@@ -557,9 +525,7 @@ const extraerDatosDetalle = (html, url = '', jurisdiccion = 'nacional') => {
     const indiceAncla = textoMinuscula.indexOf(ancla);
     if (indiceAncla !== -1) {
       textoLimpio = cuerpo.slice(0, indiceAncla).trim();
-      break;
-    }
-  }
+      break;}}
 
   const fechaPublicacion = extraerFechaPublicacion(textoCompleto, url);
   const contenidoInicial = recortarTexto(textoLimpio, 1800);
@@ -570,8 +536,7 @@ const extraerDatosDetalle = (html, url = '', jurisdiccion = 'nacional') => {
     texto: recortarTexto(textoLimpio, 7000),
     textoInicial: contenidoInicial,
     fechaPublicacion,
-  };
-};
+  };};
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
@@ -596,8 +561,7 @@ exports.handler = async (event) => {
             const urlDirectaPdf = `https://www.santafe.gob.ar/boletinoficial/verPdf.php?archivo=recursos/boletines/pdf/${yyyy}/${mm}/BO${dd}${mm}${yyyy}.pdf`;
             if (!links.includes(urlDirectaPdf)) {
               links.push(urlDirectaPdf);
-            }
-          }
+            }}
 
           if (provinciasActivas?.entreRios) {
             promesasScraping.push((async () => {
@@ -619,8 +583,7 @@ exports.handler = async (event) => {
                 console.error(`[Entre Ríos] Error de red en ${dd}-${mm}:`, e.message); 
               }
             })());
-          }
-        });
+          }});
 
         await Promise.all(promesasScraping);
       } else {
@@ -632,12 +595,10 @@ exports.handler = async (event) => {
             if (esLinkValido(href)) {
               const fullUrl = resolverUrl(href, BOLETIN_BASE_URL);
               if (fullUrl && !links.includes(fullUrl)) links.push(fullUrl);
-            }
-          });
+            }});
         } catch (e) { console.error('Error extrayendo BORA:', e.message); }
       }
-      return { statusCode: 200, body: JSON.stringify({ links: [...new Set(links)] }) };
-    }
+      return { statusCode: 200, body: JSON.stringify({ links: [...new Set(links)] }) };}
     
     if (!sessionId) return { statusCode: 400, body: JSON.stringify({ error: "Falta sessionId" }) };
     
@@ -676,8 +637,7 @@ exports.handler = async (event) => {
                       console.error(`\n[${provinciaLabel}] Error al descargar/parsear:`, e.message);
                       stateProc.omitidos.push({ url: targetUrl });
                       stateProc.index += 1;
-                      continue;
-                    }
+                      continue;}
 
                     if (textoPdf && textoPdf.trim().length > 50) {
                       const normasEncontradas = extraerNormasDePdfProvincial(textoPdf, targetUrl, provinciaLabel);
@@ -693,8 +653,7 @@ exports.handler = async (event) => {
                       }
                     } else {
                       console.warn(`[${provinciaLabel}] Alerta: El proceso terminó pero el texto está vacío (¿PDF escaneado como imagen?)`);
-                      stateProc.omitidos.push({ url: targetUrl });
-                    }
+                      stateProc.omitidos.push({ url: targetUrl });}
 
                     stateProc.index += 1;
                     return { statusCode: 200, body: JSON.stringify({ progress: stateProc.index, total: stateProc.links.length }) };
@@ -707,8 +666,7 @@ exports.handler = async (event) => {
              console.warn(`Error HTML (${targetUrl}):`, e);
              stateProc.omitidos.push({ url: targetUrl });
              stateProc.index += 1;
-             continue;
-          }
+             continue;}
 
           const { organismo, titulo, texto, textoInicial, fechaPublicacion } = extraerDatosDetalle(htmlDetalle, targetUrl);
           
@@ -722,8 +680,7 @@ exports.handler = async (event) => {
           
           if (debeOmitirse) {
             stateProc.omitidos.push({ url: targetUrl });
-            continue;
-          }
+            continue;}
           
           stateProc.textos.push({ titulo, organismo, texto, fechaPublicacion, url: targetUrl, esProvincial: esProvincialUrl });
           return { statusCode: 200, body: JSON.stringify({ progress: stateProc.index, total: stateProc.links.length }) };
@@ -775,7 +732,6 @@ exports.handler = async (event) => {
               let htmlOrg = `<h3 class="organismo-titulo" style="margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #000000; padding-bottom: 5px;">${org}</h3>`;
               const items = agrupados[org];
               const lotes = chunkArray(items, 4); 
-
               const promesasLotes = lotes.map(async (lote) => {
                   let bloqueHtml = '';
                   try {
@@ -798,23 +754,19 @@ exports.handler = async (event) => {
                       console.error(`Error en lote de ${org}:`, errorLote);
                       lote.forEach(item => {
                           bloqueHtml += `<div style="margin-bottom: 20px;"><p style="text-transform: uppercase; margin: 0 0 5px 0;"><b>${item.titulo}</b></p><p style="margin: 0;"><a href="${item.url}" style="color: #2563eb; text-decoration: none;">Ver Norma</a></p></div>`;
-                      });
-                  }
-                  return bloqueHtml;
-              });
+                      });}
+                  return bloqueHtml;});
 
               const htmlLotesResueltos = await Promise.all(promesasLotes);
               htmlOrg += htmlLotesResueltos.join('');
-              return htmlOrg;
-          };
+              return htmlOrg;};
 
           const orgsProvinciales = Object.keys(agrupados).filter(o => /santa fe|entre r[ií]os|provincia/i.test(o));
           const orgsNacionales = Object.keys(agrupados).filter(o => !orgsProvinciales.includes(o));
 
           if (orgsNacionales.length > 0) {
               if (tieneProvinciales && tieneNacionales) cuerpoPdfHtml += `<h2 style="color: #0f172a; margin-top: 10px; border-bottom: 3px solid #334155; padding-bottom: 8px; font-size: 18px;">NORMATIVAS NACIONALES</h2>`;
-              for (const org of orgsNacionales) cuerpoPdfHtml += await procesarOrganismo(org);
-          }
+              for (const org of orgsNacionales) cuerpoPdfHtml += await procesarOrganismo(org);}
           
           if (orgsProvinciales.length > 0) {
               cuerpoPdfHtml += `
@@ -823,8 +775,7 @@ exports.handler = async (event) => {
               `;
               for (const org of orgsProvinciales) {
                 cuerpoPdfHtml += await procesarOrganismo(org);
-              }
-          }
+              }}
 
           if (cuerpoPdfHtml === '') cuerpoPdfHtml = fallbackEstructural.boletinCompleto;
 
@@ -846,6 +797,4 @@ exports.handler = async (event) => {
     }
   } catch (error) {
     console.error("Error crítico:", error);
-    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };  
-  }
-};
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };}};

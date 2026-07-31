@@ -37,8 +37,7 @@ const Header = () => {
         setDropdownAbierto(false);
       }};
     document.addEventListener('mousedown', handleClickFuera);
-    return () => document.removeEventListener('mousedown', handleClickFuera);
-  }, []);
+    return () => document.removeEventListener('mousedown', handleClickFuera);}, []);
 
   const marcarTodasComoLeidas = () => {
     setNotificaciones(notificaciones.map(n => ({ ...n, leido: true })));};
@@ -77,9 +76,7 @@ const Header = () => {
                         <p className="noti-mensaje">{noti.mensaje}</p>
                         <span className="noti-fecha">{noti.fecha}</span>
                       </div>
-                    </li>))
-                ) : (
-                  <div className="panel-vacio">No hay alertas pendientes.</div>)}
+                    </li>))) : (<div className="panel-vacio">No hay alertas pendientes.</div>)}
               </ul>
             </div>)}
         </div>
@@ -88,9 +85,7 @@ const Header = () => {
           <div className="user-info">
             <span className="user-name">Project Manager</span>
             <span className="user-role">Administrador</span>
-          </div>
-        </div>
-      </div>
+          </div></div></div>
     </header>);};
 
 export default Header;
