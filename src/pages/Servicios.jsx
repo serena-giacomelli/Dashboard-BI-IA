@@ -10,6 +10,11 @@ const Servicios = ({ servicios, setServicios }) => {
   const [editandoId, setEditandoId] = useState(null);
   const [busquedaArca, setBusquedaArca] = useState('');
   const [tabActiva, setTabActiva] = useState('Observaciones Internas');
+
+  // Estados para los desplegables relacionales
+  const [listaClientes, setListaClientes] = useState([]);
+  const [listaOrganismos, setListaOrganismos] = useState([]);
+  const [listaDirectores, setListaDirectores] = useState([]);
   
   const [formData, setFormData] = useState({
     id_servicio: '',
@@ -43,6 +48,26 @@ const Servicios = ({ servicios, setServicios }) => {
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [paginaActual, setPaginaActual] = useState(1);
   const itemsPorPagina = 10;
+
+  // Fetch de datos para los desplegables de Contactos
+  useEffect(() => {
+    const fetchRelaciones = async () => {
+      try {
+        const { data: clientes } = await supabase.from('clientes').select('id, razon_social').order('razon_social');
+        if (clientes) setListaClientes(clientes);
+
+        // CORRECCIÓN: Buscamos organismo y regional de la nueva tabla
+        const { data: organismos } = await supabase.from('organismos_regionales').select('id, organismo, regional').order('organismo');
+        if (organismos) setListaOrganismos(organismos);
+
+        const { data: directores } = await supabase.from('director_tecnico').select('id, nombre_director, apellido_director').order('apellido_director');
+        if (directores) setListaDirectores(directores);
+      } catch (error) {
+        console.error("Error cargando listas para desplegables:", error);
+      }
+    };
+    fetchRelaciones();
+  }, []);
 
   useEffect(() => {
     setPaginaActual(1);
@@ -158,18 +183,15 @@ const Servicios = ({ servicios, setServicios }) => {
   const guardarServicio = async (e) => {
     e.preventDefault();
 
-const payload = {
+    const payload = {
       id_servicio: formData.id_servicio,
       nombre: formData.nombre,
       usuario_asignado: formData.usuario_asignado,
       estado: formData.estado,
-      
-      // Aplicar esta corrección a las 4 fechas:
       fecha_inicio: formData.fecha_inicio || null,
       fecha_fin: formData.fecha_fin || null,
       fecha_notificacion: formData.fecha_notificacion || null,
       fecha_vto_registro: formData.fecha_vto_registro || null,
-      
       contacto_cliente: formData.contacto_cliente,
       contacto_organismo: formData.contacto_organismo,
       director_tecnico: formData.director_tecnico,
@@ -463,18 +485,52 @@ const payload = {
                 Contactos y Director Técnico
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr auto', gap: '16px', alignItems: 'flex-end' }}>
+                
+                {/* Desplegable de Cliente */}
                 <label className="cifas-field">
                   <span>Contacto Cliente</span>
-                  <input type="text" name="contacto_cliente" value={formData.contacto_cliente} onChange={manejarCambioInput} className="cifas-input" />
+                  <select name="contacto_cliente" value={formData.contacto_cliente} onChange={manejarCambioInput} className="cifas-select">
+                    <option value="">-- Seleccionar Cliente --</option>
+                    {listaClientes.map(cliente => (
+                      <option key={cliente.id} value={cliente.razon_social}>
+                        {cliente.razon_social}
+                      </option>
+                    ))}
+                  </select>
                 </label>
+
+                {/* Desplegable de Organismo */}
                 <label className="cifas-field">
                   <span>Contacto Organismo</span>
-                  <input type="text" name="contacto_organismo" value={formData.contacto_organismo} onChange={manejarCambioInput} className="cifas-input" />
+                  <select name="contacto_organismo" value={formData.contacto_organismo} onChange={manejarCambioInput} className="cifas-select">
+                    <option value="">-- Seleccionar Organismo --</option>
+                    {listaOrganismos.map(org => {
+                      const nombreMostrado = org.regional ? `${org.organismo} - ${org.regional}` : org.organismo;
+                      return (
+                        <option key={org.id} value={nombreMostrado}>
+                          {nombreMostrado}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </label>
+
+                {/* Desplegable de Director Técnico */}
                 <label className="cifas-field">
                   <span>Director Técnico</span>
-                  <input type="text" name="director_tecnico" value={formData.director_tecnico} onChange={manejarCambioInput} className="cifas-input" placeholder="Buscar por nombre..." />
+                  <select name="director_tecnico" value={formData.director_tecnico} onChange={manejarCambioInput} className="cifas-select">
+                    <option value="">-- Seleccionar DT --</option>
+                    {listaDirectores.map(dt => {
+                      const nombreCompleto = `${dt.nombre_director || ''} ${dt.apellido_director || ''}`.trim();
+                      return (
+                        <option key={dt.id} value={nombreCompleto}>
+                          {nombreCompleto}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </label>
+
                 <button type="button" className="cifas-btn cifas-btn--secondary" style={{ height: '38px', whiteSpace: 'nowrap' }}>
                   Ver Director Técnico →
                 </button>

@@ -96,8 +96,10 @@ function Sidebar() {
               >
                 Directores Técnicos
               </NavLink>
+              
+              {/* Ruta corregida para Organismos y Regionales */}
               <NavLink 
-                to="/organismos" 
+                to="/organismos-regionales" 
                 className={({ isActive }) => `${styles.link} ${styles.subLink} ${isActive ? styles.active : ''}`}
               >
                 Organismos y Regionales

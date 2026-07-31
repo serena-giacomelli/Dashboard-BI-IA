@@ -15,7 +15,7 @@ import styles from './styles/AppShell.module.css';
 import Presupuestos from './pages/Presupuestos.jsx';
 import Tramites from './pages/Tramites.jsx';
 import DirectoresTecnicos from './pages/DirectoresTecnicos.jsx';
-import Organismos from './pages/Organismos.jsx';
+import OrganismosRegionales from './pages/OrganismosRegionales.jsx';
 
 function App() {
   // Iniciamos los estados vacíos
@@ -149,7 +149,7 @@ useEffect(() => {
               path="/directores-tecnicos" 
               element={<DirectoresTecnicos />} 
             />
-            <Route path="/organismos" element={<Organismos />} />
+            <Route path="/organismos-regionales" element={<OrganismosRegionales />} />
             <Route path="/actividades" element={<Actividades />} />
             <Route path="/boletines" element={<EditorBoletin clientesDB={clientes} />} />
             <Route path="/novedades" element={<EditorNovedades clientesDB={clientes} />} />
